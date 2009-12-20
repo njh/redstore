@@ -1,0 +1,22 @@
+# Process this file with autoconf to produce a configure script.
+AC_INIT(src/redstore.c)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(redstore, 0.1)
+
+# Check for C compiler
+AC_PROG_CC
+AC_C_CONST
+
+# Check for packages we depend upon
+PKG_CHECK_MODULES(LIBMICROHTTPD, libmicrohttpd >= 0.4)
+AC_SUBST(LIBMICROHTTPD_CFLAGS)
+AC_SUBST(LIBMICROHTTPD_LIBS)
+
+PKG_CHECK_MODULES(REDLAND, redland >= 1.0.7)
+AC_SUBST(REDLAND_CFLAGS)
+AC_SUBST(REDLAND_LIBS)
+
+# Checks for standard header files.
+AC_HEADER_STDC
+
+AC_OUTPUT([Makefile src/Makefile])
