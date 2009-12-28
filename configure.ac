@@ -53,6 +53,20 @@ else
 fi
 
 
+dnl ############## Header and function checks
+
+AC_HEADER_STDC
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+
+AC_CHECK_FUNCS(open_memstream)
+if test x$ac_cv_func_open_memstream != xyes; then
+    AC_CHECK_FUNC(funopen,,
+        AC_MSG_ERROR([neither open_memstream or funopen are available on this system])
+    )
+fi
+
+
 dnl ############## Check for packages we depend upon
 
 PKG_CHECK_MODULES(LIBMICROHTTPD, libmicrohttpd >= 0.4.2)
@@ -63,8 +77,6 @@ PKG_CHECK_MODULES(REDLAND, redland >= 1.0.7)
 AC_SUBST(REDLAND_CFLAGS)
 AC_SUBST(REDLAND_LIBS)
 
-# Checks for standard header files.
-AC_HEADER_STDC
 
 AC_OUTPUT([Makefile src/Makefile])
 

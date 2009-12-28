@@ -1,2 +1,8 @@
 
 * Implement 405 Method Not Allowed
+* Added Expiry headers to static content
+* Make RedStore multi-threaded
+  - only enable writing to storage when needed
+
+Long-term:
+* Add support for multiple stores

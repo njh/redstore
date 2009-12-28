@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #include <microhttpd.h>
+#include <redland.h>
 
 
 #ifndef _REDSTORE_H_
@@ -15,8 +16,9 @@
 
 // ------- Constants -------
 #define DEFAULT_PORT    (8080)
-
-
+#define DEFAULT_STORAGE_NAME    "redstore"
+#define DEFAULT_STORAGE_TYPE    "hashes"
+#define DEFAULT_STORAGE_OPTIONS "hash-type='bdb',dir='.'"
 
 
 // ------- Logging ---------
@@ -60,13 +62,16 @@ typedef struct MHD_Response http_response_t;
 
 
 // ------- Globals ---------
+extern librdf_world* world;
+extern librdf_storage* storage;
 
 
 
 // ------- Prototypes -------
 
 int handle_homepage(http_request_t *request);
-int handle_favicon(http_request_t *request);
+int handle_querypage(http_request_t *request);
+int handle_graph_index(http_request_t *request);
 int handle_error(http_request_t *request, unsigned int status);
 int handle_html_page(http_request_t *request, unsigned int status, 
                      const char* title, const char* page);
@@ -74,7 +79,14 @@ int handle_static_data(http_request_t *request, unsigned int status,
                        void* content, size_t content_size,
                        const char* content_type);
 
+int handle_favicon(http_request_t *request);
+
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... );
+
+
+#ifndef HAVE_OPEN_MEMSTREAM
+FILE *open_memstream(char **ptr, size_t *sizeloc);
+#endif
 
 
 #endif
