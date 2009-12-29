@@ -23,6 +23,7 @@
 #define DEFAULT_STORAGE_NAME    "redstore"
 #define DEFAULT_STORAGE_TYPE    "hashes"
 #define DEFAULT_STORAGE_OPTIONS "hash-type='bdb',dir='.'"
+#define DEFAULT_RESULTS_FORMAT  "application/sparql-results+xml"
 
 
 // ------- Logging ---------
@@ -68,11 +69,13 @@ typedef struct MHD_Response http_response_t;
 // ------- Globals ---------
 extern librdf_world* world;
 extern librdf_storage* storage;
+extern librdf_model* model;
 
 
 
 // ------- Prototypes -------
 
+int handle_sparql_query(http_request_t *request);
 int handle_homepage(http_request_t *request);
 int handle_querypage(http_request_t *request);
 int handle_graph_index(http_request_t *request);

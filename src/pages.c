@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <librdf.h>
 
-#include "config.h"
 #include "redstore.h"
 
 #define MESSAGE_BUFFER_SIZE   (1024)
@@ -19,6 +19,15 @@ int handle_error(http_request_t *request, unsigned int status)
     if (status == MHD_HTTP_NOT_FOUND) {
         title = "Not Found";
         snprintf(message, MESSAGE_BUFFER_SIZE, "<p>The requested URL %s was not found on this server.</p>", request->url);
+    } else if (status == MHD_HTTP_METHOD_NOT_ALLOWED) {
+        title = "Method Not Allowed";
+        snprintf(message, MESSAGE_BUFFER_SIZE, "<p>The requested method %s is not allowed for the URL %s.</p>", request->method, request->url);
+    } else if (status == MHD_HTTP_INTERNAL_SERVER_ERROR) {
+        title = "Internal Server Error";
+        snprintf(message, MESSAGE_BUFFER_SIZE, "<p>The server encountered an unexpected condition which prevented it from fulfilling the request.</p>");
+    } else if (status == MHD_HTTP_NOT_IMPLEMENTED) {
+        title = "Not Implemented";
+        snprintf(message, MESSAGE_BUFFER_SIZE, "<p>Sorry, this functionality has not been implemented.</p>");
     } else {
         title = "Unknown Error";
         snprintf(message, MESSAGE_BUFFER_SIZE, "<p>An unknown error (%d) occurred.</p>", status);
@@ -56,11 +65,13 @@ int handle_html_page(http_request_t *request, unsigned int status,
         "<body>\n"
         "<h1>%s</h1>\n"
         "%s\n"
-        "<hr /><address>%s Redland/%s</address>\n"
+        "<hr /><address>%s librdf/%s libraptor/%s librasqal/%s</address>\n"
         "</body></html>\n",
         title, title, content,
         PACKAGE_NAME "/" PACKAGE_VERSION,
-        librdf_version_string
+        librdf_version_string,
+        raptor_version_string,
+        rasqal_version_string
     );
     
     fclose(stream);
@@ -85,7 +96,7 @@ int handle_static_data(http_request_t *request, unsigned int status,
     );
 
     MHD_add_response_header(response, "Content-Type", content_type);
-    MHD_add_response_header(response, "Last-Modified", BUILD_TIME);
+    //MHD_add_response_header(response, "Last-Modified", BUILD_TIME);
     MHD_add_response_header(response, "Server", PACKAGE_NAME "/" PACKAGE_VERSION);
 
     ret = MHD_queue_response(request->connection, status, response);
@@ -97,15 +108,19 @@ int handle_static_data(http_request_t *request, unsigned int status,
 
 int handle_homepage(http_request_t *request)
 {
-    const char data[] = "<p>Hello World!</p>";
+    const char page[] = 
+        "<ul>\n"
+        "<li><a href=\"/query\">SPARQL Query Page</a></li>"
+        "<li><a href=\"/graphs\">Named Graphs</a></li>"
+        "</ul>\n";
 
-    return handle_html_page(request, MHD_HTTP_OK, "Homepage", data);
+    return handle_html_page(request, MHD_HTTP_OK, "RedStore", page);
 }
 
 int handle_querypage(http_request_t *request)
 {
     const char page[] = 
-        "<form action=\"../sparql\" method=\"post\">\n"
+        "<form action=\"../sparql\" method=\"get\">\n"
         "<textarea name=\"query\" cols=\"80\" rows=\"18\">\n"
         "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
         "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
@@ -114,9 +129,19 @@ int handle_querypage(http_request_t *request)
         " ?s ?p ?o\n"
         "} LIMIT 10\n"
         "</textarea><br>\n"
-        "<input type=\"reset\">\n"
-        "<input type=\"submit\" value=\"Execute\">"
+        "Output Format: <select name=\"format\">\n"
+        "  <option value=\"html\">HTML</option>\n"
+        "  <option value=\"text\">Plain Text</option>\n"
+        "  <option value=\"xml\">XML</option>\n"
+        "  <option value=\"json\">JSON</option>\n"
+        "</select>\n"
+        "<input type=\"reset\"> "
+        "<input type=\"submit\" value=\"Execute\">\n"
         "</form>\n";
+  
+    // FIXME: list output formats based on enumeration of formats
+    // that Redland supports
+
     return handle_html_page(request, MHD_HTTP_OK, "SPARQL Query", page);
 }
 
@@ -164,4 +189,3 @@ int handle_graph_index(http_request_t *request)
     free(page_buffer);
     return ret;
 }
-

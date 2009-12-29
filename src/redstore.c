@@ -16,6 +16,7 @@ int quiet = 0;					// Only display error messages
 int verbose = 0;				// Increase number of logging messages
 int running = 1;        // True while still running
 librdf_world* world = NULL;
+librdf_model* model = NULL;
 librdf_storage* storage = NULL;
 
 
@@ -104,8 +105,12 @@ static int dispatcher (void *cls, struct MHD_Connection *connection,
     request.con_cls = con_cls;
     
     redstore_debug("%s: %s", method, url);
+    
+    // FIXME: 301 redirect if the URL ends in a slash
 
-    if (strcmp(request.url, "/")==0) {
+    if (strcmp(request.url, "/sparql")==0) {
+        return handle_sparql_query(&request);
+    } else if (strcmp(request.url, "/")==0) {
         return handle_homepage(&request);
     } else if (strcmp(request.url, "/query")==0) {
         return handle_querypage(&request);
@@ -164,7 +169,6 @@ int main(int argc, char *argv[])
 {
     struct MHD_Daemon *daemon = NULL;
     librdf_hash *storage_options = NULL;
-    librdf_model *model = NULL;
     int port = DEFAULT_PORT;
     const char* storage_name = DEFAULT_STORAGE_NAME;
     const char* storage_type = DEFAULT_STORAGE_TYPE;

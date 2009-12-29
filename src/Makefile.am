@@ -6,5 +6,6 @@ redstore_SOURCES = \
   redstore.c \
   redstore.h \
   pages.c \
+  query.c \
   images.c \
   open_memstream.c
