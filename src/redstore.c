@@ -168,21 +168,6 @@ static void usage()
 }
 
 
-/** data type used to describe hash key and data */
-struct librdf_hash_datum_s
-{
-  librdf_world *world;
-  void *data;
-  size_t size;
-  /* used internally to build lists of these  */
-  struct librdf_hash_datum_s *next;
-};
-typedef struct librdf_hash_datum_s librdf_hash_datum;
-
-librdf_hash_datum* librdf_new_hash_datum(librdf_world *world, void *data, size_t size);
-void librdf_free_hash_datum(librdf_hash_datum *ptr);
-
-
 int main(int argc, char *argv[])
 {
     struct MHD_Daemon *daemon = NULL;
