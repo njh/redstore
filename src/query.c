@@ -7,7 +7,6 @@
 
 #include "redstore.h"
 
-
 static int format_results_librdf(http_request_t *request, librdf_query_results* results, const char* format_str)
 {
     librdf_uri *format_uri = NULL;
@@ -56,11 +55,11 @@ static int format_results_librdf(http_request_t *request, librdf_query_results* 
 static int format_results_html(http_request_t *request, librdf_query_results* results)
 {
     FILE* stream = NULL;
-    char *page_buffer = NULL;
-    size_t page_size = 0;
+    char *string_buffer = NULL;
+    size_t string_size = 0;
     int i, count, ret;
 
-    stream = open_memstream(&page_buffer, &page_size);
+    stream = open_memstream(&string_buffer, &string_size);
     if(!stream) {
         redstore_error("Failed to open open_memstream");
         return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
@@ -94,20 +93,20 @@ static int format_results_html(http_request_t *request, librdf_query_results* re
     fprintf(stream, "</table>\n");
     fclose(stream);
    
-    ret = handle_html_page(request, MHD_HTTP_OK, "SPARQL Results", page_buffer);
+    ret = handle_html_page(request, MHD_HTTP_OK, "SPARQL Results", string_buffer);
             
-    free(page_buffer);
+    free(string_buffer);
     return ret;
 }
 
 static int format_results_text(http_request_t *request, librdf_query_results* results)
 {
     FILE* stream = NULL;
-    char *page_buffer = NULL;
-    size_t page_size = 0;
+    char *string_buffer = NULL;
+    size_t string_size = 0;
     int i, count, ret;
 
-    stream = open_memstream(&page_buffer, &page_size);
+    stream = open_memstream(&string_buffer, &string_size);
     if(!stream) {
         redstore_error("Failed to open open_memstream");
         return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
@@ -142,9 +141,9 @@ static int format_results_text(http_request_t *request, librdf_query_results* re
 
     fclose(stream);
    
-    ret = handle_static_data(request, MHD_HTTP_OK, page_buffer, page_size, "text/plain");
+    ret = handle_static_data(request, MHD_HTTP_OK, string_buffer, string_size, "text/plain");
             
-    free(page_buffer);
+    free(string_buffer);
     return ret;
 }
 
