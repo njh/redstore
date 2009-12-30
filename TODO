@@ -19,6 +19,9 @@ Before version 0.1
   - Number of queries/requests
   - Uptime
   - Memory usage
+* Return error messages to the client
+  - internal error - eg memory allocation
+  - query errors
 
 
 More stuff to do:
