@@ -5,6 +5,7 @@ bin_PROGRAMS = redstore
 redstore_SOURCES = \
   redstore.c \
   redstore.h \
+  graphs.c \
   pages.c \
   query.c \
   images.c \
