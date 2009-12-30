@@ -8,4 +8,4 @@ redstore_SOURCES = \
   pages.c \
   query.c \
   images.c \
-  open_memstream.c
+  util.c

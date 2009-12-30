@@ -96,6 +96,7 @@ http_response_t* handle_favicon(http_request_t *request);
 
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... );
 
+char* escape_uri(char *arg);
 
 #ifndef HAVE_OPEN_MEMSTREAM
 FILE *open_memstream(char **ptr, size_t *sizeloc);

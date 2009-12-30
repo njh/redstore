@@ -1,21 +1,3 @@
-/*
- * Copyright (C) 2005 Richard Kettlewell
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA
- */
 
 #include <stdio.h>
 #include <errno.h>
@@ -23,9 +5,45 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "config.h"
+#include "redstore.h"
 
-/* BSD-compatible implementation of open_memstream */
+
+char* escape_uri(char *arg)
+{ 
+    FILE* stream = NULL;
+    char *escaped = NULL;
+    size_t escaped_size = 0;
+    int i; 
+
+    stream = open_memstream(&escaped, &escaped_size);
+    if(!stream) return NULL;
+
+    for (i = 0; arg[i]; i++) {
+        char c = arg[i];
+        if (c == ' ') {
+            fputc('+', stream); 
+        } else if (
+            (c == 0x2D) || (c == 0x2E) || // Hyphen-Minus, Full Stop
+            ((0x30 <= c) && (c <= 0x39)) || // Digits [0-9]
+            ((0x41 <= c) && (c <= 0x5A)) || // Uppercase [A-Z]
+            ((0x61 <= c) && (c <= 0x7A))    // Lowercase [a-z]
+        ) { 
+            fputc(c, stream); 
+        } else {
+            fprintf(stream, "%%%02X", c);
+        }
+    }
+    
+    fclose(stream);
+    
+    return escaped;
+}
+
+
+/*
+    BSD-compatible implementation of open_memstream 
+    Copyright (C) 2005 Richard Kettlewell
+*/
 
 #ifndef HAVE_OPEN_MEMSTREAM
 
