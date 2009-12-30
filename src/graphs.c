@@ -96,7 +96,7 @@ static http_response_t* format_stream_html(http_request_t *request, librdf_strea
     fprintf(iostream, "</table>\n");
     fclose(iostream);
    
-    return handle_html_page(request, MHD_HTTP_OK, "SPARQL Results", string_buffer);
+    return handle_html_page(request, MHD_HTTP_OK, "Graph Contents", string_buffer);
 }
 
 
