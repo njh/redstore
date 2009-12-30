@@ -94,32 +94,50 @@ static int dispatcher (void *cls, struct MHD_Connection *connection,
                       const char *version, const char *upload_data,
                       size_t *upload_data_size, void **con_cls)
 {
-    http_request_t request;
-    request.cls = cls;
-    request.connection = connection;
-    request.url = url;
-    request.method = method;
-    request.version = version;
-    request.upload_data = upload_data;
-    request.upload_data_size = upload_data_size;
-    request.con_cls = con_cls;
+    http_request_t *request = malloc(sizeof(http_request_t));
+    http_response_t *response = NULL;
+    
+    request->cls = cls;
+    request->connection = connection;
+    request->url = url;
+    request->method = method;
+    request->version = version;
+    request->upload_data = upload_data;
+    request->upload_data_size = upload_data_size;
+    request->con_cls = con_cls;
     
     redstore_debug("%s: %s", method, url);
-    
-    // FIXME: 301 redirect if the URL ends in a slash
 
-    if (strcmp(request.url, "/sparql")==0) {
-        return handle_sparql_query(&request);
-    } else if (strcmp(request.url, "/")==0) {
-        return handle_homepage(&request);
-    } else if (strcmp(request.url, "/query")==0) {
-        return handle_querypage(&request);
-    } else if (strcmp(request.url, "/graphs")==0) {
-        return handle_graph_index(&request);
-    } else if (strcmp(request.url, "/favicon.ico")==0) {
-        return handle_favicon(&request);
+    if (strcmp(request->url, "/sparql")==0) {
+        response = handle_sparql_query(request);
+    } else if (strcmp(request->url, "/")==0) {
+        response = handle_homepage(request);
+    } else if (strcmp(request->url, "/query")==0) {
+        response = handle_querypage(request);
+    } else if (strcmp(request->url, "/graphs")==0) {
+        response = handle_graph_index(request);
+    } else if (strcmp(request->url, "/favicon.ico")==0) {
+        response = handle_favicon(request);
+    } else if (strlen(request->url)>1 && request->url[strlen(request->url)-1] == '/') {
+        // redirect if the URL ends in a slash
+        char* new_url = strdup(request->url);
+        new_url[strlen(new_url)-1] = '\0';
+        redstore_debug("Redirecting to: %s", new_url);
+        response = handle_redirect(request, new_url);
     } else {
-        return handle_error(&request, MHD_HTTP_NOT_FOUND);
+        response = handle_error(request, MHD_HTTP_NOT_FOUND);
+    }
+    
+    free(request);
+    
+    // Send the response back to the client
+    if (response) {
+        int ret = MHD_queue_response(connection, response->status, response->mhd_response);
+        MHD_destroy_response(response->mhd_response);
+        free(response);
+        return ret;
+    } else {
+        return MHD_NO;
     }
 }
 

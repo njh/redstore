@@ -7,13 +7,12 @@
 
 #include "redstore.h"
 
-static int format_results_librdf(http_request_t *request, librdf_query_results* results, const char* format_str)
+static http_response_t* format_results_librdf(http_request_t *request, librdf_query_results* results, const char* format_str)
 {
     librdf_uri *format_uri = NULL;
     const char *mime_type = NULL;
     char* data = NULL;
     unsigned int i;
-    int ret;
     
     for(i=0; 1; i++) {
       const char *name;
@@ -44,20 +43,17 @@ static int format_results_librdf(http_request_t *request, librdf_query_results* 
         return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
     }
 
-    ret = handle_static_data(request, MHD_HTTP_OK, data, strlen(data), mime_type);
-
     librdf_free_uri(format_uri);
-    free(data);
-    
-    return ret;
+
+    return new_http_response(request, MHD_HTTP_OK, data, strlen(data), mime_type);
 }
 
-static int format_results_html(http_request_t *request, librdf_query_results* results)
+static http_response_t* format_results_html(http_request_t *request, librdf_query_results* results)
 {
     FILE* stream = NULL;
     char *string_buffer = NULL;
     size_t string_size = 0;
-    int i, count, ret;
+    int i, count;
 
     stream = open_memstream(&string_buffer, &string_size);
     if(!stream) {
@@ -93,18 +89,15 @@ static int format_results_html(http_request_t *request, librdf_query_results* re
     fprintf(stream, "</table>\n");
     fclose(stream);
    
-    ret = handle_html_page(request, MHD_HTTP_OK, "SPARQL Results", string_buffer);
-            
-    free(string_buffer);
-    return ret;
+    return handle_html_page(request, MHD_HTTP_OK, "SPARQL Results", string_buffer);
 }
 
-static int format_results_text(http_request_t *request, librdf_query_results* results)
+static http_response_t* format_results_text(http_request_t *request, librdf_query_results* results)
 {
     FILE* stream = NULL;
     char *string_buffer = NULL;
     size_t string_size = 0;
-    int i, count, ret;
+    int i, count;
 
     stream = open_memstream(&string_buffer, &string_size);
     if(!stream) {
@@ -140,20 +133,17 @@ static int format_results_text(http_request_t *request, librdf_query_results* re
     }
 
     fclose(stream);
-   
-    ret = handle_static_data(request, MHD_HTTP_OK, string_buffer, string_size, "text/plain");
-            
-    free(string_buffer);
-    return ret;
+
+    return new_http_response(request, MHD_HTTP_OK, string_buffer, string_size, "text/plain");
 }
 
-int handle_sparql_query(http_request_t *request)
+http_response_t* handle_sparql_query(http_request_t *request)
 {
     const char *query_string = NULL;
     const char *format = NULL;
     librdf_query* query;
     librdf_query_results* results;
-    int ret;
+    http_response_t* response;
 
     if (strcmp(request->method, MHD_HTTP_METHOD_GET)==0) {
         query_string = MHD_lookup_connection_value (request->connection, MHD_GET_ARGUMENT_KIND, "query");
@@ -187,11 +177,11 @@ int handle_sparql_query(http_request_t *request)
 
     if (format == NULL) format = DEFAULT_RESULTS_FORMAT;
     if (strcmp(format, "html")==0) {
-        ret = format_results_html(request, results);
+        response = format_results_html(request, results);
     } else if (strcmp(format, "text")==0) {
-        ret = format_results_text(request, results);
+        response = format_results_text(request, results);
     } else {
-        ret = format_results_librdf(request, results, format);
+        response = format_results_librdf(request, results, format);
     }
 
     redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
@@ -199,5 +189,5 @@ int handle_sparql_query(http_request_t *request)
     librdf_free_query_results(results);
     librdf_free_query(query);
 
-    return ret;
+    return response;
 }

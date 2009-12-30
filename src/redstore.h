@@ -51,6 +51,7 @@ typedef enum {
 
 // ------- Structures -------
 
+// FIXME: ICK
 typedef struct http_request {
     void *cls;
     struct MHD_Connection *connection;
@@ -62,8 +63,11 @@ typedef struct http_request {
     void **con_cls;
 } http_request_t;
 
-
-typedef struct MHD_Response http_response_t;
+// FIXME: ICK ICK
+typedef struct http_response {
+    struct MHD_Response *mhd_response;
+    unsigned int status;
+} http_response_t;
 
 
 // ------- Globals ---------
@@ -75,18 +79,20 @@ extern librdf_model* model;
 
 // ------- Prototypes -------
 
-int handle_sparql_query(http_request_t *request);
-int handle_homepage(http_request_t *request);
-int handle_querypage(http_request_t *request);
-int handle_graph_index(http_request_t *request);
-int handle_error(http_request_t *request, unsigned int status);
-int handle_html_page(http_request_t *request, unsigned int status, 
-                     const char* title, const char* page);
-int handle_static_data(http_request_t *request, unsigned int status,
+http_response_t* new_http_response(http_request_t *request, unsigned int status,
                        void* content, size_t content_size,
                        const char* content_type);
 
-int handle_favicon(http_request_t *request);
+http_response_t* handle_sparql_query(http_request_t *request);
+http_response_t* handle_homepage(http_request_t *request);
+http_response_t* handle_querypage(http_request_t *request);
+http_response_t* handle_graph_index(http_request_t *request);
+http_response_t* handle_error(http_request_t *request, unsigned int status);
+http_response_t* handle_redirect(http_request_t *request, char* url);
+http_response_t* handle_html_page(http_request_t *request, unsigned int status, 
+                     const char* title, char* page);
+
+http_response_t* handle_favicon(http_request_t *request);
 
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... );
 

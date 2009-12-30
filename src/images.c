@@ -1,9 +1,11 @@
+#include <stdlib.h>
+#include <string.h>
 
 #include "redstore.h"
 
-int handle_favicon(http_request_t *request)
+http_response_t* handle_favicon(http_request_t *request)
 {
-    const unsigned char data[] = {
+    const unsigned char const_data[] = {
         0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10, 
         0x10, 0x00, 0x01, 0x00, 0x04, 0x00, 0x28, 0x01, 
         0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00, 
@@ -46,6 +48,8 @@ int handle_favicon(http_request_t *request)
         0x00, 0x00, 0xe0, 0x07, 0x00, 0x00, 
     };
     
-    return handle_static_data(request, MHD_HTTP_OK,
-           (void*)data, sizeof(data), "image/x-icon");
+    void *data = malloc(sizeof(const_data));
+    memcpy(data, const_data, sizeof(const_data));
+    return new_http_response(request, MHD_HTTP_OK,
+           (void*)data, sizeof(const_data), "image/x-icon");
 }
