@@ -1,8 +1,44 @@
+Before version 0.1
+------------------
 
+* Implement fetching of graphs
+* Implement POSTing of SPARQL queries
+* Implement of adding data from browser
+  - Upload file
+  - Form submit
+  - HTTP fetch
+* Implement some of SPARQL Update
+* Implement adding/delete/updating of graphs using PUT/POST/DELETE
+* Add more information about the store to the homepage
+  - Storage name
+  - Storage type
+  - Storage options
+  - Port Number
+  - Total number of Triples
+  - Number of graphs
+  - Number of queries/requests
+  - Uptime
+  - Memory usage
+
+
+More stuff to do:
+-----------------
+
+* Documentation!
 * Implement 405 Method Not Allowed
-* Added Expiry headers to static content
+* Added Last Modified and Expiry headers to static content
+* Stream results to client instead of storing in memory first
 * Make RedStore multi-threaded
-  - only enable writing to storage when needed
+  - which objects are shared?
+  - only enable writing to storage when needed?
+* Standardise code style
+* replace open_memstream() with raptor_iostream functions
+* Output Turtle/N-Triples style terms in HTML / Text outputs
+* init.d script
+* Store date graph was last modified
+
 
 Long-term:
+----------
+
 * Add support for multiple stores
