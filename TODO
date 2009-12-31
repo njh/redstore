@@ -1,7 +1,6 @@
 Before version 0.1
 ------------------
 
-* Implement fetching of graphs
 * Implement POSTing of SPARQL queries
 * Implement of adding data from browser
   - Upload file
@@ -29,6 +28,7 @@ More stuff to do:
 
 * Documentation!
 * Implement 405 Method Not Allowed
+* Implement proper content negotiation
 * Added Last Modified and Expiry headers to static content
 * Stream results to client instead of storing in memory first
 * Make RedStore multi-threaded
@@ -37,12 +37,15 @@ More stuff to do:
 * Standardise code style
 * replace open_memstream() with raptor_iostream functions
 * Output Turtle/N-Triples style terms in HTML / Text outputs
+* Add RDF/a syntax to HTML pages
 * init.d script
+* daemontools run script
 * Store date graph was last modified
-* List supported input and output formats
 
 
 Long-term:
 ----------
 
+* Implement results 'timeout' or query effort
 * Add support for multiple stores
+

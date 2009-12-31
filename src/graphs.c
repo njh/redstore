@@ -100,18 +100,78 @@ static http_response_t* format_stream_html(http_request_t *request, librdf_strea
 }
 
 
+
+static http_response_t* format_stream_librdf(
+    http_request_t *request, librdf_stream* stream,
+    const char* serialiser_name, const char* mime_type)
+{
+    librdf_serializer* serialiser;
+    char* data = NULL;
+   
+    serialiser = librdf_new_serializer(world, serialiser_name, NULL, NULL);
+    if (!serialiser) {
+        redstore_error("Failed to create serialiser: %s", serialiser_name);
+        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+    }
+    
+    data = (char*)librdf_serializer_serialize_stream_to_string(serialiser, NULL, stream);
+    if (!data) {
+        redstore_error("Failed to serialize graph");
+        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+    }
+    
+    librdf_free_serializer(serialiser);
+
+    return new_http_response(request, MHD_HTTP_OK, data, strlen(data), mime_type);
+}
+
+
+/*
+  Return the first item in the accept header
+  FIXME: do content negotiation properly
+*/
+char* parse_accept_header(http_request_t *request)
+{
+    const char* accept_str = MHD_lookup_connection_value(request->connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT);
+    int pos=-1, i;
+    
+    if (accept_str == NULL) return NULL;
+
+    for(i=0; i<=strlen(accept_str); i++) {
+        if (accept_str[i]=='\0' || 
+            accept_str[i]==' ' ||
+            accept_str[i]==',' ||
+            accept_str[i]==';' )
+        {
+            pos = i;
+            break;
+        }
+    }
+    
+    if (pos>0) {
+        char* result = malloc(pos+1);
+        strncpy(result,accept_str,pos);
+        result[pos] = '\0';
+        return result;
+    } else {
+        return NULL;
+    }
+}
+
+
 http_response_t* handle_graph_show(http_request_t *request, char* uri)
 {
     librdf_node *context;
     librdf_stream * stream;
     http_response_t* response;
+    char *accept;
     
     context = librdf_new_node_from_uri_string(world,(unsigned char*)uri);
     if (!context) return NULL;
     
     // First check if the graph exists
     if (!librdf_model_contains_context(model, context)) {
-        redstore_error("Graph not found: %s", uri);
+        redstore_debug("Graph not found: %s", uri);
         // FIXME: display a better error message
         return handle_error(request, MHD_HTTP_NOT_FOUND);
     }
@@ -124,10 +184,28 @@ http_response_t* handle_graph_show(http_request_t *request, char* uri)
         return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
     }
 
-    response = format_stream_html(request, stream);
+    // Work out what format to return it as
+    accept = parse_accept_header(request);
+    redstore_debug("accept: %s", accept);
+    if (!accept) accept = strdup("text/html");
 
+    if (strcmp("application/rdf+xml", accept)==0) {
+        response = format_stream_librdf(request, stream, "rdfxml-abbrev", accept);
+    } else if (strcmp("application/x-turtle", accept)==0 || strcmp("text/turtle", accept)==0) {
+        response = format_stream_librdf(request, stream, "turtle", accept);
+    } else if (strcmp("application/x-ntriples", accept)==0) {
+        response = format_stream_librdf(request, stream, "ntriples", accept);
+    } else if (strcmp("application/json", accept)==0 || strcmp("text/json", accept)==0) {
+        // FIXME: why doesn't this work?
+        response = format_stream_librdf(request, stream, "json", accept);
+    } else {
+        // Default is to return HTML
+        response = format_stream_html(request, stream);
+    }
+    
     librdf_free_stream(stream);
     free(uri);
+    free(accept);
     
     return response;
 }
