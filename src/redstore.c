@@ -19,6 +19,19 @@ librdf_world* world = NULL;
 librdf_model* model = NULL;
 librdf_storage* storage = NULL;
 
+// FIXME: this should be got from Redland
+serialiser_info_t serialiser_info[] = {
+    { .name = "ntriples", .label = "N-Triples", .mime_type = "application/x-ntriples", .uri = "" },
+    { .name = "turtle", .label = "Turtle", .mime_type = "application/x-turtle", .uri = "" },
+    { .name = "turtle", .label = NULL, .mime_type = "text/turtle", .uri = "" },
+    { .name = "rdfxml-abbrev", .label = "RDF/XML (Abbreviated)", .mime_type = "application/rdf+xml", .uri = "" },
+    { .name = "rdfxml", .label = "RDF/XML", .mime_type = "application/rdf+xml", .uri = "" },
+    { .name = "json", .label = "RDF/JSON Resource-Centric", .mime_type = "application/json", .uri = "" },
+    { .name = "json", .label = NULL, .mime_type = "application/rdf+json", .uri = "" },
+    { .name = "json-triples", .label = "", .mime_type = "application/rdf+json", .uri = "" },
+    { .name = NULL }
+};
+
 
 static void termination_handler (int signum)
 {

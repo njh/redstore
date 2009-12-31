@@ -69,12 +69,20 @@ typedef struct http_response {
     unsigned int status;
 } http_response_t;
 
+// FIXME: this should be got from Redland
+typedef struct serialiser_info {
+    const char *name;
+    const char *label;
+    const char *mime_type;
+    const char *uri;
+} serialiser_info_t;
+
 
 // ------- Globals ---------
 extern librdf_world* world;
 extern librdf_storage* storage;
 extern librdf_model* model;
-
+extern serialiser_info_t serialiser_info[];
 
 
 // ------- Prototypes -------
@@ -93,6 +101,17 @@ http_response_t* handle_error(http_request_t *request, unsigned int status);
 http_response_t* handle_redirect(http_request_t *request, char* url);
 http_response_t* handle_html_page(http_request_t *request, unsigned int status, 
                      const char* title, char* page);
+
+http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str);
+http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str);
+http_response_t* format_bindings_query_result_text(http_request_t *request, librdf_query_results* results, const char* format_str);
+http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results, const char* format_str);
+
+http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stream* stream, const char* format_str);
+http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream* stream, const char* format_str);
+http_response_t* format_graph_stream_text(http_request_t *request, librdf_stream* stream, const char* format_str);
+http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream, const char* format_str);
+
 
 http_response_t* handle_favicon(http_request_t *request);
 

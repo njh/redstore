@@ -153,12 +153,11 @@ http_response_t* handle_formats_page(http_request_t *request)
 
     fprintf(iostream, "<h2>RDF Serialisers</h2>\n");
     fprintf(iostream, "<table border=\"1\">\n");
-    fprintf(iostream, "<tr><th>Name</th><th>Description</th></tr>\n");
-    for(i=0; 1; i++) {
-        const char *name, *label;
-        if(librdf_serializer_enumerate(world, i, &name, &label))
-            break;
-        fprintf(iostream, "<tr><td>%s</td><td>%s</td></tr>\n", name, label);
+    fprintf(iostream, "<tr><th>Name</th><th>Description</th><th>MIME Type</th></tr>\n");
+    for(i=0; serialiser_info[i].name; i++) {
+        if(!serialiser_info[i].label) continue;
+        fprintf(iostream, "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+                serialiser_info[i].name, serialiser_info[i].label, serialiser_info[i].mime_type);
     }
     fprintf(iostream, "</table>\n");
 
