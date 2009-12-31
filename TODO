@@ -46,6 +46,7 @@ More stuff to do:
 Long-term:
 ----------
 
+* rspec/cucumber tests
 * Implement results 'timeout' or query effort
 * Add support for multiple stores
 
