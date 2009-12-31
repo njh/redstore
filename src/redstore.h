@@ -85,6 +85,7 @@ http_response_t* new_http_response(http_request_t *request, unsigned int status,
 
 http_response_t* handle_sparql_query(http_request_t *request);
 http_response_t* handle_homepage(http_request_t *request);
+http_response_t* handle_formats_page(http_request_t *request);
 http_response_t* handle_querypage(http_request_t *request);
 http_response_t* handle_graph_index(http_request_t *request);
 http_response_t* handle_graph_show(http_request_t *request, char* url);

@@ -78,17 +78,17 @@ http_response_t* handle_redirect(http_request_t *request, char* url)
 http_response_t* handle_html_page(http_request_t *request, unsigned int status, 
                      const char* title, char* content)
 {
-    FILE* stream = NULL;
+    FILE* iostream = NULL;
     char *page_buffer = NULL;
     size_t page_size = 0;
 
-    stream = open_memstream(&page_buffer, &page_size);
-    if(!stream) {
+    iostream = open_memstream(&page_buffer, &page_size);
+    if(!iostream) {
         redstore_error("Failed to open open_memstream");
         return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
     }
     
-    fprintf(stream,
+    fprintf(iostream,
         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
         "          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
@@ -108,7 +108,7 @@ http_response_t* handle_html_page(http_request_t *request, unsigned int status,
         rasqal_version_string
     );
     
-    fclose(stream);
+    fclose(iostream);
     free(content);
 
     return new_http_response(request, status, (void*)page_buffer, page_size, "text/html");
@@ -121,9 +121,62 @@ http_response_t* handle_homepage(http_request_t *request)
         "<ul>\n"
         "<li><a href=\"/query\">SPARQL Query Page</a></li>"
         "<li><a href=\"/graphs\">Named Graphs</a></li>"
+        "<li><a href=\"/formats\">Supported Formats</a></li>"
         "</ul>\n";
 
     return handle_html_page(request, MHD_HTTP_OK, "RedStore", strdup(page));
+}
+
+http_response_t* handle_formats_page(http_request_t *request)
+{
+    FILE* iostream = NULL;
+    char *page_buffer = NULL;
+    size_t page_size = 0;
+    int i;
+
+    iostream = open_memstream(&page_buffer, &page_size);
+    if(!iostream) {
+        redstore_error("Failed to open open_memstream");
+        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+    }
+    
+    fprintf(iostream, "<h2>RDF Parsers</h2>\n");
+    fprintf(iostream, "<table border=\"1\">\n");
+    fprintf(iostream, "<tr><th>Name</th><th>Description</th></tr>\n");
+    for(i=0; 1; i++) {
+        const char *name, *label;
+        if(librdf_parser_enumerate(world, i, &name, &label))
+            break;
+        fprintf(iostream, "<tr><td>%s</td><td>%s</td></tr>\n", name, label);
+    }
+    fprintf(iostream, "</table>\n");
+
+    fprintf(iostream, "<h2>RDF Serialisers</h2>\n");
+    fprintf(iostream, "<table border=\"1\">\n");
+    fprintf(iostream, "<tr><th>Name</th><th>Description</th></tr>\n");
+    for(i=0; 1; i++) {
+        const char *name, *label;
+        if(librdf_serializer_enumerate(world, i, &name, &label))
+            break;
+        fprintf(iostream, "<tr><td>%s</td><td>%s</td></tr>\n", name, label);
+    }
+    fprintf(iostream, "</table>\n");
+
+    fprintf(iostream, "<h2>Query Result Formatters</h2>\n");
+    fprintf(iostream, "<table border=\"1\">\n");
+    fprintf(iostream, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
+    for(i=0; 1; i++) {
+        const char *name, *label, *mime_type;
+        const unsigned char *uri;
+        if(librdf_query_results_formats_enumerate(world, i, &name, &label, &uri, &mime_type))
+            break;
+        fprintf(iostream, "<tr><td>%s</td><td>%s</td><td>%s</td><td><a href=\"%s\">More Info</a></td></tr>\n", name, label, mime_type, uri);
+    }
+    fprintf(iostream, "</table>\n");
+
+    fclose(iostream);
+
+    return handle_html_page(request, MHD_HTTP_OK, "Supported Formats", page_buffer);
 }
 
 http_response_t* handle_querypage(http_request_t *request)

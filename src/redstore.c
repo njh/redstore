@@ -116,6 +116,8 @@ static int dispatcher (void *cls, struct MHD_Connection *connection,
         response = handle_querypage(request);
     } else if (strcmp(request->url, "/graphs")==0) {
         response = handle_graph_index(request);
+    } else if (strcmp(request->url, "/formats")==0) {
+        response = handle_formats_page(request);
     } else if (strlen(request->url) > 8 && strncmp(request->url, "/graphs/",8)==0) {
         response = handle_graph_show(request, strdup(&request->url[8]));
     } else if (strcmp(request->url, "/favicon.ico")==0) {
