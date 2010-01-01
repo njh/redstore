@@ -121,18 +121,18 @@ static int dispatcher (void *cls, struct MHD_Connection *connection,
     
     redstore_debug("%s: %s", method, url);
 
-    if (strcmp(request->url, "/sparql")==0) {
+    if (strcmp(request->url, "/sparql")==0 || strcmp(request->url, "/sparql/")==0) {
         response = handle_sparql_query(request);
     } else if (strcmp(request->url, "/")==0) {
         response = handle_homepage(request);
+    } else if (strlen(request->url) > 6 && strncmp(request->url, "/data/",6)==0) {
+        response = handle_graph(request, strdup(&request->url[6]));
     } else if (strcmp(request->url, "/query")==0) {
         response = handle_query_page(request);
-    } else if (strcmp(request->url, "/graphs")==0) {
+    } else if (strcmp(request->url, "/data")==0) {
         response = handle_graph_index(request);
     } else if (strcmp(request->url, "/formats")==0) {
         response = handle_formats_page(request);
-    } else if (strlen(request->url) > 8 && strncmp(request->url, "/graphs/",8)==0) {
-        response = handle_graph_show(request, strdup(&request->url[8]));
     } else if (strcmp(request->url, "/favicon.ico")==0) {
         response = handle_favicon(request);
     } else if (strlen(request->url)>1 && request->url[strlen(request->url)-1] == '/') {

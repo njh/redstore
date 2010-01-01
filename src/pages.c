@@ -120,7 +120,7 @@ http_response_t* handle_homepage(http_request_t *request)
     const char page[] = 
         "<ul>\n"
         "<li><a href=\"/query\">SPARQL Query Page</a></li>"
-        "<li><a href=\"/graphs\">Named Graphs</a></li>"
+        "<li><a href=\"/data\">Named Graphs</a></li>"
         "<li><a href=\"/formats\">Supported Formats</a></li>"
         "</ul>\n";
 

@@ -6,7 +6,6 @@ Before version 0.1
   - Upload file
   - Form submit
   - HTTP fetch
-* Implement some of SPARQL Update
 * Implement adding/delete/updating of graphs using PUT/POST/DELETE
 * Add more information about the store to the homepage
   - Storage name
@@ -21,11 +20,13 @@ Before version 0.1
 * Return error messages to the client
   - internal error - eg memory allocation
   - query errors
+* Clean up and insert GNU General Public License
 
 
 More stuff to do:
 -----------------
 
+* Add some SPARQL Update support
 * Documentation!
 * Implement 405 Method Not Allowed
 * Implement proper content negotiation
@@ -41,6 +42,7 @@ More stuff to do:
 * init.d script
 * daemontools run script
 * Store date graph was last modified
+* Query Logging
 
 
 Long-term:

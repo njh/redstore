@@ -95,12 +95,17 @@ http_response_t* handle_sparql_query(http_request_t *request);
 http_response_t* handle_homepage(http_request_t *request);
 http_response_t* handle_formats_page(http_request_t *request);
 http_response_t* handle_query_page(http_request_t *request);
-http_response_t* handle_graph_index(http_request_t *request);
-http_response_t* handle_graph_show(http_request_t *request, char* url);
+
 http_response_t* handle_error(http_request_t *request, unsigned int status);
 http_response_t* handle_redirect(http_request_t *request, char* url);
 http_response_t* handle_html_page(http_request_t *request, unsigned int status, 
                      const char* title, char* page);
+
+
+http_response_t* handle_graph_index(http_request_t *request);
+http_response_t* handle_graph_get(http_request_t *request, librdf_node *context);
+http_response_t* handle_graph_delete(http_request_t *request, librdf_node *context);
+http_response_t* handle_graph(http_request_t *request, char* url);
 
 http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str);
 http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str);
