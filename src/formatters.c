@@ -8,6 +8,54 @@
 #include "redstore.h"
 
 
+/*
+  Return the first item in the accept header
+
+  FIXME: do content negotiation properly
+*/
+static char* parse_accept_header(http_request_t *request)
+{
+    const char* accept_str = MHD_lookup_connection_value(request->connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT);
+    int pos=-1, i;
+    
+    if (accept_str == NULL) return NULL;
+
+    for(i=0; i<=strlen(accept_str); i++) {
+        if (accept_str[i]=='\0' || 
+            accept_str[i]==' '  ||
+            accept_str[i]==','  ||
+            accept_str[i]==';')
+        {
+            pos = i;
+            break;
+        }
+    }
+    
+    if (pos>0) {
+        char* result = malloc(pos+1);
+        strncpy(result,accept_str,pos);
+        result[pos] = '\0';
+        return result;
+    } else {
+        return NULL;
+    }
+}
+
+static char* get_format(http_request_t *request)
+{
+    char *format_str;
+
+    format_str = http_get_argument(request, "format");
+    redstore_debug("format_str: %s", format_str);
+    if (!format_str) {
+        format_str = parse_accept_header(request);
+        redstore_debug("accept: %s", format_str);
+    }
+    
+    return format_str;
+}
+
+
 http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stream* stream, const char* format_str)
 {
     librdf_serializer* serialiser;
@@ -88,63 +136,23 @@ http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream
 }
 
 
-/*
-  Return the first item in the accept header
-  FIXME: do content negotiation properly
-*/
-static char* parse_accept_header(http_request_t *request)
-{
-    const char* accept_str = MHD_lookup_connection_value(request->connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT);
-    int pos=-1, i;
-    
-    if (accept_str == NULL) return NULL;
-
-    for(i=0; i<=strlen(accept_str); i++) {
-        if (accept_str[i]=='\0' || 
-            accept_str[i]==' ' ||
-            accept_str[i]==',' ||
-            accept_str[i]==';' )
-        {
-            pos = i;
-            break;
-        }
-    }
-    
-    if (pos>0) {
-        char* result = malloc(pos+1);
-        strncpy(result,accept_str,pos);
-        result[pos] = '\0';
-        return result;
-    } else {
-        return NULL;
-    }
-}
-
-
-http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream, const char* format_str)
+http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream)
 {
     http_response_t* response;
-    char *accept;
+    char *format_str;
 
-    if (format_str) {
-      accept = strdup(format_str);
-    } else {
-      // Work out what format to return it as
-      accept = parse_accept_header(request);
-      redstore_debug("accept: %s", accept);
-    }
-    
-    if (accept == NULL ||
-        strcmp(accept, "html")==0 ||
-        strcmp(accept, "application/xml")==0 ||
-        strcmp(accept, "text/html")==0 )
+    format_str = get_format(request);
+    if (format_str == NULL ||
+        strcmp(format_str, "html")==0 ||
+        strcmp(format_str, "application/xml")==0 ||
+        strcmp(format_str, "text/html")==0 )
     {
-        response = format_graph_stream_html(request, stream, accept);
+        response = format_graph_stream_html(request, stream, format_str);
     } else {
-        response = format_graph_stream_librdf(request, stream, accept);
+        response = format_graph_stream_librdf(request, stream, format_str);
     }
 
-    if (accept) free(accept);
+    if (format_str) free(format_str);
     
     return response;
 }
@@ -279,12 +287,13 @@ http_response_t* format_bindings_query_result_text(http_request_t *request, libr
     return new_http_response(request, MHD_HTTP_OK, string_buffer, string_size, "text/plain");
 }
 
-http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results, const char* format_str)
+http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results)
 {
     http_response_t* response;
+    char *format_str;
 
-    if (format_str == NULL) format_str = DEFAULT_RESULTS_FORMAT;
-    if (strcmp(format_str, "html")==0) {
+    format_str = get_format(request);
+    if (format_str == NULL || strcmp(format_str, "html")==0) {
         response = format_bindings_query_result_html(request, results, format_str);
     } else if (strcmp(format_str, "text")==0) {
         response = format_bindings_query_result_text(request, results, format_str);
@@ -293,6 +302,8 @@ http_response_t* format_bindings_query_result(http_request_t *request, librdf_qu
     }
 
     redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
+    
+    if (format_str) free(format_str);
     
     return response;
 }

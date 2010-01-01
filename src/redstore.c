@@ -27,8 +27,7 @@ serialiser_info_t serialiser_info[] = {
     { .name = "rdfxml-abbrev", .label = "RDF/XML (Abbreviated)", .mime_type = "application/rdf+xml", .uri = "" },
     { .name = "rdfxml", .label = "RDF/XML", .mime_type = "application/rdf+xml", .uri = "" },
     { .name = "json", .label = "RDF/JSON Resource-Centric", .mime_type = "application/json", .uri = "" },
-    { .name = "json", .label = NULL, .mime_type = "application/rdf+json", .uri = "" },
-    { .name = "json-triples", .label = "", .mime_type = "application/rdf+json", .uri = "" },
+    { .name = "json-triples", .label = "RDF/JSON Triples", .mime_type = "application/json", .uri = "" },
     { .name = NULL }
 };
 

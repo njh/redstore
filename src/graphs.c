@@ -85,7 +85,7 @@ http_response_t* handle_graph_show(http_request_t *request, char* uri)
         return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
     }
     
-    response = format_graph_stream(request, stream, NULL);
+    response = format_graph_stream(request, stream);
 
     librdf_free_stream(stream);
     free(uri);

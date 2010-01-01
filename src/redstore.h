@@ -105,12 +105,12 @@ http_response_t* handle_html_page(http_request_t *request, unsigned int status,
 http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str);
 http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str);
 http_response_t* format_bindings_query_result_text(http_request_t *request, librdf_query_results* results, const char* format_str);
-http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results, const char* format_str);
+http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results);
 
 http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stream* stream, const char* format_str);
 http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream* stream, const char* format_str);
 http_response_t* format_graph_stream_text(http_request_t *request, librdf_stream* stream, const char* format_str);
-http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream, const char* format_str);
+http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream);
 
 
 http_response_t* handle_favicon(http_request_t *request);
@@ -118,6 +118,7 @@ http_response_t* handle_favicon(http_request_t *request);
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... );
 
 char* escape_uri(char *arg);
+char* http_get_argument(http_request_t *request, const char *name);
 
 #ifndef HAVE_OPEN_MEMSTREAM
 FILE *open_memstream(char **ptr, size_t *sizeloc);

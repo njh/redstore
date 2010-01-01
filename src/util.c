@@ -39,6 +39,20 @@ char* escape_uri(char *arg)
     return escaped;
 }
 
+char* http_get_argument(http_request_t *request, const char *name)
+{
+    if (strcmp(request->method, MHD_HTTP_METHOD_GET)==0) {
+        const char *value = MHD_lookup_connection_value(request->connection, MHD_GET_ARGUMENT_KIND, name);
+        if (value) return strdup(value);
+        else return NULL;
+    } else if (strcmp(request->method, MHD_HTTP_METHOD_POST)==0) {
+        // FIXME: implement this
+        return NULL;
+    } else {
+        return NULL;
+    }
+}
+
 
 /*
     BSD-compatible implementation of open_memstream 
