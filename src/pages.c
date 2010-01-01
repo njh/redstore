@@ -178,7 +178,7 @@ http_response_t* handle_formats_page(http_request_t *request)
     return handle_html_page(request, MHD_HTTP_OK, "Supported Formats", page_buffer);
 }
 
-http_response_t* handle_querypage(http_request_t *request)
+http_response_t* handle_query_page(http_request_t *request)
 {
     const char page[] = 
         "<form action=\"../sparql\" method=\"get\">\n"

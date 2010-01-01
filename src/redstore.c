@@ -126,7 +126,7 @@ static int dispatcher (void *cls, struct MHD_Connection *connection,
     } else if (strcmp(request->url, "/")==0) {
         response = handle_homepage(request);
     } else if (strcmp(request->url, "/query")==0) {
-        response = handle_querypage(request);
+        response = handle_query_page(request);
     } else if (strcmp(request->url, "/graphs")==0) {
         response = handle_graph_index(request);
     } else if (strcmp(request->url, "/formats")==0) {
