@@ -26,6 +26,7 @@ serialiser_info_t serialiser_info[] = {
     { .name = "turtle", .label = NULL, .mime_type = "text/turtle", .uri = "" },
     { .name = "rdfxml-abbrev", .label = "RDF/XML (Abbreviated)", .mime_type = "application/rdf+xml", .uri = "" },
     { .name = "rdfxml", .label = "RDF/XML", .mime_type = "application/rdf+xml", .uri = "" },
+    { .name = "dot", .label = "GraphViz DOT format", .mime_type = "text/vnd.graphviz", .uri = "" },
     { .name = "json", .label = "RDF/JSON Resource-Centric", .mime_type = "application/json", .uri = "" },
     { .name = "json-triples", .label = "RDF/JSON Triples", .mime_type = "application/json", .uri = "" },
     { .name = NULL }
