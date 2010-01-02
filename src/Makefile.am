@@ -11,3 +11,6 @@ redstore_SOURCES = \
   query.c \
   images.c \
   util.c
+
+noinst_PROGRAMS = test_httpd
+test_httpd_SOURCES = test_httpd.c httpd.c httpd.h
