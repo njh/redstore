@@ -3,11 +3,10 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "httpd.h"
+#include "nano_httpd.h"
 
 
 #define DEFAULT_PORT      "8080"
-#define DEFAULT_BACKLOG   5
 
 int running = 1;
 
@@ -63,7 +62,12 @@ main(int argc, char **argv)
 
   server = http_new_server(sopt_host, sopt_service, sopt_family);
   if (!server) {
-      fprintf(stderr, "Failed to start HTTP server.\n");
+      fprintf(stderr, "Failed to initialise HTTP server.\n");
+			exit(EXIT_FAILURE);
+  }
+
+  if (http_server_listen(server, sopt_host, sopt_service, sopt_family)) {
+      fprintf(stderr, "Failed to create HTTP socket.\n");
 			exit(EXIT_FAILURE);
   }
 
