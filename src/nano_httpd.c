@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 #include <errno.h>
 #include <sys/types.h>
@@ -16,6 +17,396 @@
 #include "nano_httpd.h"
 
 
+void http_message_send_headers(http_message_t* message, FILE* socket)
+{
+    int i;
+    for (i=0;i<message->header_count; i++) {
+      fprintf(socket, "%s: %s\r\n", message->headers[i].key, message->headers[i].value);
+    }
+}
+
+void http_message_add_header(http_message_t* message, const char* key, const char* value)
+{
+    int i = message->header_count;
+
+    // FIXME: add value if header already exists
+
+    // Allocate memory for the new header
+    message->header_count++;
+    message->headers = realloc(message->headers, message->header_count * sizeof(http_header_t));
+    
+    // Store the key-value pair
+    message->headers[i].key = strdup(key);
+    message->headers[i].value = strdup(value);
+}
+
+char* http_message_get_header(http_message_t* message, const char* key)
+{
+    int i;
+    for (i=0;i<message->header_count; i++) {
+      if (strcasecmp(key, message->headers[i].key)==0)
+          return strdup(message->headers[i].value);
+    }
+    return NULL;
+}
+
+
+void http_message_parse_header(http_message_t* message, const char* input)
+{
+    char *line, *ptr, *key, *value;
+
+    // FIXME: is there whitespace at the start?
+    
+    line = strdup(input);
+    key = line;
+    for (ptr = line; *ptr && *ptr != ':'; ptr++)
+        continue;
+    *ptr++ = '\0';
+
+    // Skip whitespace
+    while(isspace(*ptr))
+        ptr++;
+
+    value = ptr;
+
+    http_message_add_header(message, key, value);
+    
+    free(line);
+}
+
+void http_free_message(http_message_t* message)
+{
+  int i;
+  
+  for(i=0; i<message->header_count; i++) {
+    if (message->headers[i].key) free(message->headers[i].key);
+    if (message->headers[i].value) free(message->headers[i].value);
+  }
+	
+	free(message);
+}
+
+void http_free_response(http_response_t* response)
+{
+	if (response->status_message) free(response->status_message);
+	if (response->content_buffer) free(response->content_buffer);
+
+	http_free_message(&response->message);
+}
+
+http_response_t* http_new_response()
+{
+    http_response_t* response = malloc(sizeof(http_response_t));
+    if (!response) {
+        perror("failed to allocate memory for http_response_t");
+        return NULL;
+    } else {
+        memset(response, 0, sizeof(http_response_t));
+    }
+		
+    return response;
+}
+
+http_response_t* http_new_response_with_options(int status, char* message)
+{
+    http_response_t* response = http_new_response();
+    if (response) {
+		response->status_code = status;
+		
+		if (message==NULL) {
+			switch(status) {
+				case 200: message = "OK"; break;
+				case 201: message = "Created"; break;
+				case 202: message = "Accepted"; break;
+				case 204: message = "No Content"; break;
+				case 301: message = "Moved Permanently"; break;
+				case 302: message = "Moved Temporarily"; break;
+				case 304: message = "Not Modified"; break;
+				case 400: message = "Bad Request"; break;
+				case 401: message = "Unauthorized"; break;
+				case 403: message = "Forbidden"; break;
+				case 404: message = "Not Found"; break;
+				case 500: message = "Internal Server Error"; break;
+				case 501: message = "Not Implemented"; break;
+				case 502: message = "Bad Gateway"; break;
+				case 503: message = "Service Unavailable"; break;
+				default: message = "Unknown"; break;
+			}
+		}
+		response->status_message = strdup(message);
+    }
+		
+    return response;
+}
+
+void http_response_content_append(http_response_t* response, char* string)
+{
+	// Does the buffer already exist?
+	if (!response->content_buffer) {
+		response->content_buffer_size = BUFSIZ + strlen(string);
+		response->content_buffer = malloc(response->content_buffer_size);
+		response->content_length = 0;
+	}
+
+	// Is the buffer big enough?
+	if (response->content_buffer_size - response->content_length < strlen(string)) {
+		response->content_buffer_size += strlen(string) + BUFSIZ;
+		response->content_buffer = realloc(response->content_buffer, response->content_buffer_size);
+	}
+	
+	// Perform the append
+	strcat(response->content_buffer + response->content_length, string);
+	response->content_length += strlen(string);
+}
+
+http_response_t*  http_response_error_page(int code, char* explanation)
+{
+	http_response_t* response = http_new_response_with_options(code, NULL);
+	char *code_str = malloc(BUFSIZ);
+
+	// FIXME: check for memory allocation error
+
+	// FIXME: assert(code>=100 && code<1000);
+	snprintf(code_str, BUFSIZ, "%d ", code);
+
+  http_message_add_header(&response->message, "Content-Type", "text/html");
+  http_response_content_append(response, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
+	http_response_content_append(response, "<html><head><title>");
+	http_response_content_append(response, code_str);
+	http_response_content_append(response, response->status_message);
+	http_response_content_append(response, "</title></head>\n");
+	http_response_content_append(response, "<body><h1>");
+	http_response_content_append(response, code_str);
+	http_response_content_append(response, response->status_message);
+	http_response_content_append(response, "</h1>\n");
+	
+	if (explanation) {
+		http_response_content_append(response, "<p>");
+		http_response_content_append(response, explanation);
+		http_response_content_append(response, "</p>\n");
+	}
+	http_response_content_append(response, "</body></html>\n");
+	
+	free(code_str);
+	
+	return response;
+}
+
+
+static char* http_request_get_line(http_request_t *request)
+{
+	char *buffer = malloc(BUFSIZ);
+	int buffer_size = BUFSIZ;
+	int buffer_count = 0;
+	int c;
+
+	// FIXME: check memory was allocated
+	
+	buffer[0] = '\0';
+
+	while (1) {
+		// FIXME: is fgetc really slow way of doing things?
+		int c = fgetc(request->socket);
+		if (c<=0) {
+			free(buffer);
+			return NULL;
+		}
+
+		if (c == '\r') {
+			buffer[buffer_count] = '\0';
+		} else if (c == '\n') {
+			buffer[buffer_count] = '\0';
+			break;
+		} else {
+			buffer[buffer_count] = c;
+		}
+		
+		buffer_count++;
+		
+		// Expand buffer ?
+		if (buffer_count > (buffer_size - 1)) {
+			buffer_size *= 2;
+			buffer = realloc(buffer, buffer_size);
+			// FIXME: check memory was allocated
+		}
+	}
+
+	return buffer;
+}
+
+
+http_request_t* http_new_request()
+{
+    http_request_t* request = malloc(sizeof(http_request_t));
+    if (!request) {
+        perror("failed to allocate memory for http_request_t");
+        return NULL;
+    } else {
+        memset(request, 0, sizeof(http_request_t));
+    }
+		
+    return request;
+}
+
+void http_free_request(http_request_t* request)
+{
+	if (request->method) free(request->method);
+	if (request->url) free(request->url);
+	if (request->version) free(request->version);
+	
+	if (request->socket) fclose(request->socket);
+
+	http_free_message(&request->message);
+}
+
+
+static int http_read_request_line(http_request_t *request)
+{
+	char *line, *ptr;
+	char *method = NULL;
+	char *url = NULL;
+	char *version = NULL;
+	
+	line = http_request_get_line(request);
+	if (line == NULL || strlen(line) == 0) {
+		// FAIL!
+		return 400;
+	}
+
+	// Skip whitespace at the start
+	for (ptr = line; isspace(*ptr); ptr++)
+		continue;
+		
+	// Find the end of the method
+	method = ptr;
+	while (isalpha(*ptr))
+		ptr++;
+	*ptr++ = '\0';
+
+	// Find the start of the url
+	while (isspace(*ptr) && *ptr != '\n')
+		ptr++;
+	if (*ptr == '\n' || *ptr == '\0') {
+		free(line);
+		return 400;
+	}
+	url = ptr;
+
+	// Find the end of the url
+	ptr = &url[strlen(url)];
+	while (isspace(*ptr))
+		ptr--;
+	*ptr = '\0';
+	while (!isspace(*ptr) && ptr > url)
+		ptr--;
+	
+	// Is there a version string at the end?
+	if (ptr > url && strncasecmp("HTTP/",&ptr[1],5)==0) {
+		version = &ptr[6];
+		while (isspace(*ptr) && ptr > url)
+			ptr--;
+		ptr[1] = '\0';
+	} else {
+		version = "0.9";
+	}
+	
+	// Is the URL valid?
+	if (strlen(url)==0) {
+		free(line);
+		return 400;
+	}
+
+	request->method = strdup(method);
+	request->url = strdup(url);
+	request->version = strdup(version);
+
+	free(line);
+
+	// Success
+	return 0;
+}
+
+static int http_read_request(http_request_t* request)
+{
+	if (http_read_request_line(request)) {
+		// FIXME: return with 400
+		return 400;
+	}
+
+	printf("%s: %s\n", request->method, request->url);
+
+	if (strncmp(request->version, "0.9", 3)) {
+		// Read in the headers
+		while(!feof(request->socket)) {
+			char* line = http_request_get_line(request);
+			if (line == NULL || strlen(line)==0) break;
+			http_message_parse_header(&request->message, line);
+			free(line);
+		}
+	}
+
+    return 0;
+}
+
+
+int http_request_send_response(http_request_t *request, http_response_t *response)
+{
+  static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
+  time_t timer = time(NULL);
+  char date_str[80];
+
+  strftime(date_str, sizeof(date_str), RFC1123FMT, gmtime(&timer));
+  http_message_add_header(&response->message, "Date", date_str);
+  http_message_add_header(&response->message, "Connection", "Close");
+  
+  if (response->content_length) {
+    // FIXME: must be better way to do int to string
+    char *length_str = malloc(BUFSIZ);
+    snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
+    http_message_add_header(&response->message, "Content-Length", length_str);
+    free(length_str);
+  }
+
+	if (strncmp(request->version, "0.9", 3)) {
+		fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status_code, response->status_message);
+		http_message_send_headers(&response->message, request->socket);
+		fputs("\r\n", request->socket);
+	}
+	
+	if (response->content_buffer) {
+		fputs(response->content_buffer, request->socket);
+	}
+	
+	request->response_sent = 1;
+}
+
+
+static int http_request_process(FILE* file /*, client address */)
+{
+	http_request_t* request = http_new_request();
+	http_response_t* response = NULL;
+
+	if (!request) return -1;
+	request->socket = file;
+	// FIXME: store client address
+	
+	if (http_read_request(request)) {
+    	response = http_response_error_page(400, NULL);
+	} else {
+    	response = http_response_error_page(200, "Everything is OK");
+    	printf("method: %s\n", request->method);
+    	printf("url: %s\n", request->url);
+    	printf("version: %s\n", request->version);
+   	}
+   	
+   	// Send response
+   	http_request_send_response(request, response);
+
+    http_free_request(request);
+
+    // Success
+    return 0;
+}
 
 
 http_server_t* http_new_server()
@@ -116,315 +507,6 @@ int http_server_listen(http_server_t* server, const char* host, const char* port
 	return 0;
 }
 
-
-void http_free_response(http_response_t* response)
-{
-	if (response->message) free(response->message);
-	if (response->content_buffer) free(response->content_buffer);
-	
-	free(response);
-}
-
-http_response_t* http_new_response()
-{
-    http_response_t* response = malloc(sizeof(http_response_t));
-    if (!response) {
-        perror("failed to allocate memory for http_response_t");
-        return NULL;
-    } else {
-        memset(response, 0, sizeof(http_response_t));
-    }
-		
-    return response;
-}
-
-http_response_t* http_new_response_with_options(int status, char* message)
-{
-    http_response_t* response = http_new_response();
-    if (response) {
-		response->status = status;
-		
-		if (message==NULL) {
-			switch(status) {
-				case 200: message = "OK"; break;
-				case 201: message = "Created"; break;
-				case 202: message = "Accepted"; break;
-				case 204: message = "No Content"; break;
-				case 301: message = "Moved Permanently"; break;
-				case 302: message = "Moved Temporarily"; break;
-				case 304: message = "Not Modified"; break;
-				case 400: message = "Bad Request"; break;
-				case 401: message = "Unauthorized"; break;
-				case 403: message = "Forbidden"; break;
-				case 404: message = "Not Found"; break;
-				case 500: message = "Internal Server Error"; break;
-				case 501: message = "Not Implemented"; break;
-				case 502: message = "Bad Gateway"; break;
-				case 503: message = "Service Unavailable"; break;
-				default: message = "Unknown"; break;
-			}
-		}
-		response->message = strdup(message);
-    }
-		
-    return response;
-}
-
-void http_response_content_append(http_response_t* response, char* string)
-{
-	// Does the buffer already exist?
-	if (!response->content_buffer) {
-		response->content_buffer_size = BUFSIZ + strlen(string);
-		response->content_buffer = malloc(response->content_buffer_size);
-		response->content_length = 0;
-	}
-
-	// Is the buffer big enough?
-	if (response->content_buffer_size - response->content_length < strlen(string)) {
-		response->content_buffer_size += strlen(string) + BUFSIZ;
-		response->content_buffer = realloc(response->content_buffer, response->content_buffer_size);
-	}
-	
-	// Perform the append
-	strcat(response->content_buffer + response->content_length, string);
-	response->content_length += strlen(string);
-}
-
-http_response_t*  http_response_error_page(int code, char* explanation)
-{
-	http_response_t* response = http_new_response_with_options(code, NULL);
-	char *code_str = malloc(BUFSIZ);
-
-	// FIXME: check for memory allocation error
-
-	// FIXME: assert(code>=100 && code<1000);
-	snprintf(code_str, BUFSIZ, "%d ", code);
-
-	http_response_content_append(response, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-	http_response_content_append(response, "<html><head><title>");
-	http_response_content_append(response, code_str);
-	http_response_content_append(response, response->message);
-	http_response_content_append(response, "</title></head>\n");
-	http_response_content_append(response, "<body><h1>");
-	http_response_content_append(response, code_str);
-	http_response_content_append(response, response->message);
-	http_response_content_append(response, "</h1>\n");
-	
-	if (explanation) {
-		http_response_content_append(response, "<p>");
-		http_response_content_append(response, explanation);
-		http_response_content_append(response, "</p>\n");
-	}
-	http_response_content_append(response, "</body></html>\n");
-	
-	free(code_str);
-	
-	return response;
-}
-
-
-static char* http_request_get_line(http_request_t *request)
-{
-	char *buffer = malloc(BUFSIZ);
-	int buffer_size = BUFSIZ;
-	int buffer_count = 0;
-	int c;
-
-	// FIXME: check memory was allocated
-	
-	buffer[0] = '\0';
-
-	while (1) {
-		// FIXME: is fgetc really slow way of doing things?
-		int c = fgetc(request->socket);
-		if (c<=0) {
-			free(buffer);
-			return NULL;
-		}
-
-		if (c == '\r') {
-			buffer[buffer_count] = '\0';
-		} else if (c == '\n') {
-			buffer[buffer_count] = '\0';
-			break;
-		} else {
-			buffer[buffer_count] = c;
-		}
-		
-		buffer_count++;
-		
-		// Expand buffer ?
-		if (buffer_count > (buffer_size - 1)) {
-			buffer_size *= 2;
-			buffer = realloc(buffer, buffer_size);
-			// FIXME: check memory was allocated
-		}
-	}
-
-	return buffer;
-}
-
-
-http_request_t* http_new_request()
-{
-    http_request_t* request = malloc(sizeof(http_request_t));
-    if (!request) {
-        perror("failed to allocate memory for http_request_t");
-        return NULL;
-    } else {
-        memset(request, 0, sizeof(http_request_t));
-    }
-		
-    return request;
-}
-
-void http_free_request(http_request_t* request)
-{
-	if (request->method) free(request->method);
-	if (request->url) free(request->url);
-	if (request->version) free(request->version);
-	
-	if (request->socket) fclose(request->socket);
-	
-	free(request);
-}
-
-
-static int http_read_request_line(http_request_t *request)
-{
-	char *line, *ptr;
-	char *method = NULL;
-	char *url = NULL;
-	char *version = NULL;
-	
-	line = http_request_get_line(request);
-	if (line == NULL || strlen(line) == 0) {
-		// FAIL!
-		return 400;
-	}
-
-	// Skip whitespace at the start
-	for (ptr = line; isspace(*ptr); ptr++)
-		continue;
-		
-	// Find the end of the method
-	method = ptr;
-	while (isalpha(*ptr))
-		ptr++;
-	*ptr++ = '\0';
-
-	// Find the start of the url
-	while (isspace(*ptr) && *ptr != '\n')
-		ptr++;
-	if (*ptr == '\n' || *ptr == '\0') {
-		free(line);
-		return 400;
-	}
-	url = ptr;
-
-	// Find the end of the url
-	ptr = &url[strlen(url)];
-	while (isspace(*ptr))
-		ptr--;
-	*ptr = '\0';
-	while (!isspace(*ptr) && ptr > url)
-		ptr--;
-	
-	// Is there a version string at the end?
-	if (ptr > url && strncasecmp("HTTP/",&ptr[1],5)==0) {
-		version = &ptr[6];
-		while (isspace(*ptr) && ptr > url)
-			ptr--;
-		ptr[1] = '\0';
-	} else {
-		version = "0.9";
-	}
-	
-	// Is the URL valid?
-	if (strlen(url)==0) {
-		free(line);
-		return 400;
-	}
-
-	request->method = strdup(method);
-	request->url = strdup(url);
-	request->version = strdup(version);
-
-	free(line);
-
-	// Success
-	return 0;
-}
-
-static int http_read_request(http_request_t* request)
-{
-	if (http_read_request_line(request)) {
-		// FIXME: return with 400
-		return 400;
-	}
-
-	printf("%s: %s\n", request->method, request->url);
-
-	if (strncmp(request->version, "0.9", 3)) {
-		// Read in the headers
-		while(!feof(request->socket)) {
-			char* line = http_request_get_line(request);
-			if (line == NULL) break;
-			if (strlen(line)==0) {
-				free(line);
-				break;
-			}
-			printf("header: %s\n", line);
-			free(line);
-		}
-	}
-
-    return 0;
-}
-
-
-int http_request_send_response(http_request_t *request, http_response_t *response)
-{
-	if (strncmp(request->version, "0.9", 3)) {
-		fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status, response->message);
-		fprintf(request->socket, "\r\n");
-	}
-	
-	if (response->content_buffer) {
-		fprintf(request->socket, response->content_buffer);
-	}
-	
-	request->response_sent = 1;
-}
-
-
-static int http_request_process(FILE* file /*, client address */)
-{
-	http_request_t* request = http_new_request();
-	http_response_t* response = NULL;
-
-	if (!request) return -1;
-	request->socket = file;
-	// FIXME: store client address
-	
-	if (http_read_request(request)) {
-    	response = http_response_error_page(400, NULL);
-	} else {
-    	response = http_response_error_page(200, "Everything is OK");
-    	printf("method: %s\n", request->method);
-    	printf("url: %s\n", request->url);
-    	printf("version: %s\n", request->version);
-   	}
-   	
-   	// Send response
-   	http_request_send_response(request, response);
-
-	http_free_request(request);
-
-	// Success
-	return 0;
-}
-
 void http_server_run(http_server_t* server)
 {
     struct sockaddr_storage ss;
@@ -512,27 +594,6 @@ char* httpd_escape_uri(char *arg)
 }
 */
 
-
-/* NOTE: content will be freed after the response is sent */
-
-/*
-http_response_t* new_http_response(http_request_t *request, unsigned int status,
-                       void* content, size_t content_size,
-                       const char* content_type)
-{
-    http_response_t* response = malloc(sizeof(response));
-    if (!response) return NULL;
-    
-    response->status = status;
-
-    // Add headers
-    MHD_add_response_header(response->mhd_response, "Content-Type", content_type);
-    //MHD_add_response_header(response->mhd_response, "Last-Modified", BUILD_TIME);
-    MHD_add_response_header(response->mhd_response, "Server", PACKAGE_NAME "/" PACKAGE_VERSION);
-
-    return response;
-}
-*/
 
 #define ERROR_MESSAGE_BUFFER_SIZE   (1024)
 

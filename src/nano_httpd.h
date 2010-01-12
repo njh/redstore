@@ -20,7 +20,19 @@ typedef struct http_route {
     const char *route;
 } http_route_t;
 
+typedef struct http_header {
+    char *key;
+    char *value;
+} http_header_t;
+
+typedef struct http_message {
+    http_header_t *headers;
+    size_t header_count;
+} http_message_t;
+
 typedef struct http_request {
+    http_message_t message;
+
     FILE* socket;
     char *url;
     char *method;
@@ -32,12 +44,13 @@ typedef struct http_request {
 } http_request_t;
 
 typedef struct http_response {
-    unsigned int status;
-    char *message;
-	char *content_buffer;
+    http_message_t message;
+
+    unsigned int status_code;
+    char *status_message;
+    char *content_buffer;
     size_t content_buffer_size;
     size_t content_length;
-    char *content_type;
 } http_response_t;
 
 
