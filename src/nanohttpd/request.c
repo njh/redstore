@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include <assert.h>
 
 #include <errno.h>
 #include <sys/types.h>
@@ -25,12 +26,14 @@ http_request_t* http_request_new()
 }
 
 
-char* http_request_get_line(http_request_t *request)
+char* http_request_read_line(http_request_t *request)
 {
     char *buffer = calloc(1, BUFSIZ);
     int buffer_size = BUFSIZ;
     int buffer_count = 0;
     int c;
+    
+    assert(request != NULL);
 
     // FIXME: check memory was allocated
     
@@ -67,14 +70,16 @@ char* http_request_get_line(http_request_t *request)
 }
 
 
-static int http_read_request_line(http_request_t *request)
+int http_request_read_status_line(http_request_t *request)
 {
     char *line, *ptr;
     char *method = NULL;
     char *url = NULL;
     char *version = NULL;
     
-    line = http_request_get_line(request);
+    assert(request != NULL);
+    
+    line = http_request_read_line(request);
     if (line == NULL || strlen(line) == 0) {
         // FAIL!
         return 400;
@@ -135,78 +140,44 @@ static int http_read_request_line(http_request_t *request)
 
 int http_request_send_response(http_request_t *request, http_response_t *response)
 {
-  static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
-  time_t timer = time(NULL);
-  char date_str[80];
-
-  strftime(date_str, sizeof(date_str), RFC1123FMT, gmtime(&timer));
-  http_headers_add(&response->headers, "Date", date_str);
-  http_headers_add(&response->headers, "Connection", "Close");
-  
-  if (response->content_length) {
-    // FIXME: must be better way to do int to string
-    char *length_str = malloc(BUFSIZ);
-    snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
-    http_headers_add(&response->headers, "Content-Length", length_str);
-    free(length_str);
-  }
-
-    if (strncmp(request->version, "0.9", 3)) {
-        fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status_code, response->status_message);
-        http_headers_send(&response->headers, request->socket);
-        fputs("\r\n", request->socket);
-    }
+    static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
+    time_t timer = time(NULL);
+    char date_str[80];
     
-    if (response->content_buffer) {
-        fputs(response->content_buffer, request->socket);
-    }
+    assert(request != NULL);
+    assert(response != NULL);
     
-    request->response_sent = 1;
-}
-
-
-int http_request_process(FILE* file /*, client address */)
-{
-    http_request_t* request = http_request_new();
-    http_response_t* response = NULL;
-
-    if (!request) return -1;
-    request->socket = file;
-    // FIXME: store client address
-    
-    if (http_read_request_line(request)) {
-        // FIXME: return with 400
-        response = http_response_error_page(400, NULL);
-    } else {
-        response = http_response_error_page(200, "Everything is OK");
-        printf("method: %s\n", request->method);
-        printf("url: %s\n", request->url);
-        printf("version: %s\n", request->version);
-
-        printf("%s: %s\n", request->method, request->url);
+    if (!request->response_sent) {
+        strftime(date_str, sizeof(date_str), RFC1123FMT, gmtime(&timer));
+        http_headers_add(&response->headers, "Date", date_str);
+        http_headers_add(&response->headers, "Connection", "Close");
+      
+        if (response->content_length) {
+            // FIXME: must be better way to do int to string
+            char *length_str = malloc(BUFSIZ);
+            snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
+            http_headers_add(&response->headers, "Content-Length", length_str);
+            free(length_str);
+        }
     
         if (strncmp(request->version, "0.9", 3)) {
-            // Read in the headers
-            while(!feof(request->socket)) {
-                char* line = http_request_get_line(request);
-                if (line == NULL || strlen(line)==0) break;
-                http_headers_parse_line(&request->headers, line);
-                free(line);
-            }
+            fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status_code, response->status_message);
+            http_headers_send(&response->headers, request->socket);
+            fputs("\r\n", request->socket);
         }
+        
+        if (response->content_buffer) {
+            fputs(response->content_buffer, request->socket);
+        }
+        
+        request->response_sent = 1;
     }
-
-    // Send response
-    http_request_send_response(request, response);
-
-    http_request_free(request);
-
-    // Success
-    return 0;
 }
 
 void http_request_free(http_request_t* request)
 {
+    assert(request != NULL);
+
     if (request->method) free(request->method);
     if (request->url) free(request->url);
     if (request->version) free(request->version);

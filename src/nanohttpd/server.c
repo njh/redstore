@@ -35,6 +35,7 @@ http_server_t* http_server_new()
         for (i=0; i<FD_SETSIZE; i++) {
             server->sockets[i] = -1;
         }
+        server->signature = NULL;
     }
         
     return server;
@@ -114,7 +115,7 @@ int http_server_listen(http_server_t* server, const char* host, const char* port
     return 0;
 }
 
-void http_server_add_handler(http_server_t *server, const char* method, const char* path, http_handler_func func)
+void http_server_add_handler(http_server_t *server, const char* method, const char* path, http_handler_func func, void *user_data)
 {
     http_handler_t *handler = calloc(1, sizeof(http_handler_t));
     http_handler_t *it;
@@ -127,6 +128,7 @@ void http_server_add_handler(http_server_t *server, const char* method, const ch
     handler->method = strdup(method);
     handler->path = strdup(path);
     handler->func = func;
+    handler->user_data = user_data;
     handler->next = NULL;
     
     // append the new method to the list
@@ -147,6 +149,8 @@ void http_server_run(http_server_t* server)
     int nfds = server->socket_max + 1;
     fd_set rfd;
     int i, m;
+    
+    assert(server != NULL);
 
     FD_ZERO(&rfd);
     for (i = 0; i < server->socket_count; i++)
@@ -171,7 +175,7 @@ void http_server_run(http_server_t* server)
             if (fork() == 0) {
                 FILE* file = fdopen(cs, "r+");
                 close(server->sockets[i]);
-                http_request_process(file);
+                http_server_handle_request(server, file);
                 fclose(file);
                 exit(EXIT_SUCCESS);
             }
@@ -180,11 +184,86 @@ void http_server_run(http_server_t* server)
     }
 }
 
+int http_server_handle_request(http_server_t* server, FILE* file /*, client address */)
+{
+    http_request_t *request = http_request_new();
+    http_response_t *response = NULL;
+    http_handler_t *it;
+    
+    assert(server != NULL);
+    assert(file != NULL);
+
+    if (!request) return -1;
+    request->socket = file;
+    // FIXME: store client address
+    
+    if (http_request_read_status_line(request)) {
+        // Invalid request
+        response = http_response_error_page(400, NULL);
+    } else {
+        if (strncmp(request->version, "0.9", 3)) {
+            // Read in the headers
+            while(!feof(request->socket)) {
+                char* line = http_request_read_line(request);
+                if (line == NULL || strlen(line)==0) break;
+                http_headers_parse_line(&request->headers, line);
+                free(line);
+            }
+        }
+    }
+    
+    // Dispatch the request
+    if (!response) {
+        printf("Request: %s %s\n", request->method, request->url);
+        for (it = server->handlers; it; it = it->next) {
+            if (strcasecmp(it->method, request->method)==0 && 
+                strcasecmp(it->path, request->url)==0)
+            {
+                response = it->func(request, it->user_data);
+            }
+        }
+    }
+    
+    // No response?
+    if (!response) {
+        response = http_response_error_page(404, NULL);
+    }
+
+    // Send response
+    if (server->signature)
+        http_headers_add(&response->headers, "Server", server->signature);
+    http_request_send_response(request, response);
+
+    http_request_free(request);
+    http_response_free(response);
+
+    // Success
+    return 0;
+}
+
+void http_server_set_signature(http_server_t* server, const char* signature)
+{
+    assert(server != NULL);
+    assert(signature != NULL);
+
+    if (server->signature)
+        free(server->signature);
+    server->signature = strdup(signature);
+}
+
+
+const char* http_server_get_signature(http_server_t* server)
+{
+    assert(server != NULL);
+    return server->signature;
+}
 
 void http_server_free(http_server_t* server)
 {
     http_handler_t *it, *next;
     int i;
+
+    assert(server != NULL);
 
     for (i=0;i<server->socket_count; i++) {
         close(server->sockets[i]);
@@ -196,6 +275,9 @@ void http_server_free(http_server_t* server)
         free(it->path);
         free(it);
     }
+
+    if (server->signature)
+        free(server->signature);
 
     free(server);
 }

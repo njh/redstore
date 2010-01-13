@@ -21,8 +21,11 @@
 void http_headers_send(http_header_t** first, FILE* socket)
 {
     http_header_t* it;
+
+    assert(first != NULL);
+    assert(socket != NULL);
     
-    for (it = *first; it && it->next; it = it->next) {
+    for (it = *first; it; it = it->next) {
         fprintf(socket, "%s: %s\r\n", it->key, it->value);
     }
 }
@@ -55,8 +58,11 @@ void http_headers_add(http_header_t** first, const char* key, const char* value)
 char* http_headers_get(http_header_t** first, const char* key)
 {
     http_header_t* it;
+
+    assert(first != NULL);
+    assert(key != NULL);
     
-    for (it = *first; it && it->next; it = it->next) {
+    for (it = *first; it; it = it->next) {
         if (strcasecmp(key, it->key)==0)
             return strdup(it->value);
     }
@@ -69,6 +75,8 @@ void http_headers_parse_line(http_header_t** first, const char* input)
 {
     char *line, *ptr, *key, *value;
 
+    assert(first != NULL);
+    assert(input != NULL);
     // FIXME: is there whitespace at the start?
     
     line = strdup(input);
@@ -91,6 +99,8 @@ void http_headers_parse_line(http_header_t** first, const char* input)
 void http_headers_free(http_header_t** first)
 {
     http_header_t *it, *next;
+
+    assert(first != NULL);
 
     for (it = *first; it; it = next) {
         next = it->next;

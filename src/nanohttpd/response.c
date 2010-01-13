@@ -121,6 +121,8 @@ http_response_t* http_response_error_page(int code, const char* explanation)
 
 void http_response_free(http_response_t* response)
 {
+    assert(response != NULL);
+
     if (response->status_message) free(response->status_message);
     if (response->content_buffer) free(response->content_buffer);
 

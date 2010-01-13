@@ -23,7 +23,7 @@ print_help(char *pname)
 }
 
 
-http_response_t *handle_homepage(http_request_t *request)
+http_response_t *handle_homepage(http_request_t *request, void *user_data)
 {
     http_response_t* response = http_response_new(200, NULL);
     const char* page =
@@ -82,7 +82,8 @@ main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
   
-    http_server_add_handler(server, "GET", "/", handle_homepage);
+    http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
+    http_server_set_signature(server, "test_nanohttpd/0.1");
 
     if (http_server_listen(server, sopt_host, sopt_service, sopt_family)) {
         fprintf(stderr, "Failed to create HTTP socket.\n");
