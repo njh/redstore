@@ -137,7 +137,6 @@ int http_request_read_status_line(http_request_t *request)
 		request->query_string = strdup(&ptr[1]);
 	}
     request->path = http_url_unescape(url);
-    // FIXME: http_url_unescape can return NULL
 
     free(line);
 

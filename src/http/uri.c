@@ -37,12 +37,14 @@ char* http_url_unescape(const char* escaped)
 			    (ch1 = hex_decode(escaped[i + 1])) == -1 || 
 				(ch2 = hex_decode(escaped[i + 2])) == -1)
 			{
-				free(unescaped);
-				return NULL;
+				// Pass invalid escape sequences straight through
+				*ptr++ = escaped[i];
+			} else {
+				// Decode hex
+				*ptr++ = ch1 * 16 + ch2;
+				i += 2;
 			}
-			*ptr++ = ch1 * 16 + ch2;
-			i += 2;
-		} else if (escaped[i] == ' ') {
+		} else if (escaped[i] == '+') {
 			*ptr++ = ' ';
     	} else {
 			*ptr++ = escaped[i];
