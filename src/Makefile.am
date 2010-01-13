@@ -12,5 +12,4 @@ redstore_SOURCES = \
   images.c \
   util.c
 
-noinst_PROGRAMS = test_nano_httpd
-test_nano_httpd_SOURCES = test_nano_httpd.c nano_httpd.c nano_httpd.h
+SUBDIRS = nanohttpd
