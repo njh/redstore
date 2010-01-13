@@ -213,10 +213,10 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     
     // Dispatch the request
     if (!response) {
-        printf("Request: %s %s\n", request->method, request->url);
+        printf("Request: %s %s\n", request->method, request->path);
         for (it = server->handlers; it; it = it->next) {
-            if (strcasecmp(it->method, request->method)==0 && 
-                strcasecmp(it->path, request->url)==0)
+            if ((strcmp(it->method, "*")==0 || strcasecmp(it->method, request->method)==0) && 
+                strcasecmp(it->path, request->path)==0)
             {
                 response = it->func(request, it->user_data);
             }
@@ -281,39 +281,6 @@ void http_server_free(http_server_t* server)
     free(server);
 }
 
-
-/*
-char* httpd_escape_uri(char *arg)
-{ 
-    FILE* stream = NULL;
-    char *escaped = NULL;
-    size_t escaped_size = 0;
-    int i; 
-
-    stream = open_memstream(&escaped, &escaped_size);
-    if(!stream) return NULL;
-
-    for (i = 0; arg[i]; i++) {
-        char c = arg[i];
-        if (c == ' ') {
-            fputc('+', stream); 
-        } else if (
-            (c == 0x2D) || (c == 0x2E) || // Hyphen-Minus, Full Stop
-            ((0x30 <= c) && (c <= 0x39)) || // Digits [0-9]
-            ((0x41 <= c) && (c <= 0x5A)) || // Uppercase [A-Z]
-            ((0x61 <= c) && (c <= 0x7A))    // Lowercase [a-z]
-        ) { 
-            fputc(c, stream); 
-        } else {
-            fprintf(stream, "%%%02X", c);
-        }
-    }
-    
-    fclose(stream);
-    
-    return escaped;
-}
-*/
 
 
 #define ERROR_MESSAGE_BUFFER_SIZE   (1024)

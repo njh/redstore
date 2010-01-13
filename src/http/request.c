@@ -129,6 +129,15 @@ int http_request_read_status_line(http_request_t *request)
     request->method = strdup(method);
     request->url = strdup(url);
     request->version = strdup(version);
+    
+    // Separate the path from the query string
+    for(ptr = url; *ptr && *ptr != '?'; ptr++);
+	if (*ptr == '?') {
+		*ptr = '\0';
+		request->query_string = strdup(&ptr[1]);
+	}
+    request->path = http_url_unescape(url);
+    // FIXME: http_url_unescape can return NULL
 
     free(line);
 
@@ -179,6 +188,8 @@ void http_request_free(http_request_t* request)
     if (request->method) free(request->method);
     if (request->url) free(request->url);
     if (request->version) free(request->version);
+    if (request->path) free(request->path);
+    if (request->query_string) free(request->query_string);
     
     if (request->socket) fclose(request->socket);
 

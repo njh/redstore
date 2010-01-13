@@ -52,7 +52,9 @@ http_response_t* http_response_new(int code, const char* message)
 void http_response_content_append(http_response_t* response, const char* string)
 {
     assert(response != NULL);
-    assert(string != NULL);
+    
+    if (string == NULL || strlen(string) == 0)
+    	return;
 
     // Does the buffer already exist?
     if (!response->content_buffer) {

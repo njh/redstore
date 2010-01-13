@@ -20,6 +20,9 @@ typedef struct http_request {
     char *version;
     void* user_data;
     
+    char* path;
+    char* query_string;
+    
     int response_sent;
     
 } http_request_t;
@@ -84,4 +87,7 @@ const char* http_server_get_signature(http_server_t* server);
 void http_server_free(http_server_t* server);
 
 
-//char* http_uri_escape(char *arg);
+char* http_url_unescape(const char* escaped);
+
+
+

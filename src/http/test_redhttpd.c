@@ -27,13 +27,39 @@ http_response_t *handle_homepage(http_request_t *request, void *user_data)
 {
     http_response_t* response = http_response_new(200, NULL);
     const char* page =
-        "<!DOCTYPE HTML PUBLIC \"-//BBSW//DTD Compact HTML 2.0//EN\">"
         "<html><head><title>Homepage</title></head>"
         "<body><h1>Homepage</h1>"
         "<p>This is the homepage.</p>"
-        "</html>";
+        "</body></html>";
 
     http_response_set_content(response, page, strlen(page), "text/html");
+    
+    return response;
+}
+
+http_response_t *handle_query(http_request_t *request, void *user_data)
+{
+    http_response_t* response = http_response_new(200, NULL);
+    http_headers_add(&response->headers, "Content-Type", "text/html");
+    http_response_content_append(response, "<html><body><h1>Query Page</h1><pre>");
+    
+    http_response_content_append(response, "Method: ");
+    http_response_content_append(response, request->method);
+    http_response_content_append(response, "\n");
+
+    http_response_content_append(response, "URL:    ");
+    http_response_content_append(response, request->url);
+    http_response_content_append(response, "\n");
+    
+    http_response_content_append(response, "Path:   ");
+    http_response_content_append(response, request->path);
+    http_response_content_append(response, "\n");
+    
+    http_response_content_append(response, "Query:  ");
+    http_response_content_append(response, request->query_string);
+    http_response_content_append(response, "\n");
+
+    http_response_content_append(response, "</pre></body></html>");
     
     return response;
 }
@@ -83,7 +109,8 @@ main(int argc, char **argv)
     }
   
     http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
-    http_server_set_signature(server, "test_nanohttpd/0.1");
+    http_server_add_handler(server, "*", "/query", handle_query, NULL);
+    http_server_set_signature(server, "test_redhttpd/0.1");
 
     if (http_server_listen(server, sopt_host, sopt_service, sopt_family)) {
         fprintf(stderr, "Failed to create HTTP socket.\n");
