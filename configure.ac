@@ -17,6 +17,7 @@ dnl ############# Compiler and tools Checks
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_PROG_RANLIB
 
 AC_C_BIGENDIAN
 AC_C_INLINE
@@ -78,5 +79,4 @@ AC_SUBST(REDLAND_CFLAGS)
 AC_SUBST(REDLAND_LIBS)
 
 
-AC_OUTPUT([Makefile src/Makefile])
-
+AC_OUTPUT([Makefile src/Makefile src/http/Makefile])

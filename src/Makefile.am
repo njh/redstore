@@ -12,4 +12,4 @@ redstore_SOURCES = \
   images.c \
   util.c
 
-SUBDIRS = nanohttpd
+SUBDIRS = http

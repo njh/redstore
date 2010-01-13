@@ -1,5 +1,3 @@
-/* Nano HTTP Server */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -15,7 +13,7 @@
 #include <sys/un.h>
 #include <netdb.h>
 
-#include "nanohttpd.h"
+#include "redhttpd.h"
 
 
 void http_headers_send(http_header_t** first, FILE* socket)

@@ -1,5 +1,3 @@
-/* Nano HTTP Server */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,7 +8,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "nanohttpd.h"
+#include "redhttpd.h"
 
 
 http_response_t* http_response_new(int code, const char* message)

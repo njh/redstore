@@ -1,5 +1,3 @@
-/* Nano HTTP Server */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -15,7 +13,8 @@
 #include <sys/un.h>
 #include <netdb.h>
 
-#include "nanohttpd.h"
+#include "redhttpd.h"
+
 
 http_server_t* http_server_new()
 {

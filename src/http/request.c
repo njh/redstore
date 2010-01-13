@@ -1,5 +1,3 @@
-/* Nano HTTP Server */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,7 +9,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "nanohttpd.h"
+#include "redhttpd.h"
 
 
 http_request_t* http_request_new()
