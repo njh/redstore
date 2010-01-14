@@ -66,6 +66,48 @@ char* http_request_read_line(http_request_t *request)
     return buffer;
 }
 
+char* http_request_get_header(http_request_t *request, const char* key)
+{
+    return http_headers_get(&request->headers, key);
+}
+
+char* http_request_get_argument(http_request_t *request, const char* key)
+{
+    return http_headers_get(&request->arguments, key);
+}
+
+static void http_request_parse_arguments(http_request_t *request, const char *input)
+{
+    char *args, *ptr, *key, *value;
+
+    assert(request != NULL);
+    if (input == NULL) return;
+    args = strdup(input);
+    
+    for(ptr = args; ptr && *ptr;)
+    {
+        key = ptr;
+        ptr = strstr(key, "=");
+        if (ptr == NULL)
+            return;
+        *ptr++ = '\0';
+        
+        value = ptr;
+        ptr = strstr(value, "&");
+        if (ptr != NULL)
+        {
+            *ptr++ = '\0';
+        }
+        
+        key = http_url_unescape(key);
+        value = http_url_unescape(value);
+        http_headers_add(&request->arguments, key, value);
+        free(key);
+        free(value);
+    }
+    
+    free(args);
+}
 
 int http_request_read_status_line(http_request_t *request)
 {
@@ -131,16 +173,54 @@ int http_request_read_status_line(http_request_t *request)
     
     // Separate the path from the query string
     for(ptr = url; *ptr && *ptr != '?'; ptr++);
-	if (*ptr == '?') {
-		*ptr = '\0';
-		request->query_string = strdup(&ptr[1]);
-	}
+    if (*ptr == '?') {
+        *ptr = '\0';
+        request->query_string = strdup(&ptr[1]);
+    }
     request->path = http_url_unescape(url);
+    
+    http_request_parse_arguments(request, request->query_string);
 
     free(line);
 
     // Success
     return 0;
+}
+
+void http_request_send_response(http_request_t *request, http_response_t *response)
+{
+    static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
+    time_t timer = time(NULL);
+    char date_str[80];
+    
+    assert(request != NULL);
+    assert(response != NULL);
+    
+    if (!request->response_sent) {
+        strftime(date_str, sizeof(date_str), RFC1123FMT, gmtime(&timer));
+        http_headers_add(&response->headers, "Date", date_str);
+        http_headers_add(&response->headers, "Connection", "Close");
+      
+        if (response->content_length) {
+            // FIXME: must be better way to do int to string
+            char *length_str = malloc(BUFSIZ);
+            snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
+            http_headers_add(&response->headers, "Content-Length", length_str);
+            free(length_str);
+        }
+    
+        if (strncmp(request->version, "0.9", 3)) {
+            fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status_code, response->status_message);
+            http_headers_send(&response->headers, request->socket);
+            fputs("\r\n", request->socket);
+        }
+        
+        if (response->content_buffer) {
+            fputs(response->content_buffer, request->socket);
+        }
+        
+        request->response_sent = 1;
+    }
 }
 
 void http_request_free(http_request_t* request)

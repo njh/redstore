@@ -41,25 +41,22 @@ static http_response_t *handle_query(http_request_t *request, void *user_data)
 {
     http_response_t* response = http_response_new(200, NULL);
     http_headers_add(&response->headers, "Content-Type", "text/html");
-    http_response_content_append(response, "<html><body><h1>Query Page</h1><pre>");
+    http_request_send_response(request, response);
     
-    http_response_content_append(response, "Method: ");
-    http_response_content_append(response, request->method);
-    http_response_content_append(response, "\n");
+    fprintf(request->socket, "<html><body><h1>Query Page</h1>");
 
-    http_response_content_append(response, "URL:    ");
-    http_response_content_append(response, request->url);
-    http_response_content_append(response, "\n");
+    fprintf(request->socket, "<pre>\n");
+    fprintf(request->socket, "Method: %s\n", request->method);
+    fprintf(request->socket, "URL: %s\n", request->url);
+    fprintf(request->socket, "Path: %s\n", request->path);
+    fprintf(request->socket, "Query: %s\n", request->query_string);
+    fprintf(request->socket, "</pre>\n");
     
-    http_response_content_append(response, "Path:   ");
-    http_response_content_append(response, request->path);
-    http_response_content_append(response, "\n");
-    
-    http_response_content_append(response, "Query:  ");
-    http_response_content_append(response, request->query_string);
-    http_response_content_append(response, "\n");
+    fprintf(request->socket, "<pre>\n");
+    http_headers_send(&request->arguments, request->socket);
+    fprintf(request->socket, "</pre>\n");
 
-    http_response_content_append(response, "</pre></body></html>");
+    fprintf(request->socket, "</body></html>");
     
     return response;
 }

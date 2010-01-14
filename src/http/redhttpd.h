@@ -13,7 +13,8 @@ typedef struct http_header {
 
 typedef struct http_request {
     http_header_t *headers;
-
+    http_header_t *arguments;
+    
     FILE* socket;
     char *url;
     char *method;
@@ -67,7 +68,10 @@ void http_headers_free(http_header_t** first);
 
 http_request_t* http_request_new(void);
 char* http_request_read_line(http_request_t *request);
+char* http_request_get_header(http_request_t *request, const char* key);
+char* http_request_get_argument(http_request_t *request, const char* key);
 int http_request_read_status_line(http_request_t *request);
+void http_request_send_response(http_request_t *request, http_response_t *response);
 void http_request_free(http_request_t* request);
 
 http_response_t* http_response_new(int status, const char* message);
@@ -82,7 +86,6 @@ void http_server_add_handler(http_server_t *server, const char* method, const ch
 void http_server_run(http_server_t* server);
 int http_server_handle_request(http_server_t* server, FILE* file /*, client address */);
 http_response_t *http_server_default_handler(http_server_t* server, http_request_t *request);
-void http_server_send_response(http_server_t *server, http_request_t *request, http_response_t *response);
 void http_server_set_signature(http_server_t* server, const char* signature);
 const char* http_server_get_signature(http_server_t* server);
 void http_server_free(http_server_t* server);
