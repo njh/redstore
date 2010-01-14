@@ -204,8 +204,34 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
                 http_headers_parse_line(&request->headers, line);
                 free(line);
             }
+            
+            // Read in PUT/POST content
+            if (strncasecmp(request->method, "POST", 4)==0) {
+                char *content_type = http_headers_get(&request->headers, "Content-Type");
+                char *content_length = http_headers_get(&request->headers, "Content-Length");
+                int bytes_read = 0;
+
+                if (content_type==NULL || content_length==NULL) {
+                    response = http_response_error_page(400, NULL);
+                } else if (strncasecmp(content_type, "application/x-www-form-urlencoded", 33)==0) {
+                    request->content_length = atoi(content_length);
+                    // FIXME: set maximum POST size
+                    request->content_buffer = malloc(request->content_length);
+                    // FIXME: check memory allocation succeeded
+                    
+                    bytes_read = fread(request->content_buffer, 1, request->content_length, request->socket);
+                    if (bytes_read != request->content_length) {
+                    	// FIXME: better response?
+                        response = http_response_error_page(400, NULL);
+                    } else {
+                    	http_request_parse_arguments(request, request->content_buffer);
+                    }
+                }
+            }
         }
     }
+    
+    
     
     // Dispatch the request
     if (!response) {
@@ -224,9 +250,11 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     if (!response)
         response = http_server_default_handler(server, request);
 
-    // Send response
+	// FIXME: set this earlier
     if (server->signature)
         http_headers_add(&response->headers, "Server", server->signature);
+
+    // Send response
     http_request_send_response(request, response);
 
     http_request_free(request);

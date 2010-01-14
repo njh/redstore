@@ -24,6 +24,9 @@ typedef struct http_request {
     char* path;
     char* query_string;
     
+    char* content_buffer;
+    size_t content_length;
+    
     int response_sent;
     
 } http_request_t;
@@ -70,12 +73,15 @@ http_request_t* http_request_new(void);
 char* http_request_read_line(http_request_t *request);
 char* http_request_get_header(http_request_t *request, const char* key);
 char* http_request_get_argument(http_request_t *request, const char* key);
+void http_request_parse_arguments(http_request_t *request, const char *input);
+FILE* http_request_get_socket(http_request_t *request);
 int http_request_read_status_line(http_request_t *request);
 void http_request_send_response(http_request_t *request, http_response_t *response);
 void http_request_free(http_request_t* request);
 
 http_response_t* http_response_new(int status, const char* message);
 void http_response_content_append(http_response_t* response, const char* string);
+void http_response_add_header(http_response_t* response, const char* key, const char* value);
 void http_response_set_content(http_response_t* response, const char* data, size_t length, const char* type);
 http_response_t* http_response_error_page(int code, const char* explanation);
 void http_response_free(http_response_t* response);

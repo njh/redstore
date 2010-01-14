@@ -76,7 +76,7 @@ char* http_request_get_argument(http_request_t *request, const char* key)
     return http_headers_get(&request->arguments, key);
 }
 
-static void http_request_parse_arguments(http_request_t *request, const char *input)
+void http_request_parse_arguments(http_request_t *request, const char *input)
 {
     char *args, *ptr, *key, *value;
 
@@ -108,6 +108,13 @@ static void http_request_parse_arguments(http_request_t *request, const char *in
     
     free(args);
 }
+
+
+FILE* http_request_get_socket(http_request_t *request)
+{
+    return request->socket;
+}
+
 
 int http_request_read_status_line(http_request_t *request)
 {
@@ -236,6 +243,7 @@ void http_request_free(http_request_t* request)
     if (request->socket) fclose(request->socket);
 
     http_headers_free(&request->headers);
+    http_headers_free(&request->arguments);
 }
 
 

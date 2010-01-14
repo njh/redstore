@@ -77,6 +77,12 @@ void http_response_content_append(http_response_t* response, const char* string)
 }
 
 
+void http_response_add_header(http_response_t* response, const char* key, const char* value)
+{
+    http_headers_add(&response->headers, key, value);
+}
+
+
 void http_response_set_content(http_response_t* response, const char* data, size_t length, const char* type)
 {
     assert(response != NULL);

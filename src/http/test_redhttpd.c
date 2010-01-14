@@ -30,6 +30,14 @@ static http_response_t *handle_homepage(http_request_t *request, void *user_data
         "<html><head><title>Homepage</title></head>"
         "<body><h1>Homepage</h1>"
         "<p>This is the homepage.</p>"
+        "<div><h2>GET</h2><form action=\"/query\" method=\"get\">"
+        "Enter a URL: <input name=\"url\" size=\"25\" value=\"http://www.example.com/\"/><br />"
+        "Enter a Title: <input name=\"title\" size=\"25\" value=\"Example Website\"/><br />"
+        "<input type=\"submit\"></form></div>"
+        "<div><h2>POST</h2><form action=\"/query\" method=\"post\">"
+        "Enter a URL: <input name=\"url\" size=\"25\" value=\"http://www.example.com/\"/><br />"
+        "Enter a Title: <input name=\"title\" size=\"25\" value=\"Example Website\"/><br />"
+        "<input type=\"submit\"></form></div>"
         "</body></html>";
 
     http_response_set_content(response, page, strlen(page), "text/html");
@@ -40,23 +48,45 @@ static http_response_t *handle_homepage(http_request_t *request, void *user_data
 static http_response_t *handle_query(http_request_t *request, void *user_data)
 {
     http_response_t* response = http_response_new(200, NULL);
-    http_headers_add(&response->headers, "Content-Type", "text/html");
+    FILE *socket = http_request_get_socket(request);
+
+    http_response_add_header(response, "Content-Type", "text/html");
     http_request_send_response(request, response);
     
-    fprintf(request->socket, "<html><body><h1>Query Page</h1>");
+    fprintf(socket, "<html><body><h1>Query Page</h1>");
 
-    fprintf(request->socket, "<pre>\n");
-    fprintf(request->socket, "Method: %s\n", request->method);
-    fprintf(request->socket, "URL: %s\n", request->url);
-    fprintf(request->socket, "Path: %s\n", request->path);
-    fprintf(request->socket, "Query: %s\n", request->query_string);
-    fprintf(request->socket, "</pre>\n");
-    
-    fprintf(request->socket, "<pre>\n");
-    http_headers_send(&request->arguments, request->socket);
-    fprintf(request->socket, "</pre>\n");
-
-    fprintf(request->socket, "</body></html>");
+    fprintf(socket, "<pre>\n");
+    fprintf(socket, "Method: %s\n", request->method);
+    fprintf(socket, "URL: %s\n", request->url);
+    fprintf(socket, "Path: %s\n", request->path);
+    fprintf(socket, "Query: %s\n", request->query_string);
+    fprintf(socket, "</pre>\n");
+   
+   	if (request->headers) {
+		fprintf(socket, "<pre><b>Request Headers</b>\n");
+		http_headers_send(&request->headers, socket);
+		fprintf(socket, "</pre>\n");
+   	}
+   
+   	if (response->headers) {
+		fprintf(socket, "<pre><b>Response Headers</b>\n");
+		http_headers_send(&response->headers, socket);
+		fprintf(socket, "</pre>\n");
+   	}
+   	
+   	if (request->arguments) {
+		fprintf(socket, "<pre><b>Arguments</b>\n");
+		http_headers_send(&request->arguments, socket);
+		fprintf(socket, "</pre>\n");
+	}
+   	
+   	if (request->content_buffer) {
+		fprintf(socket, "<pre><b>Content</b>\n");
+		fwrite(request->content_buffer, 1, request->content_length, socket);
+		fprintf(socket, "</pre>\n");
+	}
+	
+    fprintf(socket, "</body></html>");
     
     return response;
 }
