@@ -36,6 +36,7 @@ http_response_t* http_response_new(int code, const char* message)
                 case 401: message = "Unauthorized"; break;
                 case 403: message = "Forbidden"; break;
                 case 404: message = "Not Found"; break;
+                case 405: message = "Method Not Allowed"; break;
                 case 500: message = "Internal Server Error"; break;
                 case 501: message = "Not Implemented"; break;
                 case 502: message = "Bad Gateway"; break;

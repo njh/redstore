@@ -68,7 +68,6 @@ void http_headers_free(http_header_t** first);
 http_request_t* http_request_new(void);
 char* http_request_read_line(http_request_t *request);
 int http_request_read_status_line(http_request_t *request);
-void http_request_send_response(http_request_t *request, http_response_t *response);
 void http_request_free(http_request_t* request);
 
 http_response_t* http_response_new(int status, const char* message);
@@ -82,6 +81,8 @@ int http_server_listen(http_server_t* server, const char* host, const char* port
 void http_server_add_handler(http_server_t *server, const char* method, const char* path, http_handler_func func, void *user_data);
 void http_server_run(http_server_t* server);
 int http_server_handle_request(http_server_t* server, FILE* file /*, client address */);
+http_response_t *http_server_default_handler(http_server_t* server, http_request_t *request);
+void http_server_send_response(http_server_t *server, http_request_t *request, http_response_t *response);
 void http_server_set_signature(http_server_t* server, const char* signature);
 const char* http_server_get_signature(http_server_t* server);
 void http_server_free(http_server_t* server);

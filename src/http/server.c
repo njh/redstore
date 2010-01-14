@@ -215,25 +215,102 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
                 strcasecmp(it->path, request->path)==0)
             {
                 response = it->func(request, it->user_data);
+                break;
             }
         }
     }
     
-    // No response?
-    if (!response) {
-        response = http_response_error_page(404, NULL);
-    }
+    // No response? - generate one using the default handler
+    if (!response)
+        response = http_server_default_handler(server, request);
 
     // Send response
     if (server->signature)
         http_headers_add(&response->headers, "Server", server->signature);
-    http_request_send_response(request, response);
+    http_server_send_response(server, request, response);
 
     http_request_free(request);
     http_response_free(response);
 
     // Success
     return 0;
+}
+
+http_response_t *http_server_default_handler(http_server_t* server, http_request_t *request)
+{
+    http_response_t *response = NULL;
+    http_handler_t *it;
+    
+    assert(server != NULL);
+    assert(request != NULL);
+    
+    // Is it a HEAD request?
+    if (strncasecmp("HEAD",request->method,4)==0) {
+        for (it = server->handlers; it; it = it->next) {
+            if ((strcasecmp(it->method, "GET")==0) && 
+                strcasecmp(it->path, request->path)==0)
+            {
+                response = http_response_new(200, NULL);
+                break;
+            }
+        }
+        
+        if (!response)
+            response = http_response_new(404, NULL);
+
+    } else {
+        // Check if another method is allowed instead
+        for (it = server->handlers; it; it = it->next) {
+            if (strcasecmp(it->path, request->path)==0)
+            {
+                response = http_response_error_page(405, NULL);
+                // FIXME: add list of allowed methods
+                break;
+            }
+        }
+    }
+
+    // Must be a 404
+    if (!response)
+        response = http_response_error_page(404, NULL);
+
+    return response;
+}
+
+void http_server_send_response(http_server_t *server, http_request_t *request, http_response_t *response)
+{
+    static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
+    time_t timer = time(NULL);
+    char date_str[80];
+    
+    assert(request != NULL);
+    assert(response != NULL);
+    
+    if (!request->response_sent) {
+        strftime(date_str, sizeof(date_str), RFC1123FMT, gmtime(&timer));
+        http_headers_add(&response->headers, "Date", date_str);
+        http_headers_add(&response->headers, "Connection", "Close");
+      
+        if (response->content_length) {
+            // FIXME: must be better way to do int to string
+            char *length_str = malloc(BUFSIZ);
+            snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
+            http_headers_add(&response->headers, "Content-Length", length_str);
+            free(length_str);
+        }
+    
+        if (strncmp(request->version, "0.9", 3)) {
+            fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status_code, response->status_message);
+            http_headers_send(&response->headers, request->socket);
+            fputs("\r\n", request->socket);
+        }
+        
+        if (response->content_buffer) {
+            fputs(response->content_buffer, request->socket);
+        }
+        
+        request->response_sent = 1;
+    }
 }
 
 void http_server_set_signature(http_server_t* server, const char* signature)
