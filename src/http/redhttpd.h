@@ -61,14 +61,14 @@ typedef struct http_server {
 
 void http_headers_send(http_header_t** first, FILE* socket);
 void http_headers_add(http_header_t** first, const char* key, const char* value);
-char* http_message_get_header(http_header_t** first, const char* key);
+char* http_headers_get(http_header_t** first, const char* key);
 void http_headers_parse_line(http_header_t** first, const char* line);
 void http_headers_free(http_header_t** first);
 
-http_request_t* http_request_new();
+http_request_t* http_request_new(void);
 char* http_request_read_line(http_request_t *request);
 int http_request_read_status_line(http_request_t *request);
-int http_request_send_response(http_request_t *request, http_response_t *response);
+void http_request_send_response(http_request_t *request, http_response_t *response);
 void http_request_free(http_request_t* request);
 
 http_response_t* http_response_new(int status, const char* message);
@@ -77,7 +77,7 @@ void http_response_set_content(http_response_t* response, const char* data, size
 http_response_t* http_response_error_page(int code, const char* explanation);
 void http_response_free(http_response_t* response);
 
-http_server_t* http_server_new();
+http_server_t* http_server_new(void);
 int http_server_listen(http_server_t* server, const char* host, const char* port, sa_family_t family);
 void http_server_add_handler(http_server_t *server, const char* method, const char* path, http_handler_func func, void *user_data);
 void http_server_run(http_server_t* server);

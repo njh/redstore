@@ -11,7 +11,7 @@
 int running = 1;
 
 
-void
+static void
 print_help(char *pname)
 {
     fprintf(stderr, "%s [option]\n"
@@ -23,7 +23,7 @@ print_help(char *pname)
 }
 
 
-http_response_t *handle_homepage(http_request_t *request, void *user_data)
+static http_response_t *handle_homepage(http_request_t *request, void *user_data)
 {
     http_response_t* response = http_response_new(200, NULL);
     const char* page =
@@ -37,7 +37,7 @@ http_response_t *handle_homepage(http_request_t *request, void *user_data)
     return response;
 }
 
-http_response_t *handle_query(http_request_t *request, void *user_data)
+static http_response_t *handle_query(http_request_t *request, void *user_data)
 {
     http_response_t* response = http_response_new(200, NULL);
     http_headers_add(&response->headers, "Content-Type", "text/html");
@@ -102,14 +102,15 @@ main(int argc, char **argv)
     }
 
 
-    server = http_server_new(sopt_host, sopt_service, sopt_family);
+    server = http_server_new();
     if (!server) {
         fprintf(stderr, "Failed to initialise HTTP server.\n");
         exit(EXIT_FAILURE);
     }
   
     http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
-    http_server_add_handler(server, "*", "/query", handle_query, NULL);
+    http_server_add_handler(server, "GET", "/query", handle_query, NULL);
+    http_server_add_handler(server, "POST", "/query", handle_query, NULL);
     http_server_set_signature(server, "test_redhttpd/0.1");
 
     if (http_server_listen(server, sopt_host, sopt_service, sopt_family)) {

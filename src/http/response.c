@@ -49,6 +49,7 @@ http_response_t* http_response_new(int code, const char* message)
     return response;
 }
 
+
 void http_response_content_append(http_response_t* response, const char* string)
 {
     assert(response != NULL);
@@ -74,6 +75,7 @@ void http_response_content_append(http_response_t* response, const char* string)
     response->content_length += strlen(string);
 }
 
+
 void http_response_set_content(http_response_t* response, const char* data, size_t length, const char* type)
 {
     assert(response != NULL);
@@ -85,6 +87,7 @@ void http_response_set_content(http_response_t* response, const char* data, size
     memcpy(response->content_buffer, data, length);
     http_headers_add(&response->headers, "Content-Type", type);
 }
+
 
 http_response_t* http_response_error_page(int code, const char* explanation)
 {
@@ -118,6 +121,21 @@ http_response_t* http_response_error_page(int code, const char* explanation)
     
     return response;
 }
+
+/*
+http_response_t* http_response_redirect(http_request_t *request, char* url)
+{
+    char *message = (char*)malloc(ERROR_MESSAGE_BUFFER_SIZE);
+    http_response_t* response;
+    
+    snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The document has moved <a href=\"%s\">here</a>.</p>", url);
+    response = handle_html_page(request, REDSTORE_HTTP_MOVED_PERMANENTLY, "Moved Permanently", message);
+    //MHD_add_response_header(response->mhd_response, MHD_HTTP_HEADER_LOCATION, url);
+    free(url);
+
+    return response;
+}
+*/
 
 void http_response_free(http_response_t* response)
 {

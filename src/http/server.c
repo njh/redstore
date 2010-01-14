@@ -16,19 +16,16 @@
 #include "redhttpd.h"
 
 
-http_server_t* http_server_new()
+http_server_t* http_server_new(void)
 {
     http_server_t* server = NULL;
-    struct addrinfo hints;
-    struct addrinfo *res, *res0;
-    int err;
-    int i;
 
     server = calloc(1, sizeof(http_server_t));
     if (!server) {
         perror("failed to allocate memory for http_server_t");
         return NULL;
     } else {
+        int i;
         server->socket_count = 0;
         server->socket_max = -1;
         for (i=0; i<FD_SETSIZE; i++) {
@@ -45,7 +42,6 @@ int http_server_listen(http_server_t* server, const char* host, const char* port
     struct addrinfo hints;
     struct addrinfo *res, *res0;
     int err;
-    int i;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;
@@ -215,7 +211,7 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     if (!response) {
         printf("Request: %s %s\n", request->method, request->path);
         for (it = server->handlers; it; it = it->next) {
-            if ((strcmp(it->method, "*")==0 || strcasecmp(it->method, request->method)==0) && 
+            if ((strcasecmp(it->method, request->method)==0) && 
                 strcasecmp(it->path, request->path)==0)
             {
                 response = it->func(request, it->user_data);
@@ -280,50 +276,3 @@ void http_server_free(http_server_t* server)
 
     free(server);
 }
-
-
-
-#define ERROR_MESSAGE_BUFFER_SIZE   (1024)
-
-/*
-http_response_t* http_error(http_request_t *request, unsigned int status)
-{
-    char *message = (char*)malloc(ERROR_MESSAGE_BUFFER_SIZE);
-    char *title;
-    
-    if (status == REDSTORE_HTTP_NOT_FOUND) {
-        title = "Not Found";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The requested URL %s was not found on this server.</p>", request->url);
-    } else if (status == REDSTORE_HTTP_METHOD_NOT_ALLOWED) {
-        title = "Method Not Allowed";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The requested method %s is not allowed for the URL %s.</p>", request->method, request->url);
-    } else if (status == REDSTORE_HTTP_INTERNAL_SERVER_ERROR) {
-        title = "Internal Server Error";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The server encountered an unexpected condition which prevented it from fulfilling the request.</p>");
-    } else if (status == REDSTORE_HTTP_NOT_IMPLEMENTED) {
-        title = "Not Implemented";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>Sorry, this functionality has not been implemented.</p>");
-    } else {
-        title = "Unknown Error";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>An unknown error (%d) occurred.</p>", status);
-    }
-
-    return handle_html_page(request, status, title, message);
-}
-*/
-
-/*
-http_response_t* http_redirect(http_request_t *request, char* url)
-{
-    char *message = (char*)malloc(ERROR_MESSAGE_BUFFER_SIZE);
-    http_response_t* response;
-    
-    snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The document has moved <a href=\"%s\">here</a>.</p>", url);
-    response = handle_html_page(request, REDSTORE_HTTP_MOVED_PERMANENTLY, "Moved Permanently", message);
-    //MHD_add_response_header(response->mhd_response, MHD_HTTP_HEADER_LOCATION, url);
-    free(url);
-
-    return response;
-}
-*/
-

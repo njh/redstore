@@ -12,7 +12,7 @@
 #include "redhttpd.h"
 
 
-http_request_t* http_request_new()
+http_request_t* http_request_new(void)
 {
     http_request_t* request = calloc(1, sizeof(http_request_t));
     if (!request) {
@@ -29,8 +29,7 @@ char* http_request_read_line(http_request_t *request)
     char *buffer = calloc(1, BUFSIZ);
     int buffer_size = BUFSIZ;
     int buffer_count = 0;
-    int c;
-    
+
     assert(request != NULL);
 
     // FIXME: check memory was allocated
@@ -144,7 +143,7 @@ int http_request_read_status_line(http_request_t *request)
     return 0;
 }
 
-int http_request_send_response(http_request_t *request, http_response_t *response)
+void http_request_send_response(http_request_t *request, http_response_t *response)
 {
     static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
     time_t timer = time(NULL);
