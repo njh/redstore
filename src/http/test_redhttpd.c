@@ -92,6 +92,14 @@ static http_response_t *handle_query(http_request_t *request, void *user_data)
 }
 
 
+static http_response_t *handle_redirect(http_request_t *request, void *user_data)
+{
+    return http_response_new_redirect("/query");
+}
+
+
+
+
 int
 main(int argc, char **argv)
 {
@@ -138,6 +146,7 @@ main(int argc, char **argv)
     http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
     http_server_add_handler(server, "GET", "/query", handle_query, NULL);
     http_server_add_handler(server, "POST", "/query", handle_query, NULL);
+    http_server_add_handler(server, "GET", "/redirect", handle_redirect, NULL);
     http_server_set_signature(server, "test_redhttpd/0.1");
 
     if (http_server_listen(server, sopt_host, sopt_service, sopt_family)) {

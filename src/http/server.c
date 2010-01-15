@@ -194,7 +194,7 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     
     if (http_request_read_status_line(request)) {
         // Invalid request
-        response = http_response_error_page(400, NULL);
+        response = http_response_new_error_page(400, NULL);
     } else {
         if (strncmp(request->version, "0.9", 3)) {
             // Read in the headers
@@ -212,7 +212,7 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
                 int bytes_read = 0;
 
                 if (content_type==NULL || content_length==NULL) {
-                    response = http_response_error_page(400, NULL);
+                    response = http_response_new_error_page(400, NULL);
                 } else if (strncasecmp(content_type, "application/x-www-form-urlencoded", 33)==0) {
                     request->content_length = atoi(content_length);
                     // FIXME: set maximum POST size
@@ -222,7 +222,7 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
                     bytes_read = fread(request->content_buffer, 1, request->content_length, request->socket);
                     if (bytes_read != request->content_length) {
                     	// FIXME: better response?
-                        response = http_response_error_page(400, NULL);
+                        response = http_response_new_error_page(400, NULL);
                     } else {
                     	http_request_parse_arguments(request, request->content_buffer);
                     }
@@ -291,7 +291,7 @@ http_response_t *http_server_default_handler(http_server_t* server, http_request
         for (it = server->handlers; it; it = it->next) {
             if (strcasecmp(it->path, request->path)==0)
             {
-                response = http_response_error_page(405, NULL);
+                response = http_response_new_error_page(405, NULL);
                 // FIXME: add list of allowed methods
                 break;
             }
@@ -300,7 +300,7 @@ http_response_t *http_server_default_handler(http_server_t* server, http_request
 
     // Must be a 404
     if (!response)
-        response = http_response_error_page(404, NULL);
+        response = http_response_new_error_page(404, NULL);
 
     return response;
 }

@@ -51,6 +51,58 @@ http_response_t* http_response_new(int code, const char* message)
     return response;
 }
 
+http_response_t* http_response_new_error_page(int code, const char* explanation)
+{
+    http_response_t* response = http_response_new(code, NULL);
+    char *code_str = calloc(1, BUFSIZ);
+
+    // FIXME: check for memory allocation error
+
+    assert(code>=100 && code<1000);
+    snprintf(code_str, BUFSIZ, "%d ", code);
+
+    http_headers_add(&response->headers, "Content-Type", "text/html");
+    http_response_content_append(response, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
+    http_response_content_append(response, "<html><head><title>");
+    http_response_content_append(response, code_str);
+    http_response_content_append(response, response->status_message);
+    http_response_content_append(response, "</title></head>\n");
+    http_response_content_append(response, "<body><h1>");
+    http_response_content_append(response, code_str);
+    http_response_content_append(response, response->status_message);
+    http_response_content_append(response, "</h1>\n");
+    
+    if (explanation) {
+        http_response_content_append(response, "<p>");
+        http_response_content_append(response, explanation);
+        http_response_content_append(response, "</p>\n");
+    }
+    http_response_content_append(response, "</body></html>\n");
+    
+    free(code_str);
+    
+    return response;
+}
+
+http_response_t* http_response_new_redirect(const char* url)
+{
+    static const char MESSAGE_FMT[] = "<p>The document has moved <a href=\"%s\">here</a>.</p>";
+    http_response_t* response;
+    size_t message_length;
+    char* message;
+
+    message_length = snprintf(NULL, 0, MESSAGE_FMT, url);
+    message = malloc(message_length+1);
+    // FIXME: check for memory allocation error
+    snprintf(message, message_length, MESSAGE_FMT, url);
+    
+    // Build the response
+    response = http_response_new_error_page(301, message);
+    http_response_add_header(response, "Location", url);
+    free(message);
+
+    return response;
+}
 
 void http_response_content_append(http_response_t* response, const char* string)
 {
@@ -107,55 +159,6 @@ void http_response_set_content(http_response_t* response, const char* data, size
     memcpy(response->content_buffer, data, length);
     http_headers_add(&response->headers, "Content-Type", type);
 }
-
-
-http_response_t* http_response_error_page(int code, const char* explanation)
-{
-    http_response_t* response = http_response_new(code, NULL);
-    char *code_str = calloc(1, BUFSIZ);
-
-    // FIXME: check for memory allocation error
-
-    assert(code>=100 && code<1000);
-    snprintf(code_str, BUFSIZ, "%d ", code);
-
-    http_headers_add(&response->headers, "Content-Type", "text/html");
-    http_response_content_append(response, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-    http_response_content_append(response, "<html><head><title>");
-    http_response_content_append(response, code_str);
-    http_response_content_append(response, response->status_message);
-    http_response_content_append(response, "</title></head>\n");
-    http_response_content_append(response, "<body><h1>");
-    http_response_content_append(response, code_str);
-    http_response_content_append(response, response->status_message);
-    http_response_content_append(response, "</h1>\n");
-    
-    if (explanation) {
-        http_response_content_append(response, "<p>");
-        http_response_content_append(response, explanation);
-        http_response_content_append(response, "</p>\n");
-    }
-    http_response_content_append(response, "</body></html>\n");
-    
-    free(code_str);
-    
-    return response;
-}
-
-/*
-http_response_t* http_response_redirect(http_request_t *request, char* url)
-{
-    char *message = (char*)malloc(ERROR_MESSAGE_BUFFER_SIZE);
-    http_response_t* response;
-    
-    snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The document has moved <a href=\"%s\">here</a>.</p>", url);
-    response = handle_html_page(request, REDSTORE_HTTP_MOVED_PERMANENTLY, "Moved Permanently", message);
-    //MHD_add_response_header(response->mhd_response, MHD_HTTP_HEADER_LOCATION, url);
-    free(url);
-
-    return response;
-}
-*/
 
 void http_response_free(http_response_t* response)
 {
