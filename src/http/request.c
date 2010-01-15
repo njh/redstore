@@ -196,23 +196,18 @@ int http_request_read_status_line(http_request_t *request)
 
 void http_request_send_response(http_request_t *request, http_response_t *response)
 {
-    static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
-    time_t timer = time(NULL);
-    char date_str[80];
-    
     assert(request != NULL);
     assert(response != NULL);
     
     if (!request->response_sent) {
-        strftime(date_str, sizeof(date_str), RFC1123FMT, gmtime(&timer));
-        http_headers_add(&response->headers, "Date", date_str);
-        http_headers_add(&response->headers, "Connection", "Close");
+        http_response_add_time_header(response, "Date", time(NULL));
+        http_response_add_header(response, "Connection", "Close");
       
         if (response->content_length) {
             // FIXME: must be better way to do int to string
             char *length_str = malloc(BUFSIZ);
             snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
-            http_headers_add(&response->headers, "Content-Length", length_str);
+            http_response_add_header(response, "Content-Length", length_str);
             free(length_str);
         }
     

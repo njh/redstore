@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #include <assert.h>
 
 #include <errno.h>
@@ -80,6 +81,18 @@ void http_response_content_append(http_response_t* response, const char* string)
 void http_response_add_header(http_response_t* response, const char* key, const char* value)
 {
     http_headers_add(&response->headers, key, value);
+}
+
+void http_response_add_time_header(http_response_t* response, const char* key, time_t timer)
+{
+    static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
+    char *date_str = malloc(BUFSIZ);
+
+    // FIXME: calculate the length of the date string instead of using BUFSIZ
+    strftime(date_str, BUFSIZ, RFC1123FMT, gmtime(&timer));
+    http_headers_add(&response->headers, key, date_str);
+    
+    free(date_str);
 }
 
 
