@@ -25,7 +25,6 @@ print_help(char *pname)
 
 static http_response_t *handle_homepage(http_request_t *request, void *user_data)
 {
-    http_response_t* response = http_response_new(200, NULL);
     const char* page =
         "<html><head><title>Homepage</title></head>"
         "<body><h1>Homepage</h1>"
@@ -40,9 +39,7 @@ static http_response_t *handle_homepage(http_request_t *request, void *user_data
         "<input type=\"submit\"></form></div>"
         "</body></html>";
 
-    http_response_set_content(response, page, strlen(page), "text/html");
-    
-    return response;
+    return http_response_new_with_content(page, strlen(page), "text/html");
 }
 
 static http_response_t *handle_query(http_request_t *request, void *user_data)

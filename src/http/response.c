@@ -104,6 +104,13 @@ http_response_t* http_response_new_redirect(const char* url)
     return response;
 }
 
+http_response_t* http_response_new_with_content(const char* data, size_t length, const char* type)
+{
+    http_response_t* response = http_response_new(200, NULL);
+    http_response_set_content(response, data, length, type);
+    return response;
+}
+
 void http_response_content_append(http_response_t* response, const char* string)
 {
     assert(response != NULL);

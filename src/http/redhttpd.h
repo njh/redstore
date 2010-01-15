@@ -82,6 +82,7 @@ void http_request_free(http_request_t* request);
 http_response_t* http_response_new(int status, const char* message);
 http_response_t* http_response_new_error_page(int code, const char* explanation);
 http_response_t* http_response_new_redirect(const char* url);
+http_response_t* http_response_new_with_content(const char* data, size_t length, const char* type);
 void http_response_content_append(http_response_t* response, const char* string);
 void http_response_add_header(http_response_t* response, const char* key, const char* value);
 void http_response_add_time_header(http_response_t* response, const char* key, time_t timer);
