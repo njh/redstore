@@ -14,6 +14,7 @@ typedef struct http_header {
 typedef struct http_request {
     http_header_t *headers;
     http_header_t *arguments;
+    struct http_server *server;
     
     FILE* socket;
     char *url;
@@ -26,9 +27,6 @@ typedef struct http_request {
     
     char* content_buffer;
     size_t content_length;
-    
-    int response_sent;
-    
 } http_request_t;
 
 typedef struct http_response {
@@ -39,6 +37,8 @@ typedef struct http_response {
     char *content_buffer;
     size_t content_buffer_size;
     size_t content_length;
+    
+    int headers_sent;
 } http_response_t;
 
 typedef http_response_t*(* http_handler_func)(http_request_t *request, void *user_data);

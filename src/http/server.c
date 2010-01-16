@@ -90,8 +90,6 @@ int http_server_listen(http_server_t* server, const char* host, const char* port
             fprintf(stderr, "listen() failed: [%s]:%s\n", nameinfo_host, nameinfo_serv);
             close(sock);
             continue;
-        } else {
-            fprintf(stderr, "Listening on: [%s]:%s\n", nameinfo_host, nameinfo_serv);
         }
 
         if (sock > server->socket_max)
@@ -117,11 +115,9 @@ void http_server_add_handler(http_server_t *server, const char* method, const ch
     
     assert(method != NULL);
     assert(path != NULL);
-    
-    printf("Registering handler for %s : %s\n", method, path);
 
-    handler->method = strdup(method);
-    handler->path = strdup(path);
+    handler->method = method ? strdup(method) : NULL;
+    handler->path = path ? strdup(path) : NULL;
     handler->func = func;
     handler->user_data = user_data;
     handler->next = NULL;
@@ -189,6 +185,7 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     assert(file != NULL);
 
     if (!request) return -1;
+    request->server = server;
     request->socket = file;
     // FIXME: store client address
     
@@ -235,7 +232,6 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     
     // Dispatch the request
     if (!response) {
-        printf("Request: %s %s\n", request->method, request->path);
         for (it = server->handlers; it; it = it->next) {
             if ((strcasecmp(it->method, request->method)==0) && 
                 strcasecmp(it->path, request->path)==0)
@@ -249,10 +245,6 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     // No response? - generate one using the default handler
     if (!response)
         response = http_server_default_handler(server, request);
-
-	// FIXME: set this earlier
-    if (server->signature)
-        http_headers_add(&response->headers, "Server", server->signature);
 
     // Send response
     http_request_send_response(request, response);

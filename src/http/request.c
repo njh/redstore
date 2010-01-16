@@ -199,9 +199,14 @@ void http_request_send_response(http_request_t *request, http_response_t *respon
     assert(request != NULL);
     assert(response != NULL);
     
-    if (!request->response_sent) {
+    if (!response->headers_sent) {
+    	const char *signature = http_server_get_signature(request->server);
+    
         http_response_add_time_header(response, "Date", time(NULL));
         http_response_add_header(response, "Connection", "Close");
+        
+        if (signature)
+        	http_response_add_header(response, "Server", signature);
       
         if (response->content_length) {
             // FIXME: must be better way to do int to string
@@ -217,14 +222,14 @@ void http_request_send_response(http_request_t *request, http_response_t *respon
             fputs("\r\n", request->socket);
         }
         
-        if (response->content_buffer) {
-            assert(response->content_length > 0);
-            fwrite(response->content_buffer, 1, response->content_length, request->socket);
-            // FIXME: check for error?
-        }
-        
-        request->response_sent = 1;
+        response->headers_sent = 1;
     }
+
+	if (response->content_buffer) {
+		assert(response->content_length > 0);
+		fwrite(response->content_buffer, 1, response->content_length, request->socket);
+		// FIXME: check for error?
+	}
 }
 
 void http_request_free(http_request_t* request)
