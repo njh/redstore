@@ -9,7 +9,7 @@
 #include "redstore.h"
 
 
-http_response_t* handle_graph_index(http_request_t *request)
+http_response_t* handle_graph_index(http_request_t *request, void* user_data)
 {
     librdf_iterator* iterator = NULL;
     FILE* stream = NULL;
@@ -19,13 +19,13 @@ http_response_t* handle_graph_index(http_request_t *request)
     iterator = librdf_storage_get_contexts(storage);
     if(!iterator) {
         redstore_error("Failed to get contexts.");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     stream = open_memstream(&page_buffer, &page_size);
     if(!stream) {
         redstore_error("Failed to open open_memstream");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
 
     fprintf(stream, "<ul>\n");
@@ -57,7 +57,7 @@ http_response_t* handle_graph_index(http_request_t *request)
     librdf_free_iterator(iterator);
     fclose(stream);
    
-    return handle_html_page(request, MHD_HTTP_OK, "Named Graphs", page_buffer);
+    return handle_html_page(request, 200, "Named Graphs", page_buffer);
 }
 
 
@@ -72,7 +72,7 @@ http_response_t* handle_graph_get(http_request_t *request, librdf_node *context)
         redstore_debug("Graph not found: %s", uri);
         free(uri);
         // FIXME: display a better error message
-        return handle_error(request, MHD_HTTP_NOT_FOUND);
+        return http_response_new_error_page(404, NULL);
     }
     
     // Stream the graph
@@ -80,7 +80,7 @@ http_response_t* handle_graph_get(http_request_t *request, librdf_node *context)
     if(!stream) {
         librdf_free_node(context);
         redstore_error("Failed to stream context.");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     response = format_graph_stream(request, stream);
@@ -102,16 +102,16 @@ http_response_t* handle_graph_delete(http_request_t *request, librdf_node *conte
         redstore_debug("Graph not found: %s", uri);
         free(uri);
         // FIXME: display a better error message
-        return handle_error(request, MHD_HTTP_NOT_FOUND);
+        return http_response_new_error_page(404, NULL);
     }
 
     redstore_info("Deleting graph: %s", uri);
     
     if (librdf_model_context_remove_statements(model,context)) {
-        response = handle_html_page(request, MHD_HTTP_INTERNAL_SERVER_ERROR,
+        response = handle_html_page(request, 500,
                    "Delete Failed", strdup("Error while trying to delete graph"));
     } else {
-        response = handle_html_page(request, MHD_HTTP_OK, 
+        response = handle_html_page(request, 200, 
                    "Deleted Successfully", strdup("Successfully deleted Graph"));
     }
     
@@ -120,8 +120,8 @@ http_response_t* handle_graph_delete(http_request_t *request, librdf_node *conte
     return response;
 }
 
-
-http_response_t* handle_graph(http_request_t *request, char* uri)
+/*
+http_response_t* handle_graph(http_request_t *request, void* user_data)
 {
     http_response_t* response = NULL;
     librdf_node *context;
@@ -145,3 +145,4 @@ http_response_t* handle_graph(http_request_t *request, char* uri)
     
     return response;
 }
+*/

@@ -9,72 +9,6 @@
 #include "redstore.h"
 
 
-/* NOTE: content will be freed after the response is sent */
-http_response_t* new_http_response(http_request_t *request, unsigned int status,
-                       void* content, size_t content_size,
-                       const char* content_type)
-{
-    http_response_t* response = malloc(sizeof(response));
-    if (!response) return NULL;
-    
-    response->mhd_response = MHD_create_response_from_data(
-        content_size, content,
-        MHD_YES, MHD_NO
-    );
-    
-    response->status = status;
-
-    // Add headers
-    MHD_add_response_header(response->mhd_response, "Content-Type", content_type);
-    //MHD_add_response_header(response->mhd_response, "Last-Modified", BUILD_TIME);
-    MHD_add_response_header(response->mhd_response, "Server", PACKAGE_NAME "/" PACKAGE_VERSION);
-
-    return response;
-}
-
-
-#define ERROR_MESSAGE_BUFFER_SIZE   (1024)
-
-http_response_t* handle_error(http_request_t *request, unsigned int status)
-{
-    char *message = (char*)malloc(ERROR_MESSAGE_BUFFER_SIZE);
-    char *title;
-    
-    if (status == MHD_HTTP_NOT_FOUND) {
-        title = "Not Found";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The requested URL %s was not found on this server.</p>", request->url);
-    } else if (status == MHD_HTTP_METHOD_NOT_ALLOWED) {
-        title = "Method Not Allowed";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The requested method %s is not allowed for the URL %s.</p>", request->method, request->url);
-    } else if (status == MHD_HTTP_INTERNAL_SERVER_ERROR) {
-        title = "Internal Server Error";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The server encountered an unexpected condition which prevented it from fulfilling the request.</p>");
-    } else if (status == MHD_HTTP_NOT_IMPLEMENTED) {
-        title = "Not Implemented";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>Sorry, this functionality has not been implemented.</p>");
-    } else {
-        title = "Unknown Error";
-        snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>An unknown error (%d) occurred.</p>", status);
-    }
-
-    return handle_html_page(request, status, title, message);
-}
-
-http_response_t* handle_redirect(http_request_t *request, char* url)
-{
-    char *message = (char*)malloc(ERROR_MESSAGE_BUFFER_SIZE);
-    http_response_t* response;
-    
-    snprintf(message, ERROR_MESSAGE_BUFFER_SIZE, "<p>The document has moved <a href=\"%s\">here</a>.</p>", url);
-    response = handle_html_page(request, MHD_HTTP_MOVED_PERMANENTLY, "Moved Permanently", message);
-    MHD_add_response_header(response->mhd_response, MHD_HTTP_HEADER_LOCATION, url);
-    free(url);
-
-    return response;
-}
-
-
-/* NOTE: content will be freed after the response is sent */
 http_response_t* handle_html_page(http_request_t *request, unsigned int status, 
                      const char* title, char* content)
 {
@@ -85,7 +19,7 @@ http_response_t* handle_html_page(http_request_t *request, unsigned int status,
     iostream = open_memstream(&page_buffer, &page_size);
     if(!iostream) {
         redstore_error("Failed to open open_memstream");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     fprintf(iostream,
@@ -111,23 +45,23 @@ http_response_t* handle_html_page(http_request_t *request, unsigned int status,
     fclose(iostream);
     free(content);
 
-    return new_http_response(request, status, (void*)page_buffer, page_size, "text/html");
+    return http_response_new_with_content(page_buffer, page_size, "text/html");
 }
 
 
-http_response_t* handle_homepage(http_request_t *request)
+http_response_t* handle_homepage(http_request_t *request, void* user_data)
 {
     const char page[] = 
         "<ul>\n"
-        "<li><a href=\"/query\">SPARQL Query Page</a></li>"
-        "<li><a href=\"/data\">Named Graphs</a></li>"
-        "<li><a href=\"/formats\">Supported Formats</a></li>"
+        "  <li><a href=\"/query\">SPARQL Query Page</a></li>\n"
+        "  <li><a href=\"/data\">Named Graphs</a></li>\n"
+        "  <li><a href=\"/formats\">Supported Formats</a></li>\n"
         "</ul>\n";
 
-    return handle_html_page(request, MHD_HTTP_OK, "RedStore", strdup(page));
+    return handle_html_page(request, 200, "RedStore", strdup(page));
 }
 
-http_response_t* handle_formats_page(http_request_t *request)
+http_response_t* handle_formats_page(http_request_t *request, void* user_data)
 {
     FILE* iostream = NULL;
     char *page_buffer = NULL;
@@ -137,7 +71,7 @@ http_response_t* handle_formats_page(http_request_t *request)
     iostream = open_memstream(&page_buffer, &page_size);
     if(!iostream) {
         redstore_error("Failed to open open_memstream");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     fprintf(iostream, "<h2>RDF Parsers</h2>\n");
@@ -175,10 +109,10 @@ http_response_t* handle_formats_page(http_request_t *request)
 
     fclose(iostream);
 
-    return handle_html_page(request, MHD_HTTP_OK, "Supported Formats", page_buffer);
+    return handle_html_page(request, 200, "Supported Formats", page_buffer);
 }
 
-http_response_t* handle_query_page(http_request_t *request)
+http_response_t* handle_query_page(http_request_t *request, void* user_data)
 {
     const char page[] = 
         "<form action=\"../sparql\" method=\"get\">\n"
@@ -203,5 +137,5 @@ http_response_t* handle_query_page(http_request_t *request)
     // FIXME: list output formats based on enumeration of formats
     // that Redland supports
 
-    return handle_html_page(request, MHD_HTTP_OK, "SPARQL Query", strdup(page));
+    return handle_html_page(request, 200, "SPARQL Query", strdup(page));
 }

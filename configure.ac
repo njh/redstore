@@ -47,7 +47,7 @@ LDFLAGS="$LDFLAGS"
 
 # If debugging is enabled then make warnings errors
 if test "$Debugging" = "Enabled"; then
-	CFLAGS="$CFLAGS -g  -Wunused -Wall -Werror -pedantic"
+	CFLAGS="$CFLAGS -g  -Wunused -Wall -Werror -pedantic -Wmissing-prototypes -Wmissing-declarations"
 else
 	# Optimize flag. 3 is about as high as you can sanely go with GCC3.2.
 	CFLAGS="$CFLAGS -O3"
@@ -69,10 +69,6 @@ fi
 
 
 dnl ############## Check for packages we depend upon
-
-PKG_CHECK_MODULES(LIBMICROHTTPD, libmicrohttpd >= 0.4.2)
-AC_SUBST(LIBMICROHTTPD_CFLAGS)
-AC_SUBST(LIBMICROHTTPD_LIBS)
 
 PKG_CHECK_MODULES(REDLAND, redland >= 1.0.7)
 AC_SUBST(REDLAND_CFLAGS)

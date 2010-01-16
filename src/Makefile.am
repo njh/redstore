@@ -1,7 +1,8 @@
-AM_CFLAGS = @LIBMICROHTTPD_CFLAGS@ @REDLAND_CFLAGS@
-AM_LDFLAGS = @LIBMICROHTTPD_LIBS@ @REDLAND_LIBS@
+AM_CFLAGS = @REDLAND_CFLAGS@
+AM_LDFLAGS = @REDLAND_LIBS@
 
 bin_PROGRAMS = redstore
+redstore_LDADD = http/libredhttpd.a
 redstore_SOURCES = \
   redstore.c \
   redstore.h \

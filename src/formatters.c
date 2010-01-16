@@ -15,7 +15,7 @@
 */
 static char* parse_accept_header(http_request_t *request)
 {
-    const char* accept_str = MHD_lookup_connection_value(request->connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_ACCEPT);
+    const char* accept_str = http_request_get_header(request, "Accept");
     int pos=-1, i;
     
     if (accept_str == NULL) return NULL;
@@ -45,7 +45,7 @@ static char* get_format(http_request_t *request)
 {
     char *format_str;
 
-    format_str = http_get_argument(request, "format");
+    format_str = http_request_get_argument(request, "format");
     redstore_debug("format_str: %s", format_str);
     if (!format_str) {
         format_str = parse_accept_header(request);
@@ -76,24 +76,24 @@ http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stre
     
     if (!format_name) {
         redstore_error("Failed to match file format: %s", format_str);
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
 
     serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
     if (!serialiser) {
         redstore_error("Failed to create serialiser for: %s", format_name);
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     data = (char*)librdf_serializer_serialize_stream_to_string(serialiser, NULL, stream);
     if (!data) {
         redstore_error("Failed to serialize graph");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     librdf_free_serializer(serialiser);
 
-    return new_http_response(request, MHD_HTTP_OK, data, strlen(data), mime_type);
+    return http_response_new_with_content(data, strlen(data), mime_type);
 }
 
 
@@ -106,7 +106,7 @@ http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream
     iostream = open_memstream(&string_buffer, &string_size);
     if(!iostream) {
         redstore_error("Failed to open open_memstream");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     fprintf(iostream, "<table class=\"triples\" border=\"1\">\n");
@@ -132,7 +132,7 @@ http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream
     fprintf(iostream, "</table>\n");
     fclose(iostream);
    
-    return handle_html_page(request, MHD_HTTP_OK, "Graph Contents", string_buffer);
+    return handle_html_page(request, 200, "Graph Contents", string_buffer);
 }
 
 
@@ -183,19 +183,19 @@ http_response_t* format_bindings_query_result_librdf(http_request_t *request, li
     
     if (!format_uri) {
         redstore_error("Failed to match file format: %s", format_str);
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     // FIXME: stream results back to client, rather than building string
     data = (char*)librdf_query_results_to_string(results, format_uri, NULL);
     if (!data) {
         redstore_error("Failed to serialise query results");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
 
     librdf_free_uri(format_uri);
 
-    return new_http_response(request, MHD_HTTP_OK, data, strlen(data), mime_type);
+    return http_response_new_with_content(data, strlen(data), mime_type);
 }
 
 http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str)
@@ -208,7 +208,7 @@ http_response_t* format_bindings_query_result_html(http_request_t *request, libr
     stream = open_memstream(&string_buffer, &string_size);
     if(!stream) {
         redstore_error("Failed to open open_memstream");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     count = librdf_query_results_get_bindings_count(results);
@@ -239,7 +239,7 @@ http_response_t* format_bindings_query_result_html(http_request_t *request, libr
     fprintf(stream, "</table>\n");
     fclose(stream);
    
-    return handle_html_page(request, MHD_HTTP_OK, "SPARQL Results", string_buffer);
+    return handle_html_page(request, 200, "SPARQL Results", string_buffer);
 }
 
 http_response_t* format_bindings_query_result_text(http_request_t *request, librdf_query_results* results, const char* format_str)
@@ -252,7 +252,7 @@ http_response_t* format_bindings_query_result_text(http_request_t *request, libr
     stream = open_memstream(&string_buffer, &string_size);
     if(!stream) {
         redstore_error("Failed to open open_memstream");
-        return handle_error(request, MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return http_response_new_error_page(500, NULL);
     }
     
     count = librdf_query_results_get_bindings_count(results);
@@ -284,7 +284,7 @@ http_response_t* format_bindings_query_result_text(http_request_t *request, libr
 
     fclose(stream);
 
-    return new_http_response(request, MHD_HTTP_OK, string_buffer, string_size, "text/plain");
+    return http_response_new_with_content(string_buffer, string_size, "text/plain");
 }
 
 http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results)

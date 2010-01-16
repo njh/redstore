@@ -93,7 +93,7 @@ void redstore_log( RedstoreLogLevel level, const char* fmt, ... )
     }
 }
 
-int redland_log_handler(void* user, librdf_log_message* msg)
+static int redland_log_handler(void* user, librdf_log_message* msg)
 {
     int level = librdf_log_message_level(msg);
     int code = librdf_log_message_code(msg);
@@ -102,61 +102,6 @@ int redland_log_handler(void* user, librdf_log_message* msg)
     return 0;
 }
 
-static int dispatcher (void *cls, struct MHD_Connection *connection,
-                      const char *url, const char *method,
-                      const char *version, const char *upload_data,
-                      size_t *upload_data_size, void **con_cls)
-{
-    http_request_t *request = malloc(sizeof(http_request_t));
-    http_response_t *response = NULL;
-    
-    request->cls = cls;
-    request->connection = connection;
-    request->url = url;
-    request->method = method;
-    request->version = version;
-    request->upload_data = upload_data;
-    request->upload_data_size = upload_data_size;
-    request->con_cls = con_cls;
-    
-    redstore_debug("%s: %s", method, url);
-
-    if (strcmp(request->url, "/sparql")==0 || strcmp(request->url, "/sparql/")==0) {
-        response = handle_sparql_query(request);
-    } else if (strcmp(request->url, "/")==0) {
-        response = handle_homepage(request);
-    } else if (strlen(request->url) > 6 && strncmp(request->url, "/data/",6)==0) {
-        response = handle_graph(request, strdup(&request->url[6]));
-    } else if (strcmp(request->url, "/query")==0) {
-        response = handle_query_page(request);
-    } else if (strcmp(request->url, "/data")==0) {
-        response = handle_graph_index(request);
-    } else if (strcmp(request->url, "/formats")==0) {
-        response = handle_formats_page(request);
-    } else if (strcmp(request->url, "/favicon.ico")==0) {
-        response = handle_favicon(request);
-    } else if (strlen(request->url)>1 && request->url[strlen(request->url)-1] == '/') {
-        // redirect if the URL ends in a slash
-        char* new_url = strdup(request->url);
-        new_url[strlen(new_url)-1] = '\0';
-        redstore_debug("Redirecting to: %s", new_url);
-        response = handle_redirect(request, new_url);
-    } else {
-        response = handle_error(request, MHD_HTTP_NOT_FOUND);
-    }
-    
-    free(request);
-    
-    // Send the response back to the client
-    if (response) {
-        int ret = MHD_queue_response(connection, response->status, response->mhd_response);
-        MHD_destroy_response(response->mhd_response);
-        free(response);
-        return ret;
-    } else {
-        return MHD_NO;
-    }
-}
 
 // Display how to use this program
 static void usage()
@@ -164,7 +109,7 @@ static void usage()
     int i;
     printf("%s version %s\n\n", PACKAGE_NAME, PACKAGE_VERSION);
     printf("Usage: %s [options] [<name>]\n", PACKAGE_TARNAME);
-    printf("   -p <port>       Port number to run HTTP server on (default %d)\n", DEFAULT_PORT);
+    printf("   -p <port>       Port number to run HTTP server on (default %s)\n", DEFAULT_PORT);
     printf("   -s <type>       Set the graph storage type\n");
     for(i=0; 1; i++) {
         const char *help_name;
@@ -187,9 +132,9 @@ static void usage()
 
 int main(int argc, char *argv[])
 {
-    struct MHD_Daemon *daemon = NULL;
+    http_server_t *server = NULL;
     librdf_hash *storage_options = NULL;
-    int port = DEFAULT_PORT;
+    char* port = DEFAULT_PORT;
     const char* storage_name = DEFAULT_STORAGE_NAME;
     const char* storage_type = DEFAULT_STORAGE_TYPE;
     const char* storage_options_str = DEFAULT_STORAGE_OPTIONS;
@@ -211,7 +156,7 @@ int main(int argc, char *argv[])
     // Parse Switches
     while ((opt = getopt(argc, argv, "p:s:t:nvqh")) != -1) {
         switch (opt) {
-            case 'p':  port = atoi(optarg); break;
+            case 'p':  port = optarg; break;
             case 's':  storage_type = optarg; break;
             case 't':  storage_options_str = optarg; break;
             case 'n':  storage_new = 1; break;
@@ -241,6 +186,29 @@ int main(int argc, char *argv[])
     signal(SIGINT, termination_handler);
     signal(SIGHUP, termination_handler);
 
+    // Create HTTP server
+    server = http_server_new();
+    if (!server) {
+        fprintf(stderr, "Failed to initialise HTTP server.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Configure routing
+    http_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
+    http_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
+    // FIXME: http_server_add_handler(server, "GET", "/data/*", handle_graph, NULL);
+    http_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
+    http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
+    http_server_add_handler(server, "GET", "/query", handle_query_page, NULL);
+    http_server_add_handler(server, "GET", "/formats", handle_formats_page, NULL);
+    http_server_add_handler(server, "GET", "/favicon.ico", handle_favicon, NULL);
+    // FIMXE: add handler to remove slashes from the end of URLs
+    
+    // Set the server signature
+    // FIXME: add Redland libraries to this?
+    http_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);
+
+
     // Setup Redland storage
     redstore_info("Storage type: %s", storage_type);
     redstore_info("Storage name: %s", storage_name);
@@ -263,26 +231,23 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Start HTTP server
-    redstore_info("Starting HTTP server on port %d", port);
-    daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port,
-                   NULL, NULL,
-                   &dispatcher, NULL,
-                   MHD_OPTION_END
-    );
-    if (daemon == NULL) {
-        redstore_fatal("Failed to start HTTP daemon: \n");
+
+    // Start listening for connections
+    redstore_info("Starting HTTP server on port %s", port);
+    if (http_server_listen(server, "", port, PF_UNSPEC)) {
+        fprintf(stderr, "Failed to create HTTP socket.\n");
+        exit(EXIT_FAILURE);
     }
-    
-    while (running) {
-        sleep(1);
+
+    while(running) {
+        http_server_run(server);
     }
-    
-    MHD_stop_daemon(daemon);
     
     librdf_free_storage(storage);
     librdf_free_hash(storage_options);
     librdf_free_world(world);
+
+    http_server_free(server);
  
     return 0;   // FIXME: should return non-zero if there was a fatal error
 }

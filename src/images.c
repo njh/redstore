@@ -3,7 +3,7 @@
 
 #include "redstore.h"
 
-http_response_t* handle_favicon(http_request_t *request)
+http_response_t* handle_favicon(http_request_t *request, void* user_data)
 {
     const unsigned char const_data[] = {
         0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10, 
@@ -48,8 +48,5 @@ http_response_t* handle_favicon(http_request_t *request)
         0x00, 0x00, 0xe0, 0x07, 0x00, 0x00, 
     };
     
-    void *data = malloc(sizeof(const_data));
-    memcpy(data, const_data, sizeof(const_data));
-    return new_http_response(request, MHD_HTTP_OK,
-           (void*)data, sizeof(const_data), "image/x-icon");
+    return http_response_new_with_content((const char*)const_data, sizeof(const_data), "image/x-icon");
 }
