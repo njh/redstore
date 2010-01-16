@@ -218,7 +218,9 @@ void http_request_send_response(http_request_t *request, http_response_t *respon
         }
         
         if (response->content_buffer) {
-            fputs(response->content_buffer, request->socket);
+            assert(response->content_length > 0);
+            fwrite(response->content_buffer, 1, response->content_length, request->socket);
+            // FIXME: check for error?
         }
         
         request->response_sent = 1;

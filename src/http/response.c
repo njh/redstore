@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include <errno.h>
 #include <sys/types.h>
@@ -54,33 +55,21 @@ http_response_t* http_response_new(int code, const char* message)
 http_response_t* http_response_new_error_page(int code, const char* explanation)
 {
     http_response_t* response = http_response_new(code, NULL);
-    char *code_str = calloc(1, BUFSIZ);
-
-    // FIXME: check for memory allocation error
 
     assert(code>=100 && code<1000);
-    snprintf(code_str, BUFSIZ, "%d ", code);
+    if (response == NULL) return NULL;
 
     http_headers_add(&response->headers, "Content-Type", "text/html");
     http_response_content_append(response, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-    http_response_content_append(response, "<html><head><title>");
-    http_response_content_append(response, code_str);
-    http_response_content_append(response, response->status_message);
-    http_response_content_append(response, "</title></head>\n");
-    http_response_content_append(response, "<body><h1>");
-    http_response_content_append(response, code_str);
-    http_response_content_append(response, response->status_message);
-    http_response_content_append(response, "</h1>\n");
+    http_response_content_append(response, "<html>\n");
+    http_response_content_append(response, "<head><title>%d %s</title></head>\n", code, response->status_message);
+    http_response_content_append(response, "<body><h1>%d %s</h1>\n", code, response->status_message);
     
     if (explanation) {
-        http_response_content_append(response, "<p>");
-        http_response_content_append(response, explanation);
-        http_response_content_append(response, "</p>\n");
+        http_response_content_append(response, "<p>%s</p>\n", explanation);
     }
     http_response_content_append(response, "</body></html>\n");
-    
-    free(code_str);
-    
+
     return response;
 }
 
@@ -111,29 +100,43 @@ http_response_t* http_response_new_with_content(const char* data, size_t length,
     return response;
 }
 
-void http_response_content_append(http_response_t* response, const char* string)
+void http_response_content_append(http_response_t* response, const char* fmt, ...)
 {
+    va_list args;
+    size_t len;
+
     assert(response != NULL);
     
-    if (string == NULL || strlen(string) == 0)
-    	return;
+    if (fmt == NULL || strlen(fmt) == 0)
+    	  return;
+    
+    // Get the length of the formatted string
+    va_start(args, fmt);
+    len = vsnprintf(NULL, 0, fmt, args);
+    va_end(args);
 
     // Does the buffer already exist?
     if (!response->content_buffer) {
-        response->content_buffer_size = BUFSIZ + strlen(string);
+        response->content_buffer_size = BUFSIZ + len;
         response->content_buffer = malloc(response->content_buffer_size);
         response->content_length = 0;
+        // FIXME: check for memory allocation error
     }
 
     // Is the buffer big enough?
-    if (response->content_buffer_size - response->content_length < strlen(string)) {
-        response->content_buffer_size += strlen(string) + BUFSIZ;
+    if (response->content_buffer_size - response->content_length < len) {
+        response->content_buffer_size += len + BUFSIZ;
         response->content_buffer = realloc(response->content_buffer, response->content_buffer_size);
+        // FIXME: check for memory allocation error
     }
     
-    // Perform the append
-    strcat(response->content_buffer + response->content_length, string);
-    response->content_length += strlen(string);
+    // Add formatted string the buffer
+    va_start(args, fmt);
+    response->content_length += vsnprintf(
+        &response->content_buffer[response->content_length],
+        response->content_buffer_size - response->content_length - 1, fmt, args
+    );
+    va_end(args);
 }
 
 
@@ -159,11 +162,12 @@ void http_response_set_content(http_response_t* response, const char* data, size
 {
     assert(response != NULL);
     assert(data != NULL);
-    assert(length != 0);
+    assert(length > 0);
     assert(type != NULL);
 
     response->content_buffer = realloc(response->content_buffer, length);
     memcpy(response->content_buffer, data, length);
+    response->content_length = length;
     http_headers_add(&response->headers, "Content-Type", type);
 }
 
