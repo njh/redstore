@@ -68,20 +68,13 @@ extern serialiser_info_t serialiser_info[];
 
 // ------- Prototypes -------
 
-/*
-http_response_t* new_http_response(http_request_t *request, unsigned int status,
-                       void* content, size_t content_size,
-                       const char* content_type);
-*/
-
 http_response_t* handle_sparql_query(http_request_t *request, void* user_data);
 http_response_t* handle_homepage(http_request_t *request, void* user_data);
 http_response_t* handle_formats_page(http_request_t *request, void* user_data);
 http_response_t* handle_query_page(http_request_t *request, void* user_data);
 
-http_response_t* handle_html_page(http_request_t *request, unsigned int status, 
-                     const char* title, char* page);
-
+void page_append_html_header(http_response_t *response, const char* title);
+void page_append_html_footer(http_response_t *response);
 
 http_response_t* handle_graph_index(http_request_t *request, void* user_data);
 http_response_t* handle_graph_get(http_request_t *request, librdf_node *context);
@@ -98,16 +91,10 @@ http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream
 http_response_t* format_graph_stream_text(http_request_t *request, librdf_stream* stream, const char* format_str);
 http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream);
 
-
 http_response_t* handle_favicon(http_request_t *request, void* user_data);
 
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... );
 
-char* escape_uri(char *arg);
-
-#ifndef HAVE_OPEN_MEMSTREAM
-FILE *open_memstream(char **ptr, size_t *sizeloc);
-#endif
 
 
 #endif

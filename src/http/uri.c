@@ -55,6 +55,13 @@ char* http_url_unescape(const char* escaped)
 }
 
 
+char* http_url_escape(const char *arg)
+{ 
+	// FIXME: implement this
+	return strdup(arg);
+}
+
+
 /*
 char* http_url_escape(char *arg)
 { 

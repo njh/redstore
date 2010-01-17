@@ -101,6 +101,5 @@ void http_server_free(http_server_t* server);
 
 
 char* http_url_unescape(const char* escaped);
-
-
+char* http_url_escape(const char *arg);
 

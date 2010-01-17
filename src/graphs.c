@@ -1,34 +1,24 @@
-
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <librdf.h>
 
 #include "redstore.h"
 
 
 http_response_t* handle_graph_index(http_request_t *request, void* user_data)
 {
+    http_response_t* response = http_response_new(200, NULL);
     librdf_iterator* iterator = NULL;
-    FILE* stream = NULL;
-    char *page_buffer = NULL;
-    size_t page_size = 0;
+
+	page_append_html_header(response, "Named Graphs");
  
     iterator = librdf_storage_get_contexts(storage);
     if(!iterator) {
         redstore_error("Failed to get contexts.");
         return http_response_new_error_page(500, NULL);
     }
-    
-    stream = open_memstream(&page_buffer, &page_size);
-    if(!stream) {
-        redstore_error("Failed to open open_memstream");
-        return http_response_new_error_page(500, NULL);
-    }
 
-    fprintf(stream, "<ul>\n");
+    http_response_content_append(response, "<ul>\n");
     while(!librdf_iterator_end(iterator)) {
         librdf_uri* uri;
         librdf_node* node;
@@ -46,18 +36,19 @@ http_response_t* handle_graph_index(http_request_t *request, void* user_data)
             break;
         }
         
-        escaped = escape_uri((char*)librdf_uri_as_string(uri));
-        fprintf(stream, "<li><a href=\"/data/%s\">%s<a/></li>\n", escaped, librdf_uri_as_string(uri));
+        escaped = http_url_escape((char*)librdf_uri_as_string(uri));
+        http_response_content_append(response, "<li><a href=\"/data/%s\">%s<a/></li>\n", escaped, librdf_uri_as_string(uri));
         free(escaped);
         
         librdf_iterator_next(iterator);
     }
-    fprintf(stream, "</ul>\n");
+    http_response_content_append(response, "</ul>\n");
     
     librdf_free_iterator(iterator);
-    fclose(stream);
-   
-    return handle_html_page(request, 200, "Named Graphs", page_buffer);
+
+	page_append_html_footer(response);
+	
+	return response;
 }
 
 
@@ -108,11 +99,9 @@ http_response_t* handle_graph_delete(http_request_t *request, librdf_node *conte
     redstore_info("Deleting graph: %s", uri);
     
     if (librdf_model_context_remove_statements(model,context)) {
-        response = handle_html_page(request, 500,
-                   "Delete Failed", strdup("Error while trying to delete graph"));
+    	response = http_response_new_error_page(500, "Error while trying to delete graph");
     } else {
-        response = handle_html_page(request, 200, 
-                   "Deleted Successfully", strdup("Successfully deleted Graph"));
+    	response = http_response_new_error_page(200, "Successfully deleted Graph");
     }
     
     free(uri);

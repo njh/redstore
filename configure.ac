@@ -60,13 +60,6 @@ AC_HEADER_STDC
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 
-AC_CHECK_FUNCS(open_memstream)
-if test x$ac_cv_func_open_memstream != xyes; then
-    AC_CHECK_FUNC(funopen,,
-        AC_MSG_ERROR([neither open_memstream or funopen are available on this system])
-    )
-fi
-
 
 dnl ############## Check for packages we depend upon
 

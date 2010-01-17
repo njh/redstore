@@ -1,29 +1,14 @@
-
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <librdf.h>
-
 #include "redstore.h"
 
 
-http_response_t* handle_html_page(http_request_t *request, unsigned int status, 
-                     const char* title, char* content)
+void page_append_html_header(http_response_t *response, const char* title)
 {
-    FILE* iostream = NULL;
-    char *page_buffer = NULL;
-    size_t page_size = 0;
-
-    iostream = open_memstream(&page_buffer, &page_size);
-    if(!iostream) {
-        redstore_error("Failed to open open_memstream");
-        return http_response_new_error_page(500, NULL);
-    }
-    
-    fprintf(iostream,
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+	http_response_content_append(response,         
+		"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
         "          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
         "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
@@ -31,90 +16,85 @@ http_response_t* handle_html_page(http_request_t *request, unsigned int status,
         "  <title>RedStore - %s</title>\n"
         "</head>\n"
         "<body>\n"
-        "<h1>%s</h1>\n"
-        "%s\n"
-        "<hr /><address>%s librdf/%s libraptor/%s librasqal/%s</address>\n"
-        "</body></html>\n",
-        title, title, content,
-        PACKAGE_NAME "/" PACKAGE_VERSION,
-        librdf_version_string,
-        raptor_version_string,
-        rasqal_version_string
-    );
-    
-    fclose(iostream);
-    free(content);
-
-    return http_response_new_with_content(page_buffer, page_size, "text/html");
+        "<h1>%s</h1>\n", title, title
+	);
 }
 
+void page_append_html_footer(http_response_t *response)
+{
+	http_response_content_append(response,         
+        "<hr /><address>%s</address>\n"
+        "</body></html>\n",
+        PACKAGE_NAME "/" PACKAGE_VERSION
+	);
+}
 
 http_response_t* handle_homepage(http_request_t *request, void* user_data)
 {
-    const char page[] = 
+	http_response_t* response = http_response_new(200, NULL);
+	page_append_html_header(response, "RedStore");
+	http_response_content_append(response,
         "<ul>\n"
         "  <li><a href=\"/query\">SPARQL Query Page</a></li>\n"
         "  <li><a href=\"/data\">Named Graphs</a></li>\n"
         "  <li><a href=\"/formats\">Supported Formats</a></li>\n"
-        "</ul>\n";
-
-    return handle_html_page(request, 200, "RedStore", strdup(page));
+        "</ul>\n"
+	);
+	page_append_html_footer(response);
+	return response;
 }
 
 http_response_t* handle_formats_page(http_request_t *request, void* user_data)
 {
-    FILE* iostream = NULL;
-    char *page_buffer = NULL;
-    size_t page_size = 0;
-    int i;
-
-    iostream = open_memstream(&page_buffer, &page_size);
-    if(!iostream) {
-        redstore_error("Failed to open open_memstream");
-        return http_response_new_error_page(500, NULL);
-    }
+	http_response_t* response;
+	int i;
+	
+	response = http_response_new(200, NULL);
+	page_append_html_header(response, "Supported Formats");
     
-    fprintf(iostream, "<h2>RDF Parsers</h2>\n");
-    fprintf(iostream, "<table border=\"1\">\n");
-    fprintf(iostream, "<tr><th>Name</th><th>Description</th></tr>\n");
+    http_response_content_append(response, "<h2>RDF Parsers</h2>\n");
+    http_response_content_append(response, "<table border=\"1\">\n");
+    http_response_content_append(response, "<tr><th>Name</th><th>Description</th></tr>\n");
     for(i=0; 1; i++) {
         const char *name, *label;
         if(librdf_parser_enumerate(world, i, &name, &label))
             break;
-        fprintf(iostream, "<tr><td>%s</td><td>%s</td></tr>\n", name, label);
+        http_response_content_append(response, "<tr><td>%s</td><td>%s</td></tr>\n", name, label);
     }
-    fprintf(iostream, "</table>\n");
+    http_response_content_append(response, "</table>\n");
 
-    fprintf(iostream, "<h2>RDF Serialisers</h2>\n");
-    fprintf(iostream, "<table border=\"1\">\n");
-    fprintf(iostream, "<tr><th>Name</th><th>Description</th><th>MIME Type</th></tr>\n");
+    http_response_content_append(response, "<h2>RDF Serialisers</h2>\n");
+    http_response_content_append(response, "<table border=\"1\">\n");
+    http_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th></tr>\n");
     for(i=0; serialiser_info[i].name; i++) {
         if(!serialiser_info[i].label) continue;
-        fprintf(iostream, "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+        http_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n",
                 serialiser_info[i].name, serialiser_info[i].label, serialiser_info[i].mime_type);
     }
-    fprintf(iostream, "</table>\n");
+    http_response_content_append(response, "</table>\n");
 
-    fprintf(iostream, "<h2>Query Result Formatters</h2>\n");
-    fprintf(iostream, "<table border=\"1\">\n");
-    fprintf(iostream, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
+    http_response_content_append(response, "<h2>Query Result Formatters</h2>\n");
+    http_response_content_append(response, "<table border=\"1\">\n");
+    http_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
     for(i=0; 1; i++) {
         const char *name, *label, *mime_type;
         const unsigned char *uri;
         if(librdf_query_results_formats_enumerate(world, i, &name, &label, &uri, &mime_type))
             break;
-        fprintf(iostream, "<tr><td>%s</td><td>%s</td><td>%s</td><td><a href=\"%s\">More Info</a></td></tr>\n", name, label, mime_type, uri);
+        http_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td><td><a href=\"%s\">More Info</a></td></tr>\n", name, label, mime_type, uri);
     }
-    fprintf(iostream, "</table>\n");
+    http_response_content_append(response, "</table>\n");
+	page_append_html_footer(response);
 
-    fclose(iostream);
-
-    return handle_html_page(request, 200, "Supported Formats", page_buffer);
+    return response;
 }
 
 http_response_t* handle_query_page(http_request_t *request, void* user_data)
 {
-    const char page[] = 
+	http_response_t* response = http_response_new(200, NULL);
+	page_append_html_header(response, "SPARQL Query");
+    
+    http_response_content_append(response, 
         "<form action=\"../sparql\" method=\"get\">\n"
         "<textarea name=\"query\" cols=\"80\" rows=\"18\">\n"
         "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
@@ -132,10 +112,13 @@ http_response_t* handle_query_page(http_request_t *request, void* user_data)
         "</select>\n"
         "<input type=\"reset\"> "
         "<input type=\"submit\" value=\"Execute\">\n"
-        "</form>\n";
+        "</form>\n"
+    );
   
     // FIXME: list output formats based on enumeration of formats
     // that Redland supports
 
-    return handle_html_page(request, 200, "SPARQL Query", strdup(page));
+	page_append_html_footer(response);
+
+    return response;
 }

@@ -1,9 +1,6 @@
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <librdf.h>
 
 #include "redstore.h"
 
@@ -58,10 +55,11 @@ static char* get_format(http_request_t *request)
 
 http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stream* stream, const char* format_str)
 {
+    FILE* socket = http_request_get_socket(request);
+	http_response_t *response;
     librdf_serializer* serialiser;
     const char* format_name = NULL;
     const char* mime_type = NULL;
-    char* data = NULL;
     int i;
     
     for(i=0; serialiser_info[i].name; i++) {
@@ -85,32 +83,34 @@ http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stre
         return http_response_new_error_page(500, NULL);
     }
     
-    data = (char*)librdf_serializer_serialize_stream_to_string(serialiser, NULL, stream);
-    if (!data) {
+	// Send back the response headers
+	response = http_response_new(200, NULL);
+	http_response_add_header(response, "Content-Type", mime_type);
+	http_request_send_response(request, response);
+
+    if (librdf_serializer_serialize_stream_to_file_handle(serialiser, socket, NULL, stream)) {
         redstore_error("Failed to serialize graph");
-        return http_response_new_error_page(500, NULL);
+        // FIXME: send error message to client?
     }
     
     librdf_free_serializer(serialiser);
 
-    return http_response_new_with_content(data, strlen(data), mime_type);
+    return response;
 }
 
 
 http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream* stream, const char* format_str)
 {
-    FILE* iostream = NULL;
-    char *string_buffer = NULL;
-    size_t string_size = 0;
+	http_response_t *response = http_response_new(200, NULL);
+    FILE* socket = http_request_get_socket(request);
 
-    iostream = open_memstream(&string_buffer, &string_size);
-    if(!iostream) {
-        redstore_error("Failed to open open_memstream");
-        return http_response_new_error_page(500, NULL);
-    }
+	// Send back the response headers
+	http_response_add_header(response, "Content-Type", "text/html");
+	http_request_send_response(request, response);
+    fprintf(socket, "<html><head><title>RedStore</title></head><body>");
     
-    fprintf(iostream, "<table class=\"triples\" border=\"1\">\n");
-    fprintf(iostream, "<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n");
+    fprintf(socket, "<table class=\"triples\" border=\"1\">\n");
+    fprintf(socket, "<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n");
     while(!librdf_stream_end(stream)) {
         librdf_statement *statement = librdf_stream_get_object(stream);
         if(!statement) {
@@ -118,21 +118,20 @@ http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream
             break;
         }
       
-        fprintf(iostream, "<tr><td>");
-        librdf_node_print(librdf_statement_get_subject(statement), iostream);
-        fprintf(iostream, "</td><td>");
-        librdf_node_print(librdf_statement_get_predicate(statement), iostream);
-        fprintf(iostream, "</td><td>");
-        librdf_node_print(librdf_statement_get_object(statement), iostream);
-        fprintf(iostream, "</td></tr>\n");
+        fprintf(socket, "<tr><td>");
+        librdf_node_print(librdf_statement_get_subject(statement), socket);
+        fprintf(socket, "</td><td>");
+        librdf_node_print(librdf_statement_get_predicate(statement), socket);
+        fprintf(socket, "</td><td>");
+        librdf_node_print(librdf_statement_get_object(statement), socket);
+        fprintf(socket, "</td></tr>\n");
 
         librdf_stream_next(stream);
     }
 
-    fprintf(iostream, "</table>\n");
-    fclose(iostream);
+    fprintf(socket, "</table></body></html>\n");
    
-    return handle_html_page(request, 200, "Graph Contents", string_buffer);
+    return response;
 }
 
 
@@ -160,9 +159,10 @@ http_response_t* format_graph_stream(http_request_t *request, librdf_stream* str
 
 http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str)
 {
+    FILE* socket = http_request_get_socket(request);
+	http_response_t *response;
     librdf_uri *format_uri = NULL;
     const char *mime_type = NULL;
-    char* data = NULL;
     unsigned int i;
     
     for(i=0; 1; i++) {
@@ -185,83 +185,81 @@ http_response_t* format_bindings_query_result_librdf(http_request_t *request, li
         redstore_error("Failed to match file format: %s", format_str);
         return http_response_new_error_page(500, NULL);
     }
+
+	// Send back the response headers
+	response = http_response_new(200, NULL);
+	http_response_add_header(response, "Content-Type", mime_type);
+	http_request_send_response(request, response);
     
-    // FIXME: stream results back to client, rather than building string
-    data = (char*)librdf_query_results_to_string(results, format_uri, NULL);
-    if (!data) {
+    // Stream results back to client
+	if (librdf_query_results_to_file_handle(results, socket, format_uri, NULL)) {
         redstore_error("Failed to serialise query results");
-        return http_response_new_error_page(500, NULL);
+        // FIXME: send something to the browser?
     }
 
     librdf_free_uri(format_uri);
 
-    return http_response_new_with_content(data, strlen(data), mime_type);
+    return response;
 }
 
 http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str)
 {
-    FILE* stream = NULL;
-    char *string_buffer = NULL;
-    size_t string_size = 0;
+	http_response_t *response = http_response_new(200, NULL);
+    FILE* socket = http_request_get_socket(request);
     int i, count;
 
-    stream = open_memstream(&string_buffer, &string_size);
-    if(!stream) {
-        redstore_error("Failed to open open_memstream");
-        return http_response_new_error_page(500, NULL);
-    }
-    
+	// Send back the response headers
+	http_response_add_header(response, "Content-Type", "text/html");
+	http_request_send_response(request, response);
+    fprintf(socket, "<html><head><title>RedStore</title></head><body>");
+
     count = librdf_query_results_get_bindings_count(results);
-    fprintf(stream, "<table class=\"sparql\" border=\"1\">\n<tr>");
+    fprintf(socket, "<table class=\"sparql\" border=\"1\">\n<tr>");
     for(i=0; i < count; i++) {
         const char* name = librdf_query_results_get_binding_name(results, i);
-        fprintf(stream, "<th>?%s</th>", name);
+        fprintf(socket, "<th>?%s</th>", name);
     }
-    fprintf(stream, "</tr>\n");
+    fprintf(socket, "</tr>\n");
 
     while(!librdf_query_results_finished(results)) {
-        fprintf(stream, "<tr>");
+        fprintf(socket, "<tr>");
         for(i=0; i < count; i++) {
             librdf_node *value = librdf_query_results_get_binding_value(results, i);
-            fprintf(stream, "<td>");
+            fprintf(socket, "<td>");
             if (value) {
-                librdf_node_print(value, stream);
+                librdf_node_print(value, socket);
                 librdf_free_node(value);
             } else {
-                fputs("NULL", stream);
+                fputs("NULL", socket);
             }
-            fprintf(stream, "</td>");
+            fprintf(socket, "</td>");
         }
-        fprintf(stream, "</tr>\n");
+        fprintf(socket, "</tr>\n");
         librdf_query_results_next(results);
     }
 
-    fprintf(stream, "</table>\n");
-    fclose(stream);
-   
-    return handle_html_page(request, 200, "SPARQL Results", string_buffer);
+    fprintf(socket, "</table></body></html>\n");
+
+    return response;
 }
 
 http_response_t* format_bindings_query_result_text(http_request_t *request, librdf_query_results* results, const char* format_str)
 {
-    FILE* stream = NULL;
-    char *string_buffer = NULL;
-    size_t string_size = 0;
+	http_response_t *response = http_response_new(200, NULL);
+    FILE* socket = http_request_get_socket(request);
     int i, count;
 
-    stream = open_memstream(&string_buffer, &string_size);
-    if(!stream) {
-        redstore_error("Failed to open open_memstream");
-        return http_response_new_error_page(500, NULL);
-    }
+	// Send back the response headers
+	http_response_add_header(response, "Content-Type", "text/plain");
+	http_request_send_response(request, response);
     
     count = librdf_query_results_get_bindings_count(results);
     for(i=0; i < count; i++) {
         const char* name = librdf_query_results_get_binding_name(results, i);
-        fprintf(stream, "?%s", name);
-        if (i!=count-1) fprintf(stream, "\t");
+        fprintf(socket, "?%s", name);
+        if (i!=count-1) fprintf(socket, "\t");
     }
-    fprintf(stream, "\n");
+    fprintf(socket, "\n");
 
     while(!librdf_query_results_finished(results)) {
         for(i=0; i < count; i++) {
@@ -269,22 +267,20 @@ http_response_t* format_bindings_query_result_text(http_request_t *request, libr
             if (value) {
                 char* str = (char*)librdf_node_to_string(value);
                 if (str) {
-                    fputs(str, stream);
+                    fputs(str, socket);
                     free(str);
                 }
                 librdf_free_node(value);
             } else {
-                fputs("NULL", stream);
+                fputs("NULL", socket);
             }
-            if (i!=count-1) fprintf(stream, "\t");
+            if (i!=count-1) fprintf(socket, "\t");
         }
-        fprintf(stream, "\n");
+        fprintf(socket, "\n");
         librdf_query_results_next(results);
     }
 
-    fclose(stream);
-
-    return http_response_new_with_content(string_buffer, string_size, "text/plain");
+    return response;
 }
 
 http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results)
