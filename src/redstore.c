@@ -196,13 +196,15 @@ int main(int argc, char *argv[])
     // Configure routing
     http_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
     http_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
-    // FIXME: http_server_add_handler(server, "GET", "/data/*", handle_graph, NULL);
+    http_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
+    http_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
+    http_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
     http_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
     http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
     http_server_add_handler(server, "GET", "/query", handle_query_page, NULL);
     http_server_add_handler(server, "GET", "/formats", handle_formats_page, NULL);
     http_server_add_handler(server, "GET", "/favicon.ico", handle_favicon, NULL);
-    // FIMXE: add handler to remove slashes from the end of URLs
+    //http_server_add_handler(server, "GET", NULL, handle_remove_trailing_slash, NULL);
     
     // Set the server signature
     // FIXME: add Redland libraries to this?

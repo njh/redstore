@@ -51,21 +51,57 @@ http_response_t* handle_graph_index(http_request_t *request, void* user_data)
 	return response;
 }
 
-
-http_response_t* handle_graph_get(http_request_t *request, librdf_node *context)
+static librdf_node* get_graph_context(http_request_t *request)
 {
+	const char* uri = http_request_get_path_glob(request);
+    librdf_node *context;
+
+	if (!uri || strlen(uri)<1) {
+		return NULL;
+	}
+
+	// Create node
+	context = librdf_new_node_from_uri_string(world,(const unsigned char*)uri);
+    if (!context) {
+        redstore_debug("Failed to create node from: %s", uri);
+    	return NULL;
+    }
+
+    // Check if the graph exists
+    if (!librdf_model_contains_context(model, context)) {
+        redstore_debug("Graph not found: %s", uri);
+        // FIXME: display a better error message
+        return NULL;
+    }
+
+	return context;
+}
+
+http_response_t* handle_graph_head(http_request_t *request, void* user_data)
+{
+    librdf_node *context = get_graph_context(request);
+    http_response_t* response;
+
+    if (context) {
+    	response = http_response_new(200, NULL);
+    	librdf_free_node(context);
+    } else {
+    	response = http_response_new(404, "Graph not found");
+	}
+
+    return response;
+}
+
+http_response_t* handle_graph_get(http_request_t *request, void* user_data)
+{
+    librdf_node *context = get_graph_context(request);
     librdf_stream * stream;
     http_response_t* response;
 
-    // First check if the graph exists
-    if (!librdf_model_contains_context(model, context)) {
-        unsigned char* uri = librdf_node_to_string(context);
-        redstore_debug("Graph not found: %s", uri);
-        free(uri);
-        // FIXME: display a better error message
-        return http_response_new_error_page(404, NULL);
-    }
-    
+    if (!context) {
+         return http_response_new_error_page(404, "Graph not found.");
+	}
+
     // Stream the graph
     stream = librdf_model_context_as_stream(model, context);
     if(!stream) {
@@ -77,26 +113,23 @@ http_response_t* handle_graph_get(http_request_t *request, librdf_node *context)
     response = format_graph_stream(request, stream);
 
     librdf_free_stream(stream);
+    librdf_free_node(context);
 
     return response;
 }
 
 
-http_response_t* handle_graph_delete(http_request_t *request, librdf_node *context)
+http_response_t* handle_graph_delete(http_request_t *request, void* user_data)
 {
-    unsigned char* uri = librdf_node_to_string(context);
+    librdf_node *context = get_graph_context(request);
     http_response_t* response;
 
-    // First check if the graph exists
-    if (!librdf_model_contains_context(model, context)) {
-        unsigned char* uri = librdf_node_to_string(context);
-        redstore_debug("Graph not found: %s", uri);
-        free(uri);
-        // FIXME: display a better error message
-        return http_response_new_error_page(404, NULL);
-    }
+	// Create node
+    if (!context) {
+         return http_response_new_error_page(404, "Graph not found.");
+	}
 
-    redstore_info("Deleting graph: %s", uri);
+    redstore_info("Deleting graph: %s", http_request_get_path_glob(request));
     
     if (librdf_model_context_remove_statements(model,context)) {
     	response = http_response_new_error_page(500, "Error while trying to delete graph");
@@ -104,34 +137,7 @@ http_response_t* handle_graph_delete(http_request_t *request, librdf_node *conte
     	response = http_response_new_error_page(200, "Successfully deleted Graph");
     }
     
-    free(uri);
-    
-    return response;
-}
-
-/*
-http_response_t* handle_graph(http_request_t *request, void* user_data)
-{
-    http_response_t* response = NULL;
-    librdf_node *context;
- 
-    redstore_debug("handle_graph(%s,%s)", request->method, uri);
-
-    //response = http_allowed_methods(request, "GET", "DELETE");
-    //if (response) return response;
-    
-    context = librdf_new_node_from_uri_string(world,(unsigned char*)uri);
-    if (!context) return NULL;
-    
-    if (strcmp(request->method, "GET")==0) {
-        response = handle_graph_get(request, context);
-    } else if (strcmp(request->method, "DELETE")==0) {
-        response = handle_graph_delete(request, context);
-    }
-
-    free(uri);
     librdf_free_node(context);
     
     return response;
 }
-*/

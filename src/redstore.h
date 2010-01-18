@@ -77,9 +77,9 @@ void page_append_html_header(http_response_t *response, const char* title);
 void page_append_html_footer(http_response_t *response);
 
 http_response_t* handle_graph_index(http_request_t *request, void* user_data);
-http_response_t* handle_graph_get(http_request_t *request, librdf_node *context);
-http_response_t* handle_graph_delete(http_request_t *request, librdf_node *context);
-http_response_t* handle_graph(http_request_t *request, void* user_data);
+http_response_t* handle_graph_head(http_request_t *request, void* user_data);
+http_response_t* handle_graph_get(http_request_t *request, void* user_data);
+http_response_t* handle_graph_delete(http_request_t *request, void* user_data);
 
 http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str);
 http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str);
