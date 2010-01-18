@@ -76,6 +76,26 @@ char* http_request_get_argument(http_request_t *request, const char* key)
     return http_headers_get(&request->arguments, key);
 }
 
+void http_request_set_path_glob(http_request_t *request, const char* path_glob)
+{
+	// Free the old glob
+	if (request->path_glob) {
+		free(request->path_glob);
+	}
+	
+	// Store the new glob
+	if (path_glob && strlen(path_glob)) {
+		request->path_glob = strdup(path_glob);
+	} else {
+		request->path_glob = NULL;
+	}
+}
+
+const char* http_request_get_path_glob(http_request_t *request)
+{
+	return request->path_glob;
+}
+
 void http_request_parse_arguments(http_request_t *request, const char *input)
 {
     char *args, *ptr, *key, *value;
@@ -240,6 +260,7 @@ void http_request_free(http_request_t* request)
     if (request->url) free(request->url);
     if (request->version) free(request->version);
     if (request->path) free(request->path);
+    if (request->path_glob) free(request->path_glob);
     if (request->query_string) free(request->query_string);
     
     if (request->socket) fclose(request->socket);

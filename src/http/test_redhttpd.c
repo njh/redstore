@@ -56,7 +56,10 @@ static http_response_t *handle_query(http_request_t *request, void *user_data)
     fprintf(socket, "Method: %s\n", request->method);
     fprintf(socket, "URL: %s\n", request->url);
     fprintf(socket, "Path: %s\n", request->path);
+    fprintf(socket, "Path Glob: %s\n", request->path_glob);
     fprintf(socket, "Query: %s\n", request->query_string);
+    fprintf(socket, "Remote Address: %s\n", request->remote_addr);
+    fprintf(socket, "Remote Port: %s\n", request->remote_port);
     fprintf(socket, "</pre>\n");
    
    	if (request->headers) {
@@ -94,6 +97,11 @@ static http_response_t *handle_redirect(http_request_t *request, void *user_data
     return http_response_new_redirect("/query");
 }
 
+static http_response_t *handle_logging(http_request_t *request, void *user_data)
+{
+    printf("[%s:%s] %s: %s\n", request->remote_addr, request->remote_port, request->method, request->path);
+    return NULL;
+}
 
 
 
@@ -140,8 +148,9 @@ main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
   
+    http_server_add_handler(server, NULL, NULL, handle_logging, NULL);
     http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
-    http_server_add_handler(server, "GET", "/query", handle_query, NULL);
+    http_server_add_handler(server, "GET", "/query*", handle_query, NULL);
     http_server_add_handler(server, "POST", "/query", handle_query, NULL);
     http_server_add_handler(server, "GET", "/redirect", handle_redirect, NULL);
     http_server_set_signature(server, "test_redhttpd/0.1");
@@ -150,6 +159,8 @@ main(int argc, char **argv)
         fprintf(stderr, "Failed to create HTTP socket.\n");
         exit(EXIT_FAILURE);
     }
+    
+    printf("Listening on: %s\n", sopt_service);
 
     while(running) {
         http_server_run(server);

@@ -112,9 +112,6 @@ void http_server_add_handler(http_server_t *server, const char* method, const ch
 {
     http_handler_t *handler = calloc(1, sizeof(http_handler_t));
     http_handler_t *it;
-    
-    assert(method != NULL);
-    assert(path != NULL);
 
     handler->method = method ? strdup(method) : NULL;
     handler->path = path ? strdup(path) : NULL;
@@ -162,32 +159,64 @@ void http_server_run(http_server_t* server)
             if (cs < 0) {
                 perror("accept"); 
                 exit(EXIT_FAILURE);
+            } else {
+                http_server_handle_request(server, cs, sa);
+                close(cs);
             }
-            if (fork() == 0) {
-                FILE* file = fdopen(cs, "r+");
-                close(server->sockets[i]);
-                http_server_handle_request(server, file);
-                fclose(file);
-                exit(EXIT_SUCCESS);
-            }
-            close(cs);
         }
     }
 }
 
-int http_server_handle_request(http_server_t* server, FILE* file /*, client address */)
+static int match_route(http_handler_t *handler, http_request_t *request)
 {
-    http_request_t *request = http_request_new();
+	size_t path_len;
+	
+	// Does the method match?
+	if (!(handler->method == NULL || strcasecmp(handler->method, request->method)==0)) {
+		return 0;
+	}
+	
+	// Match any path?
+	if (!handler->path) {
+		return 1;
+	}
+
+	// Glob on the end of the path?
+	path_len = strlen(handler->path);
+	if (handler->path[path_len-1] == '*' && strncasecmp(handler->path, request->path, path_len-1)==0) {
+		const char* glob = &request->path[path_len-1];
+		http_request_set_path_glob(request, glob);
+		return 1;
+	} else if (strcasecmp(handler->path, request->path)==0) {
+		// Matched whole path
+		return 1;
+	}
+
+	// Failed to match
+	return 0;
+}
+
+int http_server_handle_request(http_server_t* server, int socket, struct sockaddr *sa)
+{
+    http_request_t *request = NULL;
     http_response_t *response = NULL;
-    http_handler_t *it;
+    http_handler_t *it = NULL;
     
     assert(server != NULL);
-    assert(file != NULL);
+    assert(socket >= 0);
 
+    request = http_request_new();
     if (!request) return -1;
     request->server = server;
-    request->socket = file;
-    // FIXME: store client address
+    request->socket = fdopen(socket, "r+");;
+    if (getnameinfo(sa, sa->sa_len,
+         request->remote_addr, sizeof(request->remote_addr),
+         request->remote_port, sizeof(request->remote_port),
+         NI_NUMERICHOST | NI_NUMERICSERV))
+    {
+        perror("could not get numeric hostname of client");
+        return -1;
+    }    
     
     if (http_request_read_status_line(request)) {
         // Invalid request
@@ -233,11 +262,10 @@ int http_server_handle_request(http_server_t* server, FILE* file /*, client addr
     // Dispatch the request
     if (!response) {
         for (it = server->handlers; it; it = it->next) {
-            if ((strcasecmp(it->method, request->method)==0) && 
-                strcasecmp(it->path, request->path)==0)
+            if (match_route(it, request))
             {
                 response = it->func(request, it->user_data);
-                break;
+                if (response) break;
             }
         }
     }
@@ -267,8 +295,8 @@ http_response_t *http_server_default_handler(http_server_t* server, http_request
     // Is it a HEAD request?
     if (strncasecmp("HEAD",request->method,4)==0) {
         for (it = server->handlers; it; it = it->next) {
-            if ((strcasecmp(it->method, "GET")==0) && 
-                strcasecmp(it->path, request->path)==0)
+            if ((it->method && strcasecmp(it->method, "GET")==0) &&
+                (it->path && strcasecmp(it->path, request->path)==0))
             {
                 response = http_response_new(200, NULL);
                 break;
@@ -281,7 +309,7 @@ http_response_t *http_server_default_handler(http_server_t* server, http_request
     } else {
         // Check if another method is allowed instead
         for (it = server->handlers; it; it = it->next) {
-            if (strcasecmp(it->path, request->path)==0)
+            if (it->path && strcasecmp(it->path, request->path)==0)
             {
                 response = http_response_new_error_page(405, NULL);
                 // FIXME: add list of allowed methods

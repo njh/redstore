@@ -1,5 +1,6 @@
 
 #include <sys/socket.h>
+#include <netdb.h>
 
 
 
@@ -17,12 +18,16 @@ typedef struct http_request {
     struct http_server *server;
     
     FILE* socket;
+    char remote_addr[NI_MAXHOST];
+    char remote_port[NI_MAXSERV];
+
     char *url;
     char *method;
     char *version;
     void* user_data;
     
     char* path;
+    char* path_glob;
     char* query_string;
     
     char* content_buffer;
@@ -73,6 +78,8 @@ http_request_t* http_request_new(void);
 char* http_request_read_line(http_request_t *request);
 char* http_request_get_header(http_request_t *request, const char* key);
 char* http_request_get_argument(http_request_t *request, const char* key);
+void http_request_set_path_glob(http_request_t *request, const char* path_glob);
+const char* http_request_get_path_glob(http_request_t *request);
 void http_request_parse_arguments(http_request_t *request, const char *input);
 FILE* http_request_get_socket(http_request_t *request);
 int http_request_read_status_line(http_request_t *request);
@@ -93,7 +100,7 @@ http_server_t* http_server_new(void);
 int http_server_listen(http_server_t* server, const char* host, const char* port, sa_family_t family);
 void http_server_add_handler(http_server_t *server, const char* method, const char* path, http_handler_func func, void *user_data);
 void http_server_run(http_server_t* server);
-int http_server_handle_request(http_server_t* server, FILE* file /*, client address */);
+int http_server_handle_request(http_server_t* server, int socket, struct sockaddr *sa);
 http_response_t *http_server_default_handler(http_server_t* server, http_request_t *request);
 void http_server_set_signature(http_server_t* server, const char* signature);
 const char* http_server_get_signature(http_server_t* server);
@@ -102,4 +109,3 @@ void http_server_free(http_server_t* server);
 
 char* http_url_unescape(const char* escaped);
 char* http_url_escape(const char *arg);
-
