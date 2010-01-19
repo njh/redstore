@@ -10,7 +10,6 @@ redstore_SOURCES = \
   formatters.c \
   pages.c \
   query.c \
-  images.c \
-  util.c
+  images.c
 
 SUBDIRS = http

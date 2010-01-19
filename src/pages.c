@@ -115,8 +115,7 @@ http_response_t* handle_query_page(http_request_t *request, void* user_data)
         "</form>\n"
     );
   
-    // FIXME: list output formats based on enumeration of formats
-    // that Redland supports
+    // FIXME: list output formats based on enumeration of formats that Redland supports
 
 	page_append_html_footer(response);
 
