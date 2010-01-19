@@ -34,7 +34,7 @@ char* http_url_unescape(const char* escaped)
 	if (unescaped==NULL) return NULL;
 	ptr = unescaped;
 
-	for(i=0; i < len; i++) {
+	for(i=0; i<len; i++) {
     	if (escaped[i] == '%') {
 			int ch1, ch2;
 			if ((i+3 > len) ||

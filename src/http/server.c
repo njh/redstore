@@ -32,6 +32,7 @@ http_server_t* http_server_new(void)
             server->sockets[i] = -1;
         }
         server->signature = NULL;
+        server->backlog_size = DEFAUT_HTTP_SERVER_BACKLOG_SIZE;
     }
         
     return server;
@@ -86,7 +87,7 @@ int http_server_listen(http_server_t* server, const char* host, const char* port
         }
 
         // Start listening for connections
-        if (listen(sock, HTTP_SERVER_BACKLOG_SIZE) < 0) {
+        if (listen(sock, server->backlog_size) < 0) {
             fprintf(stderr, "listen() failed: [%s]:%s\n", nameinfo_host, nameinfo_serv);
             close(sock);
             continue;
@@ -340,6 +341,16 @@ const char* http_server_get_signature(http_server_t* server)
 {
     assert(server != NULL);
     return server->signature;
+}
+
+void http_server_set_backlog_size(http_server_t* server, int backlog_size)
+{
+	server->backlog_size = backlog_size;
+}
+
+int http_server_get_backlog_size(http_server_t* server)
+{
+    return server->backlog_size;
 }
 
 void http_server_free(http_server_t* server)

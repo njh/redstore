@@ -3,8 +3,12 @@
 #include <netdb.h>
 
 
+#ifndef _REDHTTPD_H_
+#define _REDHTTPD_H_
 
-#define HTTP_SERVER_BACKLOG_SIZE  (5)
+
+#define DEFAUT_HTTP_SERVER_BACKLOG_SIZE  (16)
+
 
 typedef struct http_header {
     char *key;
@@ -61,6 +65,7 @@ typedef struct http_server {
     int socket_count;
     int socket_max;
     
+    int backlog_size;
     char* signature;
     
     http_handler_t *handlers;
@@ -104,8 +109,12 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
 http_response_t *http_server_default_handler(http_server_t* server, http_request_t *request);
 void http_server_set_signature(http_server_t* server, const char* signature);
 const char* http_server_get_signature(http_server_t* server);
+void http_server_set_backlog_size(http_server_t* server, int backlog_size);
+int http_server_get_backlog_size(http_server_t* server);
 void http_server_free(http_server_t* server);
-
 
 char* http_url_unescape(const char* escaped);
 char* http_url_escape(const char *arg);
+
+
+#endif
