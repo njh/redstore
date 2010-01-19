@@ -25,10 +25,14 @@ static int hex_decode(const char ch)
 
 char* http_url_unescape(const char* escaped)
 {
-	char* unescaped = strdup(escaped);
-	char* ptr = unescaped;
+	char *unescaped, *ptr;
 	size_t len = strlen(escaped);
-	int i;
+	size_t i;
+	
+	// Allocate memory for the new string
+	unescaped = strdup(escaped);
+	if (unescaped==NULL) return NULL;
+	ptr = unescaped;
 
 	for(i=0; i < len; i++) {
     	if (escaped[i] == '%') {
@@ -55,43 +59,49 @@ char* http_url_unescape(const char* escaped)
 }
 
 
-char* http_url_escape(const char *arg)
-{ 
-	// FIXME: implement this
-	return strdup(arg);
+static int isurisafe( int c )
+{
+	return ( (unsigned char)( c - 'a' ) < 26 )
+	    || ( (unsigned char)( c - 'A' ) < 26 )
+		|| ( (unsigned char)( c - '0' ) < 10 )
+		|| ( strchr( "-._~", c ) != NULL );
 }
 
+char* http_url_escape(const char *unescaped)
+{
+	char *escaped, *ptr;
+	size_t len = strlen(unescaped);
+	size_t enc_len = len;
+	size_t i;
 
-/*
-char* http_url_escape(char *arg)
-{ 
-    FILE* stream = NULL;
-    char *escaped = NULL;
-    size_t escaped_size = 0;
-    int i; 
+	// Phase 1: scan for unsafe characters
+	for(i=0; i<len; i++) {
+		if (!isurisafe(unescaped[i]))
+			enc_len += 2;
+	}
+	
+	// Allocate memory for the new string
+	escaped = malloc(enc_len + 1);
+	if (escaped == NULL) return NULL;
+	ptr = escaped;
+	
+	// Phase 2: escape any unsafe characters
+	for(i=0; i<len; i++)
+	{
+		static const char hex[16] = "0123456789ABCDEF";
+		int c = unescaped[i];
 
-    stream = open_memstream(&escaped, &escaped_size);
-    if(!stream) return NULL;
+		if( isurisafe( c ) ) {
+			*ptr++ = c;
+		} else {
+			*ptr++ = '%';
+			*ptr++ = hex[c >> 4];
+			*ptr++ = hex[c & 0xf];
+		}
+	}
+	*ptr++ = '\0';
 
-    for (i = 0; arg[i]; i++) {
-        char c = arg[i];
-        if (c == ' ') {
-            fputc('+', stream); 
-        } else if (
-            (c == 0x2D) || (c == 0x2E) || // Hyphen-Minus, Full Stop
-            ((0x30 <= c) && (c <= 0x39)) || // Digits [0-9]
-            ((0x41 <= c) && (c <= 0x5A)) || // Uppercase [A-Z]
-            ((0x61 <= c) && (c <= 0x7A))    // Lowercase [a-z]
-        ) { 
-            fputc(c, stream); 
-        } else {
-            fprintf(stream, "%%%02X", c);
-        }
-    }
-    
-    fclose(stream);
-    
-    return escaped;
+	return escaped;
 }
-*/
+
 
