@@ -1,12 +1,11 @@
 Before version 0.1
 ------------------
 
-* Implement POSTing of SPARQL queries
+* Implement adding/delete/updating of graphs using PUT/DELETE
 * Implement of adding data from browser
   - Upload file
   - Form submit
   - HTTP fetch
-* Implement adding/delete/updating of graphs using PUT/POST/DELETE
 * Add more information about the store to the homepage
   - Storage name
   - Storage type
@@ -28,10 +27,9 @@ More stuff to do:
 
 * Add some SPARQL Update support
 * Documentation!
-* Implement 405 Method Not Allowed
+* Implement 405 Method Not Allowed properly
 * Implement proper content negotiation
 * Added Last Modified and Expiry headers to static content
-* Stream results to client instead of storing in memory first
 * Make RedStore multi-threaded
   - which objects are shared?
   - only enable writing to storage when needed?
@@ -42,7 +40,9 @@ More stuff to do:
 * init.d script
 * daemontools run script
 * Store date graph was last modified
+* HTTP Request Logging
 * Query Logging
+* Configuration via RDF file
 
 
 Long-term:
@@ -52,3 +52,9 @@ Long-term:
 * Implement results 'timeout' or query effort
 * Add support for multiple stores
 
+
+Done
+----
+
+* Stream results to client instead of storing in memory first
+* Implement POSTing of SPARQL queries
