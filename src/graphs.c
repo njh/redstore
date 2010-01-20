@@ -124,10 +124,10 @@ http_response_t* handle_graph_put(http_request_t *request, void* user_data)
 	char* content_length = http_request_get_header(request, "content-length");
 	char* content_type = http_request_get_header(request, "content-type");
 	const char* parser_name = NULL;
-    http_response_t* response;
-    librdf_node *context;
-    librdf_stream *stream;
-    librdf_parser *parser;
+    http_response_t* response = NULL;
+    librdf_node *context = NULL;
+    librdf_stream *stream = NULL;
+    librdf_parser *parser = NULL;
     librdf_uri *base_uri = librdf_new_uri(world, (const unsigned char*)uri);
 	unsigned char *buffer = NULL;
 
