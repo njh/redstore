@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "redhttpd.h"
 
@@ -109,7 +110,7 @@ int
 main(int argc, char **argv)
 {
     sa_family_t sopt_family = PF_UNSPEC;       // PF_UNSPEC, PF_INET, PF_INET6
-    char        *sopt_host = "";               // nodename for getaddrinfo(3)
+    char        *sopt_host = NULL;               // nodename for getaddrinfo(3)
     char        *sopt_service = DEFAULT_PORT;  // service name: "pop", "110"
     http_server_t* server;
     int c;

@@ -5,7 +5,6 @@
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
-#include <ctype.h>
 #include <getopt.h>
 
 #include "redstore.h"
@@ -237,7 +236,7 @@ int main(int argc, char *argv[])
 
     // Start listening for connections
     redstore_info("Starting HTTP server on port %s", port);
-    if (http_server_listen(server, "", port, PF_UNSPEC)) {
+    if (http_server_listen(server, NULL, port, PF_UNSPEC)) {
         fprintf(stderr, "Failed to create HTTP socket.\n");
         exit(EXIT_FAILURE);
     }

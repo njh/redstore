@@ -1,11 +1,11 @@
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 
 
 #ifndef _REDHTTPD_H_
 #define _REDHTTPD_H_
-
 
 #define DEFAUT_HTTP_SERVER_BACKLOG_SIZE  (16)
 
@@ -105,7 +105,7 @@ http_server_t* http_server_new(void);
 int http_server_listen(http_server_t* server, const char* host, const char* port, sa_family_t family);
 void http_server_add_handler(http_server_t *server, const char* method, const char* path, http_handler_func func, void *user_data);
 void http_server_run(http_server_t* server);
-int http_server_handle_request(http_server_t* server, int socket, struct sockaddr *sa);
+int http_server_handle_request(http_server_t* server, int socket, struct sockaddr *sa, size_t sa_len);
 http_response_t *http_server_default_handler(http_server_t* server, http_request_t *request);
 void http_server_set_signature(http_server_t* server, const char* signature);
 const char* http_server_get_signature(http_server_t* server);

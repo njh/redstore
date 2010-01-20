@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <ctype.h>
-#include <time.h>
 #include <assert.h>
 
 #include <errno.h>
@@ -161,7 +159,7 @@ void http_server_run(http_server_t* server)
                 perror("accept"); 
                 exit(EXIT_FAILURE);
             } else {
-                http_server_handle_request(server, cs, sa);
+                http_server_handle_request(server, cs, sa, len);
                 close(cs);
             }
         }
@@ -197,7 +195,7 @@ static int match_route(http_handler_t *handler, http_request_t *request)
 	return 0;
 }
 
-int http_server_handle_request(http_server_t* server, int socket, struct sockaddr *sa)
+int http_server_handle_request(http_server_t* server, int socket, struct sockaddr *sa, size_t sa_len)
 {
     http_request_t *request = NULL;
     http_response_t *response = NULL;
@@ -210,7 +208,7 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
     if (!request) return -1;
     request->server = server;
     request->socket = fdopen(socket, "r+");;
-    if (getnameinfo(sa, sa->sa_len,
+    if (getnameinfo(sa, sa_len,
          request->remote_addr, sizeof(request->remote_addr),
          request->remote_port, sizeof(request->remote_port),
          NI_NUMERICHOST | NI_NUMERICSERV))
