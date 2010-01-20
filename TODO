@@ -1,11 +1,6 @@
 Before version 0.1
 ------------------
 
-* Implement adding/delete/updating of graphs using PUT/DELETE
-* Implement of adding data from browser
-  - Upload file
-  - Form submit
-  - HTTP fetch
 * Add more information about the store to the homepage
   - Storage name
   - Storage type
@@ -25,10 +20,19 @@ Before version 0.1
 More stuff to do:
 -----------------
 
+* Standardise code style / indentation
+* Implement of adding data from browser
+  - Upload file
+  - Form submit
+  - HTTP fetch
 * Add some SPARQL Update support
 * Documentation!
+* Allow binding to specific IP address and family
 * Implement 405 Method Not Allowed properly
 * Implement proper content negotiation
+* Implement request timeouts
+* Implement memory usage limits
+* Return text/plain error response messages if HTML isn't requested
 * Added Last Modified and Expiry headers to static content
 * Make RedStore multi-threaded
   - which objects are shared?
@@ -58,3 +62,4 @@ Done
 
 * Stream results to client instead of storing in memory first
 * Implement POSTing of SPARQL queries
+* Implement adding/delete/updating of graphs using PUT/DELETE
