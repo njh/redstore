@@ -42,7 +42,7 @@ AC_ARG_ENABLE(debug,
 
 dnl ############## Compiler and Linker Flags
 
-CFLAGS="$CFLAGS -std=c99"
+CFLAGS="$CFLAGS -std=c99 -D_BSD_SOURCE -D_POSIX_SOURCE"
 LDFLAGS="$LDFLAGS"
 
 # If debugging is enabled then make warnings errors
