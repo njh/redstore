@@ -1,16 +1,6 @@
 Before version 0.1
 ------------------
 
-* Add more information about the store to the homepage
-  - Storage name
-  - Storage type
-  - Storage options
-  - Port Number
-  - Total number of Triples
-  - Number of graphs
-  - Number of queries/requests
-  - Uptime
-  - Memory usage
 * Return error messages to the client
   - internal error - eg memory allocation
   - query errors
@@ -26,6 +16,7 @@ More stuff to do:
   - Form submit
   - HTTP fetch
 * Add some SPARQL Update support
+* Return the information page as RDF
 * Documentation!
 * Allow binding to specific IP address and family
 * Implement 405 Method Not Allowed properly
@@ -46,7 +37,10 @@ More stuff to do:
 * Store date graph was last modified
 * HTTP Request Logging
 * Query Logging
-* Configuration via RDF file
+* Add more information about the store to the homepage
+  - Storage options
+  - Uptime
+  - Memory usage (mstats GNU extension?)
 
 
 Long-term:
@@ -55,6 +49,7 @@ Long-term:
 * rspec/cucumber tests
 * Implement results 'timeout' or query effort
 * Add support for multiple stores
+* Configuration via RDF file
 
 
 Done

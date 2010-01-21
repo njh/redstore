@@ -60,6 +60,13 @@ typedef struct serialiser_info {
 
 
 // ------- Globals ---------
+extern int quiet;
+extern int verbose;
+extern int running;
+extern int query_count;
+extern int request_count;
+extern const char* storage_name;
+extern const char* storage_type;
 extern librdf_world* world;
 extern librdf_storage* storage;
 extern librdf_model* model;
@@ -69,9 +76,10 @@ extern serialiser_info_t serialiser_info[];
 // ------- Prototypes -------
 
 http_response_t* handle_sparql_query(http_request_t *request, void* user_data);
-http_response_t* handle_homepage(http_request_t *request, void* user_data);
-http_response_t* handle_formats_page(http_request_t *request, void* user_data);
-http_response_t* handle_query_page(http_request_t *request, void* user_data);
+http_response_t* handle_page_home(http_request_t *request, void* user_data);
+http_response_t* handle_page_query(http_request_t *request, void* user_data);
+http_response_t* handle_page_info(http_request_t *request, void* user_data);
+http_response_t* handle_page_formats(http_request_t *request, void* user_data);
 
 void page_append_html_header(http_response_t *response, const char* title);
 void page_append_html_footer(http_response_t *response);
@@ -92,7 +100,7 @@ http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream
 http_response_t* format_graph_stream_text(http_request_t *request, librdf_stream* stream, const char* format_str);
 http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream);
 
-http_response_t* handle_favicon(http_request_t *request, void* user_data);
+http_response_t* handle_image_favicon(http_request_t *request, void* user_data);
 
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... );
 

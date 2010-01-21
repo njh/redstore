@@ -1,13 +1,25 @@
 
+#include <sys/select.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 
 #ifndef _REDHTTPD_H_
 #define _REDHTTPD_H_
 
 #define DEFAUT_HTTP_SERVER_BACKLOG_SIZE  (16)
+
+
+#ifndef NI_MAXHOST
+#define NI_MAXHOST (1025)
+#endif
+
+#ifndef NI_MAXSERV
+#define NI_MAXSERV (32)
+#endif
 
 
 typedef struct http_header {

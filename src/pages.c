@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "redstore.h"
 
@@ -23,19 +24,23 @@ void page_append_html_header(http_response_t *response, const char* title)
 void page_append_html_footer(http_response_t *response)
 {
 	http_response_content_append(response,         
-        "<hr /><address>%s</address>\n"
+        "<hr /><address>%s librdf/%s raptor/%s rasqal/%s</address>\n"
         "</body></html>\n",
-        PACKAGE_NAME "/" PACKAGE_VERSION
+        PACKAGE_NAME "/" PACKAGE_VERSION,
+        librdf_version_string,
+        raptor_version_string,
+        rasqal_version_string
 	);
 }
 
-http_response_t* handle_homepage(http_request_t *request, void* user_data)
+http_response_t* handle_page_home(http_request_t *request, void* user_data)
 {
 	http_response_t* response = http_response_new(200, NULL);
 	page_append_html_header(response, "RedStore");
 	http_response_content_append(response,
         "<ul>\n"
         "  <li><a href=\"/query\">SPARQL Query Page</a></li>\n"
+        "  <li><a href=\"/info\">Information</a></li>\n"
         "  <li><a href=\"/data\">Named Graphs</a></li>\n"
         "  <li><a href=\"/formats\">Supported Formats</a></li>\n"
         "</ul>\n"
@@ -44,7 +49,7 @@ http_response_t* handle_homepage(http_request_t *request, void* user_data)
 	return response;
 }
 
-http_response_t* handle_formats_page(http_request_t *request, void* user_data)
+http_response_t* handle_page_formats(http_request_t *request, void* user_data)
 {
 	http_response_t* response;
 	int i;
@@ -89,7 +94,50 @@ http_response_t* handle_formats_page(http_request_t *request, void* user_data)
     return response;
 }
 
-http_response_t* handle_query_page(http_request_t *request, void* user_data)
+static int context_count(librdf_storage *storage)
+{
+    librdf_iterator* iterator = NULL;
+    int count = 0;
+    
+    assert(storage != NULL);
+
+    iterator = librdf_storage_get_contexts(storage);
+    if(!iterator) {
+        redstore_error("librdf_storage_get_contexts returned NULL");
+        return -1;
+    }
+
+    while(!librdf_iterator_end(iterator)) {
+    	count++;
+        librdf_iterator_next(iterator);
+    }
+
+    librdf_free_iterator(iterator);
+
+	return count;
+}
+
+
+http_response_t* handle_page_info(http_request_t *request, void* user_data)
+{
+	http_response_t* response;
+
+	response = http_response_new(200, NULL);
+	page_append_html_header(response, "Store Information");
+    http_response_content_append(response, "<dl>\n");
+    http_response_content_append(response, "<dt>Storage Name</dt><dd>%s</dd>\n", storage_name);
+    http_response_content_append(response, "<dt>Storage Type</dt><dd>%s</dd>\n", storage_type);
+    http_response_content_append(response, "<dt>Triple Count</dt><dd>%d</dd>\n", librdf_storage_size(storage));
+    http_response_content_append(response, "<dt>Graph Count</dt><dd>%d</dd>\n", context_count(storage));
+    http_response_content_append(response, "<dt>HTTP Request Count</dt><dd>%d</dd>\n", request_count);
+    http_response_content_append(response, "<dt>SPARQL Query Count</dt><dd>%d</dd>\n", query_count);
+    http_response_content_append(response, "</dl>\n");
+	page_append_html_footer(response);
+
+    return response;
+}
+
+http_response_t* handle_page_query(http_request_t *request, void* user_data)
 {
 	http_response_t* response = http_response_new(200, NULL);
 	page_append_html_header(response, "SPARQL Query");

@@ -11,9 +11,13 @@
 
 
 // ------- Globals -------
-int quiet = 0;					// Only display error messages
-int verbose = 0;				// Increase number of logging messages
+int quiet = 0;			// Only display error messages
+int verbose = 0;		// Increase number of logging messages
 int running = 1;        // True while still running
+int query_count = 0;
+int request_count = 0;
+const char* storage_name = DEFAULT_STORAGE_NAME;
+const char* storage_type = DEFAULT_STORAGE_TYPE;
 librdf_world* world = NULL;
 librdf_model* model = NULL;
 librdf_storage* storage = NULL;
@@ -92,6 +96,12 @@ void redstore_log( RedstoreLogLevel level, const char* fmt, ... )
     }
 }
 
+static http_response_t* request_counter(http_request_t *request, void* user_data)
+{
+	request_count++;
+	return NULL;
+}
+
 static int redland_log_handler(void* user, librdf_log_message* msg)
 {
     int level = librdf_log_message_level(msg);
@@ -134,8 +144,6 @@ int main(int argc, char *argv[])
     http_server_t *server = NULL;
     librdf_hash *storage_options = NULL;
     char* port = DEFAULT_PORT;
-    const char* storage_name = DEFAULT_STORAGE_NAME;
-    const char* storage_type = DEFAULT_STORAGE_TYPE;
     const char* storage_options_str = DEFAULT_STORAGE_OPTIONS;
     int storage_new = 0;
     int opt = -1;
@@ -193,6 +201,7 @@ int main(int argc, char *argv[])
     }
 
     // Configure routing
+    http_server_add_handler(server, NULL, NULL, request_counter, &request_count);
     http_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
     http_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
     http_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
@@ -200,10 +209,11 @@ int main(int argc, char *argv[])
     http_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
     http_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
     http_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
-    http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
-    http_server_add_handler(server, "GET", "/query", handle_query_page, NULL);
-    http_server_add_handler(server, "GET", "/formats", handle_formats_page, NULL);
-    http_server_add_handler(server, "GET", "/favicon.ico", handle_favicon, NULL);
+    http_server_add_handler(server, "GET", "/", handle_page_home, NULL);
+    http_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
+    http_server_add_handler(server, "GET", "/info", handle_page_info, NULL);
+    http_server_add_handler(server, "GET", "/formats", handle_page_formats, NULL);
+    http_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
     //http_server_add_handler(server, "GET", NULL, handle_remove_trailing_slash, NULL);
     
     // Set the server signature
