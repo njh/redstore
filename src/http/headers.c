@@ -2,17 +2,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
 #include <time.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include <errno.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <sys/un.h>
-#include <netdb.h>
 
 #include "redhttpd.h"
 
