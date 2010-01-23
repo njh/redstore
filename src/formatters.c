@@ -73,18 +73,16 @@ http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stre
     }
     
     if (!format_name) {
-        redstore_error("Failed to match file format: %s", format_str);
-        return http_response_new_error_page(500, NULL);
+        return redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Unknown file format.");
     }
 
     serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
     if (!serialiser) {
-        redstore_error("Failed to create serialiser for: %s", format_name);
-        return http_response_new_error_page(500, NULL);
+        return redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to create serialised.");
     }
     
 	// Send back the response headers
-	response = http_response_new(200, NULL);
+	response = http_response_new(HTTP_OK, NULL);
 	http_response_add_header(response, "Content-Type", mime_type);
 	http_request_send_response(request, response);
 
@@ -101,7 +99,7 @@ http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stre
 
 http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream* stream, const char* format_str)
 {
-	http_response_t *response = http_response_new(200, NULL);
+	http_response_t *response = http_response_new(HTTP_OK, NULL);
     FILE* socket = http_request_get_socket(request);
 
 	// Send back the response headers
@@ -182,12 +180,11 @@ http_response_t* format_bindings_query_result_librdf(http_request_t *request, li
     }
     
     if (!format_uri) {
-        redstore_error("Failed to match file format: %s", format_str);
-        return http_response_new_error_page(500, NULL);
+        return redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Failed to match file format.");
     }
 
 	// Send back the response headers
-	response = http_response_new(200, NULL);
+	response = http_response_new(HTTP_OK, NULL);
 	http_response_add_header(response, "Content-Type", mime_type);
 	http_request_send_response(request, response);
     
@@ -204,7 +201,7 @@ http_response_t* format_bindings_query_result_librdf(http_request_t *request, li
 
 http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str)
 {
-	http_response_t *response = http_response_new(200, NULL);
+	http_response_t *response = http_response_new(HTTP_OK, NULL);
     FILE* socket = http_request_get_socket(request);
     int i, count;
 
@@ -245,7 +242,7 @@ http_response_t* format_bindings_query_result_html(http_request_t *request, libr
 
 http_response_t* format_bindings_query_result_text(http_request_t *request, librdf_query_results* results, const char* format_str)
 {
-	http_response_t *response = http_response_new(200, NULL);
+	http_response_t *response = http_response_new(HTTP_OK, NULL);
     FILE* socket = http_request_get_socket(request);
     int i, count;
 

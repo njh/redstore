@@ -6,6 +6,12 @@
 #include "redstore.h"
 
 
+http_response_t* redstore_error_page(int level, int code, const char* message)
+{
+	redstore_log(level, message);
+	return http_response_new_error_page(code, message);
+}
+
 void page_append_html_header(http_response_t *response, const char* title)
 {
 	http_response_content_append(response,         
@@ -35,7 +41,7 @@ void page_append_html_footer(http_response_t *response)
 
 http_response_t* handle_page_home(http_request_t *request, void* user_data)
 {
-	http_response_t* response = http_response_new(200, NULL);
+	http_response_t* response = http_response_new(HTTP_OK, NULL);
 	page_append_html_header(response, "RedStore");
 	http_response_content_append(response,
         "<ul>\n"
@@ -54,7 +60,7 @@ http_response_t* handle_page_formats(http_request_t *request, void* user_data)
 	http_response_t* response;
 	int i;
 	
-	response = http_response_new(200, NULL);
+	response = http_response_new(HTTP_OK, NULL);
 	page_append_html_header(response, "Supported Formats");
     
     http_response_content_append(response, "<h2>RDF Parsers</h2>\n");
@@ -126,7 +132,7 @@ http_response_t* handle_page_info(http_request_t *request, void* user_data)
 {
 	http_response_t* response;
 
-	response = http_response_new(200, NULL);
+	response = http_response_new(HTTP_OK, NULL);
 	page_append_html_header(response, "Store Information");
     http_response_content_append(response, "<dl>\n");
     http_response_content_append(response, "<dt>Storage Name</dt><dd>%s</dd>\n", storage_name);
@@ -143,7 +149,7 @@ http_response_t* handle_page_info(http_request_t *request, void* user_data)
 
 http_response_t* handle_page_query(http_request_t *request, void* user_data)
 {
-	http_response_t* response = http_response_new(200, NULL);
+	http_response_t* response = http_response_new(HTTP_OK, NULL);
 	page_append_html_header(response, "SPARQL Query");
     
     http_response_content_append(response, 

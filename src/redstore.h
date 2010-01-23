@@ -81,6 +81,7 @@ http_response_t* handle_page_query(http_request_t *request, void* user_data);
 http_response_t* handle_page_info(http_request_t *request, void* user_data);
 http_response_t* handle_page_formats(http_request_t *request, void* user_data);
 
+http_response_t* redstore_error_page(int level, int code, const char* message);
 void page_append_html_header(http_response_t *response, const char* title);
 void page_append_html_footer(http_response_t *response);
 

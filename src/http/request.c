@@ -148,7 +148,7 @@ int http_request_read_status_line(http_request_t *request)
     line = http_request_read_line(request);
     if (line == NULL || strlen(line) == 0) {
         // FAIL!
-        return 400;
+        return HTTP_BAD_REQUEST;
     }
 
     // Skip whitespace at the start
@@ -166,7 +166,7 @@ int http_request_read_status_line(http_request_t *request)
         ptr++;
     if (*ptr == '\n' || *ptr == '\0') {
         free(line);
-        return 400;
+        return HTTP_BAD_REQUEST;
     }
     url = ptr;
 
@@ -191,7 +191,7 @@ int http_request_read_status_line(http_request_t *request)
     // Is the URL valid?
     if (strlen(url)==0) {
         free(line);
-        return 400;
+        return HTTP_BAD_REQUEST;
     }
 
     request->method = strdup(method);

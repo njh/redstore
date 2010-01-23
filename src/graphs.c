@@ -7,15 +7,14 @@
 
 http_response_t* handle_graph_index(http_request_t *request, void* user_data)
 {
-    http_response_t* response = http_response_new(200, NULL);
+    http_response_t* response = http_response_new(HTTP_OK, NULL);
     librdf_iterator* iterator = NULL;
 
 	page_append_html_header(response, "Named Graphs");
  
     iterator = librdf_storage_get_contexts(storage);
     if(!iterator) {
-        redstore_error("Failed to get contexts.");
-        return http_response_new_error_page(500, NULL);
+        return redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
     }
 
     http_response_content_append(response, "<ul>\n");
@@ -83,10 +82,10 @@ http_response_t* handle_graph_head(http_request_t *request, void* user_data)
     http_response_t* response;
 
     if (context) {
-    	response = http_response_new(200, NULL);
+    	response = http_response_new(HTTP_OK, NULL);
     	librdf_free_node(context);
     } else {
-    	response = http_response_new(404, "Graph not found");
+    	response = http_response_new(HTTP_NOT_FOUND, "Graph not found");
 	}
 
     return response;
@@ -99,15 +98,14 @@ http_response_t* handle_graph_get(http_request_t *request, void* user_data)
     http_response_t* response;
 
     if (!context) {
-         return http_response_new_error_page(404, "Graph not found.");
+		return redstore_error_page(REDSTORE_INFO, HTTP_NOT_FOUND, "Graph not found.");
 	}
 
     // Stream the graph
     stream = librdf_model_context_as_stream(model, context);
     if(!stream) {
         librdf_free_node(context);
-        redstore_error("Failed to stream context.");
-        return http_response_new_error_page(500, NULL);
+        return redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to stream context.");
     }
     
     response = format_graph_stream(request, stream);
@@ -132,22 +130,21 @@ http_response_t* handle_graph_put(http_request_t *request, void* user_data)
 	unsigned char *buffer = NULL;
 
 	if (!uri || strlen(uri)<1) {
-		return http_response_new_error_page(400, "Invalid Graph URI.");
+		return redstore_error_page(REDSTORE_INFO, HTTP_BAD_REQUEST, "Invalid Graph URI.");
 	}
 
 	// FIXME: stream the input data, instead of storing it in memory first
 	
 	// Check we have a content_length header
 	if (!content_length) {
-		response = http_response_new_error_page(400, "Missing content length header.");
+		response = redstore_error_page(REDSTORE_INFO, HTTP_BAD_REQUEST, "Missing content length header.");
 		goto CLEANUP;
 	}
 	
 	// Allocate memory and read in the input data
     buffer = malloc(atoi(content_length));
 	if (!buffer) {
-		redstore_error("Failed to allocate memory for input data.");
-		response = http_response_new_error_page(500, "Failed to allocate memory for input data.");
+		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to allocate memory for input data.");
 		goto CLEANUP;
 	}
 	
@@ -156,42 +153,37 @@ http_response_t* handle_graph_put(http_request_t *request, void* user_data)
 
 	context = librdf_new_node_from_uri_string(world,(const unsigned char*)uri);
     if (!context) {
-        redstore_error("Failed to create node from: %s", uri);
-		response = http_response_new_error_page(500, "Failed to create graph node.");
+		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to create graph node.");
 		goto CLEANUP;
     }
 
 	parser_name = librdf_parser_guess_name2(world, content_type, buffer, NULL);
     if (!parser_name) {
-        redstore_info("Failed to guess parser type.");
-		response = http_response_new_error_page(500, "Failed to guess parser type.");
+		response = redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Failed to guess parser type.");
 		goto CLEANUP;
     }
-	redstore_info("Parsing using: %s", parser_name);
+	redstore_debug("Parsing using: %s", parser_name);
 	
 	parser = librdf_new_parser(world, parser_name, NULL, NULL);
     if (!parser) {
-        redstore_error("Failed to create parser of type: %s", parser_name);
-		response = http_response_new_error_page(500, "Failed to create parser.");
+		response = redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Failed to create parser.");
 		goto CLEANUP;
     }
 
 	stream = librdf_parser_parse_string_as_stream(parser, buffer, base_uri);
     if (!stream) {
-        redstore_error("Failed to parse data");
-		response = http_response_new_error_page(500, "Failed to parse data.");
+		response = redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Failed to parse data.");
 		goto CLEANUP;
     }
 
 	// FIXME: delete existing statements
 	// FIXME: check for errors
 	if (librdf_model_context_add_statements(model, context, stream)) {
-        redstore_error("Failed to add parsed statements to graph");
-		response = http_response_new_error_page(500, "Failed to add parsed statements to graph.");
+		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to add parsed statements to graph.");
 		goto CLEANUP;
 	}
 	
-	response = http_response_new_error_page(200, "Successfully stored data in graph.");
+	response = redstore_error_page(REDSTORE_DEBUG, HTTP_OK, "Successfully stored data in graph.");
 
 CLEANUP:
     //librdf_free_stream(stream);
@@ -211,15 +203,15 @@ http_response_t* handle_graph_delete(http_request_t *request, void* user_data)
 
 	// Create node
     if (!context) {
-         return http_response_new_error_page(404, "Graph not found.");
+         return redstore_error_page(REDSTORE_INFO, HTTP_NOT_FOUND, "Graph not found.");
 	}
 
     redstore_info("Deleting graph: %s", http_request_get_path_glob(request));
     
     if (librdf_model_context_remove_statements(model,context)) {
-    	response = http_response_new_error_page(500, "Error while trying to delete graph");
+    	response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Error while trying to delete graph");
     } else {
-    	response = http_response_new_error_page(200, "Successfully deleted Graph");
+    	response = redstore_error_page(REDSTORE_INFO, HTTP_OK, "Successfully deleted Graph");
     }
     
     librdf_free_node(context);

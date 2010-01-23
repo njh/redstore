@@ -27,23 +27,24 @@ http_response_t* http_response_new(int code, const char* message)
         response->status_code = code;
         if (message == NULL) {
             switch(code) {
-                case 200: message = "OK"; break;
-                case 201: message = "Created"; break;
-                case 202: message = "Accepted"; break;
-                case 204: message = "No Content"; break;
-                case 301: message = "Moved Permanently"; break;
-                case 302: message = "Moved Temporarily"; break;
-                case 304: message = "Not Modified"; break;
-                case 400: message = "Bad Request"; break;
-                case 401: message = "Unauthorized"; break;
-                case 403: message = "Forbidden"; break;
-                case 404: message = "Not Found"; break;
-                case 405: message = "Method Not Allowed"; break;
-                case 500: message = "Internal Server Error"; break;
-                case 501: message = "Not Implemented"; break;
-                case 502: message = "Bad Gateway"; break;
-                case 503: message = "Service Unavailable"; break;
-                default: message = "Unknown"; break;
+                case HTTP_OK:                    message = "OK"; break;
+                case HTTP_CREATED:               message = "Created"; break;
+                case HTTP_ACCEPTED:              message = "Accepted"; break;
+                case HTTP_NO_CONTENT:            message = "No Content"; break;
+                case HTTP_MOVED_PERMANENTLY:     message = "Moved Permanently"; break;
+                case HTTP_MOVED_TEMPORARILY:     message = "Moved Temporarily"; break;
+                case HTTP_SEE_OTHER:             message = "See Other"; break;
+                case HTTP_NOT_MODIFIED:          message = "Not Modified"; break;
+                case HTTP_BAD_REQUEST:           message = "Bad Request"; break;
+                case HTTP_UNAUTHORIZED:          message = "Unauthorized"; break;
+                case HTTP_FORBIDDEN:             message = "Forbidden"; break;
+                case HTTP_NOT_FOUND:             message = "Not Found"; break;
+                case HTTP_METHOD_NOT_ALLOWED:    message = "Method Not Allowed"; break;
+                case HTTP_INTERNAL_SERVER_ERROR: message = "Internal Server Error"; break;
+                case HTTP_NOT_IMPLEMENTED:       message = "Not Implemented"; break;
+                case HTTP_BAD_GATEWAY:           message = "Bad Gateway"; break;
+                case HTTP_SERVICE_UNAVAILABLE:   message = "Service Unavailable"; break;
+                default:                         message = "Unknown"; break;
             }
         }
         response->status_message = strdup(message);
@@ -86,7 +87,7 @@ http_response_t* http_response_new_redirect(const char* url)
     snprintf(message, message_length, MESSAGE_FMT, url);
     
     // Build the response
-    response = http_response_new_error_page(301, message);
+    response = http_response_new_error_page(HTTP_MOVED_PERMANENTLY, message);
     http_response_add_header(response, "Location", url);
     free(message);
 
@@ -95,7 +96,7 @@ http_response_t* http_response_new_redirect(const char* url)
 
 http_response_t* http_response_new_with_content(const char* data, size_t length, const char* type)
 {
-    http_response_t* response = http_response_new(200, NULL);
+    http_response_t* response = http_response_new(HTTP_OK, NULL);
     http_response_set_content(response, data, length, type);
     return response;
 }
