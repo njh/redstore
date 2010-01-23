@@ -24,14 +24,14 @@ librdf_storage* storage = NULL;
 
 // FIXME: this should be got from Redland
 serialiser_info_t serialiser_info[] = {
-    { .name = "ntriples", .label = "N-Triples", .mime_type = "application/x-ntriples", .uri = "" },
-    { .name = "turtle", .label = "Turtle", .mime_type = "application/x-turtle", .uri = "" },
-    { .name = "turtle", .label = NULL, .mime_type = "text/turtle", .uri = "" },
-    { .name = "rdfxml-abbrev", .label = "RDF/XML (Abbreviated)", .mime_type = "application/rdf+xml", .uri = "" },
-    { .name = "rdfxml", .label = "RDF/XML", .mime_type = "application/rdf+xml", .uri = "" },
-    { .name = "dot", .label = "GraphViz DOT format", .mime_type = "text/vnd.graphviz", .uri = "" },
-    { .name = "json", .label = "RDF/JSON Resource-Centric", .mime_type = "application/json", .uri = "" },
-    { .name = "json-triples", .label = "RDF/JSON Triples", .mime_type = "application/json", .uri = "" },
+    { .name = "ntriples", .label = "N-Triples", .mime_type = "application/x-ntriples", .uri = "http://www.w3.org/TR/rdf-testcases/#ntriples" },
+    { .name = "turtle", .label = "Turtle", .mime_type = "application/x-turtle", .uri = "http://www.dajobe.org/2004/01/turtle" },
+    { .name = "turtle", .label = NULL, .mime_type = "text/turtle", .uri = "http://www.dajobe.org/2004/01/turtle" },
+    { .name = "rdfxml-abbrev", .label = "RDF/XML (Abbreviated)", .mime_type = "application/rdf+xml", .uri = "http://www.w3.org/TR/rdf-syntax-grammar" },
+    { .name = "rdfxml", .label = "RDF/XML", .mime_type = "application/rdf+xml", .uri = "http://www.w3.org/TR/rdf-syntax-grammar" },
+    { .name = "dot", .label = "GraphViz DOT format", .mime_type = "text/x-graphviz", .uri = "http://www.graphviz.org/doc/info/lang.html" },
+    { .name = "json", .label = "RDF/JSON Resource-Centric", .mime_type = "application/json", .uri = "http://n2.talis.com/wiki/RDF_JSON_Specification" },
+    { .name = "json-triples", .label = "RDF/JSON Triples", .mime_type = "application/json", .uri = NULL },
     { .name = NULL }
 };
 

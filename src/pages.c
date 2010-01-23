@@ -70,11 +70,15 @@ http_response_t* handle_page_formats(http_request_t *request, void* user_data)
 
     http_response_content_append(response, "<h2>RDF Serialisers</h2>\n");
     http_response_content_append(response, "<table border=\"1\">\n");
-    http_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th></tr>\n");
+    http_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
     for(i=0; serialiser_info[i].name; i++) {
         if(!serialiser_info[i].label) continue;
-        http_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+        http_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td>",
                 serialiser_info[i].name, serialiser_info[i].label, serialiser_info[i].mime_type);
+        if (serialiser_info[i].uri) {
+        	http_response_content_append(response, "<td><a href=\"%s\">More Info</a></td>\n", serialiser_info[i].uri);
+        }
+        http_response_content_append(response, "</tr>\n");
     }
     http_response_content_append(response, "</table>\n");
 
