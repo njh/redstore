@@ -126,7 +126,7 @@ http_response_t* handle_graph_put(http_request_t *request, void* user_data)
     librdf_node *context = NULL;
     librdf_stream *stream = NULL;
     librdf_parser *parser = NULL;
-    librdf_uri *base_uri = librdf_new_uri(world, (const unsigned char*)uri);
+    librdf_uri *graph_uri = NULL;
 	unsigned char *buffer = NULL;
 
 	if (!uri || strlen(uri)<1) {
@@ -151,9 +151,9 @@ http_response_t* handle_graph_put(http_request_t *request, void* user_data)
 	// FIXME: do this better and check for errors
 	fread(buffer, 1, atoi(content_length), request->socket);
 
-	context = librdf_new_node_from_uri_string(world,(const unsigned char*)uri);
-    if (!context) {
-		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to create graph node.");
+	graph_uri = librdf_new_uri(world,(const unsigned char*)uri);
+    if (!graph_uri) {
+		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to create graph URI.");
 		goto CLEANUP;
     }
 
@@ -170,32 +170,27 @@ http_response_t* handle_graph_put(http_request_t *request, void* user_data)
 		goto CLEANUP;
     }
 
-	stream = librdf_parser_parse_string_as_stream(parser, buffer, base_uri);
+	stream = librdf_parser_parse_string_as_stream(parser, buffer, graph_uri);
     if (!stream) {
 		response = redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Failed to parse data.");
 		goto CLEANUP;
     }
 
-	// FIXME: delete existing statements
-	// FIXME: check for errors
-	if (librdf_model_context_add_statements(model, context, stream)) {
-		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to add parsed statements to graph.");
-		goto CLEANUP;
-	}
+	// FIXME: delete existing statements first
 	
-	response = redstore_error_page(REDSTORE_DEBUG, HTTP_OK, "Successfully stored data in graph.");
+	response = load_stream_into_graph(stream, graph_uri);
 
 CLEANUP:
-    //librdf_free_stream(stream);
-    if (context) librdf_free_node(context);
+    if (stream) librdf_free_stream(stream);
+    if (parser) librdf_free_parser(parser);
+    if (graph_uri) librdf_free_uri(graph_uri);
     if (content_length) free(content_length);
     if (content_type) free(content_type);
     if (buffer) free(buffer);
-    if (stream) librdf_free_stream(stream);
-    if (parser) librdf_free_parser(parser);
 
     return response;
 }
+
 http_response_t* handle_graph_delete(http_request_t *request, void* user_data)
 {
     librdf_node *context = get_graph_context(request);

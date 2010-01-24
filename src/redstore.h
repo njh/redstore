@@ -91,9 +91,9 @@ http_response_t* handle_graph_get(http_request_t *request, void* user_data);
 http_response_t* handle_graph_put(http_request_t *request, void* user_data);
 http_response_t* handle_graph_delete(http_request_t *request, void* user_data);
 
+http_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph_uri);
 http_response_t* handle_load_get(http_request_t *request, void* user_data);
 http_response_t* handle_load_post(http_request_t *request, void* user_data);
-
 
 http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str);
 http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str);

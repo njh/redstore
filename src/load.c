@@ -21,6 +21,46 @@ http_response_t* handle_load_get(http_request_t *request, void* user_data)
 	return response;
 }
 
+http_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph_uri)
+{
+    http_response_t* response = NULL;
+    librdf_node *graph = NULL;
+	size_t count = 0;
+
+    graph = librdf_new_node_from_uri(world, graph_uri);
+	if (!graph) {
+		return redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "librdf_new_node_from_uri failed for Graph URI");
+    }
+
+	while(!librdf_stream_end(stream)) {
+		librdf_statement *statement = librdf_stream_get_object(stream);
+		if(!statement) {
+    		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to get statement from stream.");
+			break;
+		}
+          
+		if (librdf_model_context_add_statement(model, graph, statement)) {
+    		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to add statement to graph.");
+			break;
+		}
+		count++;
+		librdf_stream_next(stream);
+	}
+	
+	// FIXME: check for parse errors or parse warnings
+	if (!response) {
+		response = http_response_new(HTTP_OK, NULL);
+		page_append_html_header(response, "Success");
+		redstore_info("Added %d triples to graph.", count);
+		http_response_content_append(response, "<p>Added %d triples to graph: %s</p>", count, librdf_uri_as_string(graph_uri));
+		page_append_html_footer(response);
+	}
+	
+	librdf_free_node(graph);
+	
+	return response;
+}
+
 http_response_t* handle_load_post(http_request_t *request, void* user_data)
 {
 	char* uri_arg = http_request_get_argument(request, "uri");
@@ -30,8 +70,6 @@ http_response_t* handle_load_post(http_request_t *request, void* user_data)
     http_response_t* response = NULL;
     librdf_parser *parser = NULL;
     librdf_stream *stream = NULL;
-    librdf_node *graph = NULL;
-	size_t count = 0;
 
     if (!uri_arg) {
         response = redstore_error_page(REDSTORE_INFO, HTTP_BAD_REQUEST, "Missing URI to load");
@@ -67,12 +105,6 @@ http_response_t* handle_load_post(http_request_t *request, void* user_data)
     redstore_info("Loading URI: %s", librdf_uri_as_string(uri));
     redstore_debug("Base URI: %s", librdf_uri_as_string(base_uri));
     redstore_debug("Graph URI: %s", librdf_uri_as_string(graph_uri));
-    
-    graph = librdf_new_node_from_uri(world, graph_uri);
-	if (!graph) {
-        response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "librdf_new_node_from_uri failed for Graph URI");
-        goto CLEANUP;
-    }
 
 	// FIXME: allow user to choose the parser that is used
 	parser = librdf_new_parser(world, "guess", NULL, NULL);
@@ -81,40 +113,19 @@ http_response_t* handle_load_post(http_request_t *request, void* user_data)
 		goto CLEANUP;
 	}
     
-    stream  = librdf_parser_parse_as_stream(parser, uri, base_uri);
+    stream = librdf_parser_parse_as_stream(parser, uri, base_uri);
     if(!stream) {
     	response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to parse RDF as stream.");
 		goto CLEANUP;
 	}
-        
-	while(!librdf_stream_end(stream)) {
-		librdf_statement *statement = librdf_stream_get_object(stream);
-		if(!statement) {
-    		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to get statement from stream.");
-			goto CLEANUP;
-		}
-          
-		if (librdf_model_context_add_statement(model, graph, statement)) {
-    		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to add statement to graph.");
-			goto CLEANUP;
-		}
-		count++;
-		librdf_stream_next(stream);
-	}
-	
-	// FIXME: check for parse errors or parse warnings
-
-	response = http_response_new(HTTP_OK, NULL);
-	page_append_html_header(response, "Success");
-	redstore_info("Added %d triples to graph.", count);
-	http_response_content_append(response, "<p>Added %d triples to graph: %s</p>", count, librdf_uri_as_string(graph_uri));
-	page_append_html_footer(response);
+    
+    
+    response = load_stream_into_graph(stream, graph_uri);
 
 
 CLEANUP:
 	if (stream) librdf_free_stream(stream);
 	if (parser) librdf_free_parser(parser);
-	if (graph) librdf_free_node(graph);
 	if (graph_uri) librdf_free_uri(graph_uri);
 	if (base_uri) librdf_free_uri(base_uri);
 	if (uri) librdf_free_uri(uri);
