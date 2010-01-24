@@ -140,8 +140,9 @@ http_response_t* handle_page_info(http_request_t *request, void* user_data)
     http_response_content_append(response, "<dt>Storage Type</dt><dd>%s</dd>\n", storage_type);
     http_response_content_append(response, "<dt>Triple Count</dt><dd>%d</dd>\n", librdf_storage_size(storage));
     http_response_content_append(response, "<dt>Named Graph Count</dt><dd>%d</dd>\n", context_count(storage));
-    http_response_content_append(response, "<dt>HTTP Request Count</dt><dd>%d</dd>\n", request_count);
-    http_response_content_append(response, "<dt>SPARQL Query Count</dt><dd>%d</dd>\n", query_count);
+    http_response_content_append(response, "<dt>HTTP Request Count</dt><dd>%lu</dd>\n", request_count);
+    http_response_content_append(response, "<dt>Successful Import Count</dt><dd>%lu</dd>\n", import_count);
+    http_response_content_append(response, "<dt>SPARQL Query Count</dt><dd>%lu</dd>\n", query_count);
     http_response_content_append(response, "</dl>\n");
 	page_append_html_footer(response);
 

@@ -14,8 +14,9 @@
 int quiet = 0;			// Only display error messages
 int verbose = 0;		// Increase number of logging messages
 int running = 1;        // True while still running
-int query_count = 0;
-int request_count = 0;
+unsigned long query_count = 0;
+unsigned long import_count = 0;
+unsigned long request_count = 0;
 const char* storage_name = DEFAULT_STORAGE_NAME;
 const char* storage_type = DEFAULT_STORAGE_TYPE;
 librdf_world* world = NULL;

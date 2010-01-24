@@ -123,7 +123,6 @@ http_response_t* handle_graph_put(http_request_t *request, void* user_data)
 	char* content_type = http_request_get_header(request, "content-type");
 	const char* parser_name = NULL;
     http_response_t* response = NULL;
-    librdf_node *context = NULL;
     librdf_stream *stream = NULL;
     librdf_parser *parser = NULL;
     librdf_uri *graph_uri = NULL;

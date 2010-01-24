@@ -63,8 +63,9 @@ typedef struct serialiser_info {
 extern int quiet;
 extern int verbose;
 extern int running;
-extern int query_count;
-extern int request_count;
+extern unsigned long query_count;
+extern unsigned long import_count;
+extern unsigned long request_count;
 extern const char* storage_name;
 extern const char* storage_type;
 extern librdf_world* world;

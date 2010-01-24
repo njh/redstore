@@ -54,6 +54,7 @@ http_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph
 		redstore_info("Added %d triples to graph.", count);
 		http_response_content_append(response, "<p>Added %d triples to graph: %s</p>", count, librdf_uri_as_string(graph_uri));
 		page_append_html_footer(response);
+		import_count++;
 	}
 	
 	librdf_free_node(graph);
