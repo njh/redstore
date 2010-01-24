@@ -150,9 +150,11 @@ void http_response_add_time_header(http_response_t* response, const char* key, t
 {
     static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
     char *date_str = malloc(BUFSIZ);
+    struct tm time_tm;
 
     // FIXME: calculate the length of the date string instead of using BUFSIZ
-    strftime(date_str, BUFSIZ, RFC1123FMT, gmtime(&timer));
+    gmtime_r(&timer, &time_tm);
+    strftime(date_str, BUFSIZ, RFC1123FMT, &time_tm);
     http_headers_add(&response->headers, key, date_str);
     
     free(date_str);
@@ -180,5 +182,6 @@ void http_response_free(http_response_t* response)
     if (response->content_buffer) free(response->content_buffer);
 
     http_headers_free(&response->headers);
+    free(response);
 }
 

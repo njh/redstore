@@ -12,7 +12,7 @@
 */
 static char* parse_accept_header(http_request_t *request)
 {
-    const char* accept_str = http_request_get_header(request, "Accept");
+    char* accept_str = http_request_get_header(request, "Accept");
     int pos=-1, i;
     
     if (accept_str == NULL) return NULL;
@@ -30,10 +30,12 @@ static char* parse_accept_header(http_request_t *request)
     
     if (pos>0) {
         char* result = malloc(pos+1);
-        strncpy(result,accept_str,pos);
+        strncpy(result, accept_str, pos);
         result[pos] = '\0';
+        free(accept_str);
         return result;
     } else {
+    	free(accept_str);
         return NULL;
     }
 }

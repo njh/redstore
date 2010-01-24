@@ -213,6 +213,7 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
          NI_NUMERICHOST | NI_NUMERICSERV))
     {
         perror("could not get numeric hostname of client");
+        http_request_free(request);
         return -1;
     }    
     
@@ -224,7 +225,10 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
             // Read in the headers
             while(!feof(request->socket)) {
                 char* line = http_request_read_line(request);
-                if (line == NULL || strlen(line)==0) break;
+                if (line == NULL || strlen(line)<1) {
+                	if (line) free(line);
+                	break;
+                }
                 http_headers_parse_line(&request->headers, line);
                 free(line);
             }
@@ -251,6 +255,9 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
                     	http_request_parse_arguments(request, request->content_buffer);
                     }
                 }
+                
+                free(content_type);
+                free(content_length);
             }
         }
     }

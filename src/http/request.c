@@ -148,6 +148,7 @@ int http_request_read_status_line(http_request_t *request)
     line = http_request_read_line(request);
     if (line == NULL || strlen(line) == 0) {
         // FAIL!
+        if (line) free(line);
         return HTTP_BAD_REQUEST;
     }
 
@@ -267,6 +268,8 @@ void http_request_free(http_request_t* request)
 
     http_headers_free(&request->headers);
     http_headers_free(&request->arguments);
+    
+    free(request);
 }
 
 

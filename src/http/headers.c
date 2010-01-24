@@ -77,8 +77,10 @@ void http_headers_parse_line(http_header_t** first, const char* input)
 
     assert(first != NULL);
     assert(input != NULL);
+    if (strlen(input) < 1) return;
+
     // FIXME: is there whitespace at the start?
-    
+
     line = strdup(input);
     key = line;
     for (ptr = line; *ptr && *ptr != ':'; ptr++)
