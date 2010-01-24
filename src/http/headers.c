@@ -27,15 +27,20 @@ void http_headers_send(http_header_t** first, FILE* socket)
 
 void http_headers_add(http_header_t** first, const char* key, const char* value)
 {
-    http_header_t *header = calloc(1, sizeof(http_header_t));
+    http_header_t *header;
     http_header_t *it;
 
     assert(first != NULL);
     assert(key != NULL);
+    assert(strlen(key) > 0);
     assert(value != NULL);
+    
+    if (strlen(value) == 0) return;
 
     // FIXME: append value if header already exists
 
+	// Create new header item
+	header = calloc(1, sizeof(http_header_t));
     header->key = strdup(key);
     header->value = strdup(value);
     header->next = NULL;
