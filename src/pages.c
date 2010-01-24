@@ -46,6 +46,7 @@ http_response_t* handle_page_home(http_request_t *request, void* user_data)
 	http_response_content_append(response,
         "<ul>\n"
         "  <li><a href=\"/query\">SPARQL Query Page</a></li>\n"
+        "  <li><a href=\"/load\">Load URI</a></li>\n"
         "  <li><a href=\"/info\">Information</a></li>\n"
         "  <li><a href=\"/data\">Named Graphs</a></li>\n"
         "  <li><a href=\"/formats\">Supported Formats</a></li>\n"

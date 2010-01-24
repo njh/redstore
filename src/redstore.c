@@ -209,6 +209,8 @@ int main(int argc, char *argv[])
     http_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
     http_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
     http_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
+    http_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
+    http_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
     http_server_add_handler(server, "GET", "/", handle_page_home, NULL);
     http_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
     http_server_add_handler(server, "GET", "/info", handle_page_info, NULL);

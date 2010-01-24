@@ -3,7 +3,7 @@ Before version 0.1
 
 * Return error messages to the client
   - internal error - eg memory allocation
-  - query errors
+  - parse/query errors
 * Clean up and insert GNU General Public License
 
 
@@ -14,7 +14,6 @@ More stuff to do:
 * Implement of adding data from browser
   - Upload file
   - Form submit
-  - HTTP fetch
 * Add some SPARQL Update support
 * Return the information page as RDF
 * Documentation!

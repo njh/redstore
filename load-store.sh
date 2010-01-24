@@ -1,7 +1,5 @@
 #!/bin/sh
 
-rm -f redstore-contexts.db	redstore-po2s.db redstore-so2p.db redstore-sp2o.db
-
 URLS="
   http://www.aelius.com/njh/foaf.rdf
   http://moustaki.org/foaf.rdf
@@ -9,8 +7,9 @@ URLS="
 "
 
 for url in $URLS; do
-    rdfproc -c redstore parse $url rdfxml $url $url
+	curl --data uri=$url http://localhost:8080/load
+    #rdfproc -c redstore parse $url rdfxml $url $url
 done
 
-rdfproc -c redstore contexts
-rdfproc -c redstore size
+#rdfproc -c redstore contexts
+#rdfproc -c redstore size

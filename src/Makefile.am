@@ -8,6 +8,7 @@ redstore_SOURCES = \
   redstore.h \
   graphs.c \
   formatters.c \
+  load.c \
   pages.c \
   query.c \
   images.c
