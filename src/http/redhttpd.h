@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <stdio.h>
 
 
 #ifndef _REDHTTPD_H_

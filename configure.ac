@@ -64,8 +64,17 @@ AC_FUNC_REALLOC
 dnl ############## Check for packages we depend upon
 
 PKG_CHECK_MODULES(REDLAND, redland >= 1.0.7)
-AC_SUBST(REDLAND_CFLAGS)
-AC_SUBST(REDLAND_LIBS)
+
+PKG_CHECK_MODULES(CHECK, check >= 0.9.4, have_check="yes", have_check="no")
+AM_CONDITIONAL(HAVE_CHECK, test x"$have_check" = "xyes")
+if test x"$have_check" = "xyes"; then
+   AC_DEFINE([HAVE_CHECK], 1, [Define to 1 if check library is available])
+fi
 
 
-AC_OUTPUT([Makefile src/Makefile src/http/Makefile])
+AC_OUTPUT([
+	Makefile
+	src/Makefile
+	src/http/Makefile
+	tests/Makefile
+])
