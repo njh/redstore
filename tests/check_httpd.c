@@ -3,37 +3,34 @@
 #include <stdlib.h>
 
 #include "http/redhttpd.h"
-
+#include "easycheck.h"
 
 START_TEST (test_http_url_unescape)
 {
-    const char* escaped = "hello+world";
-    char * unescaped = http_url_unescape(escaped);
-    fail_unless(strcmp(unescaped, "hello world")==0, NULL);
+    char * unescaped = http_url_unescape("hello+world%20");
+    fail_unless(strcmp(unescaped, "hello world ")==0, NULL);
     free(unescaped);
 }
 END_TEST
 
-
-Suite* redhttpd_suite(void)
+START_TEST (test_http_url_unescape_invalid)
 {
-    Suite *s = suite_create ("redhttpd");
-    
-    /* URI test case */
-    TCase *tc_uri = tcase_create ("URI");
-    tcase_add_test(tc_uri, test_http_url_unescape);
-    suite_add_tcase(s, tc_uri);
-    
-    return s;
+    char * unescaped = http_url_unescape("hello+world%2");
+    fail_unless(strcmp(unescaped, "hello world ")==0, NULL);
+    free(unescaped);
 }
+END_TEST
 
-int main(void)
+START_TEST (test_http_url_escape)
 {
-    int number_failed;
-    Suite *s = redhttpd_suite();
-    SRunner *sr = srunner_create(s);
-    srunner_run_all(sr, CK_NORMAL);
-    number_failed = srunner_ntests_failed (sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+    char * escaped = http_url_escape("-Hello World_.html");
+    fail_unless(strcmp(escaped, "-Hello%20World_.html")==0, NULL);
+    free(escaped);
 }
+END_TEST
+
+
+EASYCHECK_TESTCASE_START(check_httpd)
+EASYCHECK_TESTCASE_ADD(test_http_url_escape)
+EASYCHECK_TESTCASE_ADD(test_http_url_unescape)
+EASYCHECK_TESTCASE_END
