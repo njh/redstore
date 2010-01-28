@@ -1,5 +1,5 @@
-dnl Require autoconf version >= 2.60
-AC_PREREQ(2.60)
+dnl Require autoconf version >= 2.59
+AC_PREREQ(2.59)
 
 
 dnl ############# Initialization
@@ -20,7 +20,6 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
-AC_PROG_CC_C99
 
 AC_C_BIGENDIAN
 AC_C_INLINE
@@ -47,6 +46,9 @@ dnl ############## Compiler and Linker Flags
 
 # FIXME: make Redstore POSIX compatible
 AC_DEFINE(_GNU_SOURCE, 1, [Enable GNU Extensions])
+
+# FIXME: use AC PROG CC C99
+CFLAGS="$CFLAGS -std=c99"
 
 # If debugging is enabled then make warnings errors
 if test "$Debugging" = "Enabled"; then
