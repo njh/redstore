@@ -1,5 +1,5 @@
-dnl Require autoconf version >= 2.59
-AC_PREREQ(2.59)
+dnl Require autoconf version >= 2.60
+AC_PREREQ(2.60)
 
 
 dnl ############# Initialization
