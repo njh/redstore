@@ -15,8 +15,8 @@ END_TEST
 
 START_TEST (test_http_url_unescape_invalid)
 {
-    char * unescaped = http_url_unescape("hello+world%2");
-    fail_unless(strcmp(unescaped, "hello world ")==0, NULL);
+    char * unescaped = http_url_unescape("hello%2G%2");
+    fail_unless(strcmp(unescaped, "hello%2G%2")==0, NULL);
     free(unescaped);
 }
 END_TEST
@@ -31,6 +31,7 @@ END_TEST
 
 
 EASYCHECK_TESTCASE_START(check_httpd)
-EASYCHECK_TESTCASE_ADD(test_http_url_escape)
 EASYCHECK_TESTCASE_ADD(test_http_url_unescape)
+EASYCHECK_TESTCASE_ADD(test_http_url_unescape_invalid)
+EASYCHECK_TESTCASE_ADD(test_http_url_escape)
 EASYCHECK_TESTCASE_END
