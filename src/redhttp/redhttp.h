@@ -111,6 +111,7 @@ typedef struct redhttp_server {
 
 void redhttp_headers_send(redhttp_header_t** first, FILE* socket);
 void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* value);
+int redhttp_headers_count(redhttp_header_t** first);
 char* redhttp_headers_get(redhttp_header_t** first, const char* key);
 void redhttp_headers_parse_line(redhttp_header_t** first, const char* line);
 void redhttp_headers_free(redhttp_header_t** first);

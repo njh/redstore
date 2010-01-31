@@ -35,7 +35,8 @@ void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* 
     assert(strlen(key) > 0);
     assert(value != NULL);
     
-    if (strlen(value) == 0) return;
+    if (strlen(value) == 0)
+        return;
 
     // FIXME: append value if header already exists
 
@@ -53,6 +54,20 @@ void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* 
     } else {
         *first = header;
     }
+}
+
+int redhttp_headers_count(redhttp_header_t** first)
+{
+    redhttp_header_t* it;
+    int count = 0;
+
+    assert(first != NULL);
+
+    for (it = *first; it; it = it->next) {
+        count++;
+    }
+
+    return count;
 }
 
 char* redhttp_headers_get(redhttp_header_t** first, const char* key)
@@ -77,7 +92,8 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
 
     assert(first != NULL);
     assert(input != NULL);
-    if (strlen(input) < 1) return;
+    if (strlen(input) < 1)
+        return;
 
     // FIXME: is there whitespace at the start?
 
@@ -85,6 +101,8 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
     key = line;
     for (ptr = line; *ptr && *ptr != ':'; ptr++)
         continue;
+    if (!*ptr)
+        return;
     *ptr++ = '\0';
 
     // Skip whitespace
@@ -93,7 +111,9 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
 
     value = ptr;
 
-    redhttp_headers_add(first, key, value);
+    if (*value != '\0') {
+        redhttp_headers_add(first, key, value);
+    }
     
     free(line);
 }
