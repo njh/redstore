@@ -17,7 +17,7 @@ fi
 cd `dirname $0`
 
 if [ ! -d coverage ]; then
-    mkdir -f coverage
+    mkdir coverage
 fi
 
 if [ -e Makefile ]; then
