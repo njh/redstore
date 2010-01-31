@@ -4,7 +4,7 @@ TESTS =
 check_PROGRAMS = 
 
 if HAVE_CHECK
-check_PROGRAMS += check_request check_uri
+check_PROGRAMS += check_request check_url
 TESTS += $(check_PROGRAMS)
 endif
 
@@ -15,8 +15,8 @@ check_request_SOURCES = check_request.tc
 nodist_check_request_SOURCES = check_request.c
 check_request_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
 
-check_uri_SOURCES = check_uri.tc
-nodist_check_uri_SOURCES = check_uri.c
-check_uri_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
+check_url_SOURCES = check_url.tc
+nodist_check_url_SOURCES = check_url.c
+check_url_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
 
-CLEANFILES = check_uri.c check_request.c
+CLEANFILES = check_url.c check_request.c
