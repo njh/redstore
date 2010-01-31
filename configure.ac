@@ -52,7 +52,7 @@ CFLAGS="$CFLAGS -std=c99"
 
 # If debugging is enabled then make warnings errors
 if test "$Debugging" = "Enabled"; then
-	CFLAGS="$CFLAGS -g -Wall -Werror -pedantic"
+	CFLAGS="$CFLAGS -g -O0 -Wall -Werror -pedantic"
 	CFLAGS="$CFLAGS -Wunused -Wmissing-prototypes -Wmissing-declarations"
 else
 	# Optimize flag. 3 is about as high as you can sanely go with GCC3.2.
