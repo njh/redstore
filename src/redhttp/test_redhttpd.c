@@ -49,7 +49,7 @@ static redhttp_response_t *handle_query(redhttp_request_t *request, void *user_d
     FILE *socket = redhttp_request_get_socket(request);
 
     redhttp_response_add_header(response, "Content-Type", "text/html");
-    redhttp_request_send_response(request, response);
+    redhttp_response_send(response, request);
     
     fprintf(socket, "<html><body><h1>Query Page</h1>");
 

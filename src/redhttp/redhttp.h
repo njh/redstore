@@ -128,7 +128,6 @@ void redhttp_request_set_socket(redhttp_request_t *request, FILE* socket);
 FILE* redhttp_request_get_socket(redhttp_request_t *request);
 int redhttp_request_read_status_line(redhttp_request_t *request);
 int redhttp_request_read(redhttp_request_t *request);
-void redhttp_request_send_response(redhttp_request_t *request, redhttp_response_t *response);
 void redhttp_request_free(redhttp_request_t* request);
 
 redhttp_response_t* redhttp_response_new(int status, const char* message);
@@ -139,6 +138,7 @@ void redhttp_response_content_append(redhttp_response_t* response, const char* f
 void redhttp_response_add_header(redhttp_response_t* response, const char* key, const char* value);
 void redhttp_response_add_time_header(redhttp_response_t* response, const char* key, time_t timer);
 void redhttp_response_set_content(redhttp_response_t* response, const char* data, size_t length, const char* type);
+void redhttp_response_send(redhttp_response_t *response, redhttp_request_t *request);
 void redhttp_response_free(redhttp_response_t* response);
 
 redhttp_server_t* redhttp_server_new(void);

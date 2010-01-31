@@ -238,7 +238,7 @@ int redhttp_server_handle_request(redhttp_server_t* server, int socket, struct s
         response = redhttp_server_default_handler(server, request);
 
     // Send response
-    redhttp_request_send_response(request, response);
+    redhttp_response_send(response, request);
 
     redhttp_request_free(request);
     redhttp_response_free(response);

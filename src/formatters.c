@@ -86,7 +86,7 @@ redhttp_response_t* format_graph_stream_librdf(redhttp_request_t *request, librd
 	// Send back the response headers
 	response = redhttp_response_new(REDHTTP_OK, NULL);
 	redhttp_response_add_header(response, "Content-Type", mime_type);
-	redhttp_request_send_response(request, response);
+	redhttp_response_send(response, request);
 
     if (librdf_serializer_serialize_stream_to_file_handle(serialiser, socket, NULL, stream)) {
         redstore_error("Failed to serialize graph");
@@ -106,7 +106,7 @@ redhttp_response_t* format_graph_stream_html(redhttp_request_t *request, librdf_
 
 	// Send back the response headers
 	redhttp_response_add_header(response, "Content-Type", "text/html");
-	redhttp_request_send_response(request, response);
+	redhttp_response_send(response, request);
     fprintf(socket, "<html><head><title>RedStore</title></head><body>");
     
     fprintf(socket, "<table class=\"triples\" border=\"1\">\n");
@@ -188,7 +188,7 @@ redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *reque
 	// Send back the response headers
 	response = redhttp_response_new(REDHTTP_OK, NULL);
 	redhttp_response_add_header(response, "Content-Type", mime_type);
-	redhttp_request_send_response(request, response);
+	redhttp_response_send(response, request);
     
     // Stream results back to client
 	if (librdf_query_results_to_file_handle(results, socket, format_uri, NULL)) {
@@ -209,7 +209,7 @@ redhttp_response_t* format_bindings_query_result_html(redhttp_request_t *request
 
 	// Send back the response headers
 	redhttp_response_add_header(response, "Content-Type", "text/html");
-	redhttp_request_send_response(request, response);
+	redhttp_response_send(response, request);
     fprintf(socket, "<html><head><title>RedStore</title></head><body>");
 
     count = librdf_query_results_get_bindings_count(results);
@@ -250,7 +250,7 @@ redhttp_response_t* format_bindings_query_result_text(redhttp_request_t *request
 
 	// Send back the response headers
 	redhttp_response_add_header(response, "Content-Type", "text/plain");
-	redhttp_request_send_response(request, response);
+	redhttp_response_send(response, request);
     
     count = librdf_query_results_get_bindings_count(results);
     for(i=0; i < count; i++) {

@@ -174,6 +174,45 @@ void redhttp_response_set_content(redhttp_response_t* response, const char* data
     redhttp_headers_add(&response->headers, "Content-Type", type);
 }
 
+
+void redhttp_response_send(redhttp_response_t *response, redhttp_request_t *request)
+{
+    assert(request != NULL);
+    assert(response != NULL);
+    
+    if (!response->headers_sent) {
+    	const char *signature = redhttp_server_get_signature(request->server);
+    
+        redhttp_response_add_time_header(response, "Date", time(NULL));
+        redhttp_response_add_header(response, "Connection", "Close");
+        
+        if (signature)
+        	redhttp_response_add_header(response, "Server", signature);
+      
+        if (response->content_length) {
+            // FIXME: must be better way to do int to string
+            char *length_str = malloc(BUFSIZ);
+            snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
+            redhttp_response_add_header(response, "Content-Length", length_str);
+            free(length_str);
+        }
+    
+        if (strncmp(request->version, "0.9", 3)) {
+            fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status_code, response->status_message);
+            redhttp_headers_send(&response->headers, request->socket);
+            fputs("\r\n", request->socket);
+        }
+        
+        response->headers_sent = 1;
+    }
+
+	if (response->content_buffer) {
+		assert(response->content_length > 0);
+		fwrite(response->content_buffer, 1, response->content_length, request->socket);
+		// FIXME: check for error?
+	}
+}
+
 void redhttp_response_free(redhttp_response_t* response)
 {
     assert(response != NULL);
