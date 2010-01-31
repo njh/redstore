@@ -1,0 +1,5 @@
+POST /buy HTTP/1.0
+Accept: */*
+Content-Type: application/x-www-form-urlencoded
+
+animal=

@@ -71,6 +71,11 @@ char* redhttp_request_get_header(redhttp_request_t *request, const char* key)
     return redhttp_headers_get(&request->headers, key);
 }
 
+void redhttp_request_add_header(redhttp_request_t *request, const char* key, const char* value)
+{
+    redhttp_headers_add(&request->headers, key, value);
+}
+
 char* redhttp_request_get_argument(redhttp_request_t *request, const char* key)
 {
     return redhttp_headers_get(&request->arguments, key);
@@ -109,7 +114,7 @@ void redhttp_request_parse_arguments(redhttp_request_t *request, const char *inp
         key = ptr;
         ptr = strstr(key, "=");
         if (ptr == NULL)
-            return;
+            break;
         *ptr++ = '\0';
         
         value = ptr;
@@ -129,6 +134,10 @@ void redhttp_request_parse_arguments(redhttp_request_t *request, const char *inp
     free(args);
 }
 
+void redhttp_request_set_socket(redhttp_request_t *request, FILE* socket)
+{
+    request->socket = socket;
+}
 
 FILE* redhttp_request_get_socket(redhttp_request_t *request)
 {
@@ -173,9 +182,9 @@ int redhttp_request_read_status_line(redhttp_request_t *request)
 
     // Find the end of the url
     ptr = &url[strlen(url)];
-    while (isspace(*ptr))
+    while ((*ptr == '\0' || isspace(*ptr)) && ptr > url)
         ptr--;
-    *ptr = '\0';
+    ptr[1] = '\0';
     while (!isspace(*ptr) && ptr > url)
         ptr--;
     
@@ -187,12 +196,6 @@ int redhttp_request_read_status_line(redhttp_request_t *request)
         ptr[1] = '\0';
     } else {
         version = "0.9";
-    }
-    
-    // Is the URL valid?
-    if (strlen(url)==0) {
-        free(line);
-        return REDHTTP_BAD_REQUEST;
     }
 
     request->method = strdup(method);
@@ -211,6 +214,56 @@ int redhttp_request_read_status_line(redhttp_request_t *request)
 
     free(line);
 
+    // Success
+    return 0;
+}
+
+
+int redhttp_request_read(redhttp_request_t *request)
+{
+    int result = redhttp_request_read_status_line(request);
+    if (result) return result;
+    
+    if (strncmp(request->version, "0.9", 3)) {
+        // Read in the headers
+        while(!feof(request->socket)) {
+            char* line = redhttp_request_read_line(request);
+            if (line == NULL || strlen(line)<1) {
+                if (line) free(line);
+                break;
+            }
+            redhttp_headers_parse_line(&request->headers, line);
+            free(line);
+        }
+        
+        // Read in PUT/POST content
+        if (strncasecmp(request->method, "POST", 4)==0) {
+            char *content_type = redhttp_headers_get(&request->headers, "Content-Type");
+            char *content_length = redhttp_headers_get(&request->headers, "Content-Length");
+            int bytes_read = 0;
+    
+            if (content_type==NULL || content_length==NULL) {
+                return REDHTTP_BAD_REQUEST;
+            } else if (strncasecmp(content_type, "application/x-www-form-urlencoded", 33)==0) {
+                request->content_length = atoi(content_length);
+                // FIXME: set maximum POST size
+                request->content_buffer = calloc(1,request->content_length+1);
+                // FIXME: check memory allocation succeeded
+                
+                bytes_read = fread(request->content_buffer, 1, request->content_length, request->socket);
+                if (bytes_read != request->content_length) {
+                    // FIXME: better response?
+                    return REDHTTP_BAD_REQUEST;
+                } else {
+                    redhttp_request_parse_arguments(request, request->content_buffer);
+                }
+            }
+            
+            free(content_type);
+            free(content_length);
+        }
+    }
+    
     // Success
     return 0;
 }

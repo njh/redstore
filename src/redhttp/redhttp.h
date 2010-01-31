@@ -119,12 +119,15 @@ void redhttp_headers_free(redhttp_header_t** first);
 redhttp_request_t* redhttp_request_new(void);
 char* redhttp_request_read_line(redhttp_request_t *request);
 char* redhttp_request_get_header(redhttp_request_t *request, const char* key);
+void redhttp_request_add_header(redhttp_request_t *request, const char* key, const char* value);
 char* redhttp_request_get_argument(redhttp_request_t *request, const char* key);
 void redhttp_request_set_path_glob(redhttp_request_t *request, const char* path_glob);
 const char* redhttp_request_get_path_glob(redhttp_request_t *request);
 void redhttp_request_parse_arguments(redhttp_request_t *request, const char *input);
+void redhttp_request_set_socket(redhttp_request_t *request, FILE* socket);
 FILE* redhttp_request_get_socket(redhttp_request_t *request);
 int redhttp_request_read_status_line(redhttp_request_t *request);
+int redhttp_request_read(redhttp_request_t *request);
 void redhttp_request_send_response(redhttp_request_t *request, redhttp_response_t *response);
 void redhttp_request_free(redhttp_request_t* request);
 

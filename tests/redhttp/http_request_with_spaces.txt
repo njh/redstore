@@ -1,0 +1,1 @@
+GET   /hello world%20.txt 	http/1.0  

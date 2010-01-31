@@ -1,0 +1,4 @@
+GET /foaf.rdf HTTP/1.0
+User-Agent: curl/7.15.5 (powerpc-apple-darwin8.7.0) libcurl/7.15.5 OpenSSL/0.9.7l zlib/1.2.3
+Host: www.example.com
+Accept: application/rdf+xml

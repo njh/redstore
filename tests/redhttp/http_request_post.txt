@@ -1,0 +1,6 @@
+POST /buy HTTP/1.0
+Accept: */*
+Content-Length: 23
+Content-Type: application/x-www-form-urlencoded
+
+animal=rat&colour=white

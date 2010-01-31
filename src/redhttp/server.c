@@ -217,52 +217,10 @@ int redhttp_server_handle_request(redhttp_server_t* server, int socket, struct s
         return -1;
     }    
     
-    if (redhttp_request_read_status_line(request)) {
+    if (redhttp_request_read(request)) {
         // Invalid request
         response = redhttp_response_new_error_page(REDHTTP_BAD_REQUEST, NULL);
-    } else {
-        if (strncmp(request->version, "0.9", 3)) {
-            // Read in the headers
-            while(!feof(request->socket)) {
-                char* line = redhttp_request_read_line(request);
-                if (line == NULL || strlen(line)<1) {
-                	if (line) free(line);
-                	break;
-                }
-                redhttp_headers_parse_line(&request->headers, line);
-                free(line);
-            }
-            
-            // Read in PUT/POST content
-            if (strncasecmp(request->method, "POST", 4)==0) {
-                char *content_type = redhttp_headers_get(&request->headers, "Content-Type");
-                char *content_length = redhttp_headers_get(&request->headers, "Content-Length");
-                int bytes_read = 0;
-
-                if (content_type==NULL || content_length==NULL) {
-                    response = redhttp_response_new_error_page(REDHTTP_BAD_REQUEST, NULL);
-                } else if (strncasecmp(content_type, "application/x-www-form-urlencoded", 33)==0) {
-                    request->content_length = atoi(content_length);
-                    // FIXME: set maximum POST size
-                    request->content_buffer = malloc(request->content_length);
-                    // FIXME: check memory allocation succeeded
-                    
-                    bytes_read = fread(request->content_buffer, 1, request->content_length, request->socket);
-                    if (bytes_read != request->content_length) {
-                    	// FIXME: better response?
-                        response = redhttp_response_new_error_page(REDHTTP_BAD_REQUEST, NULL);
-                    } else {
-                    	redhttp_request_parse_arguments(request, request->content_buffer);
-                    }
-                }
-                
-                free(content_type);
-                free(content_length);
-            }
-        }
     }
-    
-    
     
     // Dispatch the request
     if (!response) {
