@@ -1,0 +1,25 @@
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "redhttp/redhttp.h"
+
+#suite redhttp_server
+
+#test create_and_free
+redhttp_server_t *server = redhttp_server_new();
+ck_assert_msg(server != NULL, "redhttp_server_new() returned null");
+redhttp_server_free(server);
+
+#test set_and_get_backlog_size
+redhttp_server_t *server = redhttp_server_new();
+ck_assert_msg(redhttp_server_get_backlog_size(server) > 0, "redhttp_server_get_backlog_size() > 0");
+redhttp_server_set_backlog_size(server, 99);
+ck_assert_msg(redhttp_server_get_backlog_size(server) == 99, "redhttp_server_get_backlog_size() == 99");
+redhttp_server_free(server);
+
+#test set_and_get_signature
+redhttp_server_t *server = redhttp_server_new();
+redhttp_server_set_signature(server, "foo/bar");
+ck_assert_str_eq(redhttp_server_get_signature(server), "foo/bar");
+redhttp_server_free(server);
