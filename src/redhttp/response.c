@@ -76,7 +76,7 @@ redhttp_response_t* redhttp_response_new_error_page(int code, const char* explan
 
 redhttp_response_t* redhttp_response_new_redirect(const char* url)
 {
-    static const char MESSAGE_FMT[] = "<p>The document has moved <a href=\"%s\">here</a>.</p>";
+    static const char MESSAGE_FMT[] = "The document has moved <a href=\"%s\">here</a>.";
     redhttp_response_t* response;
     size_t message_length;
     char* message;
@@ -84,7 +84,7 @@ redhttp_response_t* redhttp_response_new_redirect(const char* url)
     message_length = snprintf(NULL, 0, MESSAGE_FMT, url);
     message = malloc(message_length+1);
     // FIXME: check for memory allocation error
-    snprintf(message, message_length, MESSAGE_FMT, url);
+    snprintf(message, message_length+1, MESSAGE_FMT, url);
     
     // Build the response
     response = redhttp_response_new_error_page(REDHTTP_MOVED_PERMANENTLY, message);
@@ -135,11 +135,15 @@ void redhttp_response_content_append(redhttp_response_t* response, const char* f
     va_start(args, fmt);
     response->content_length += vsnprintf(
         &response->content_buffer[response->content_length],
-        response->content_buffer_size - response->content_length - 1, fmt, args
+        response->content_buffer_size - response->content_length, fmt, args
     );
     va_end(args);
 }
 
+char *redhttp_response_get_header(redhttp_response_t* response, const char* key)
+{
+    return redhttp_headers_get(&response->headers, key);
+}
 
 void redhttp_response_add_header(redhttp_response_t* response, const char* key, const char* value)
 {

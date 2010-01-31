@@ -1,0 +1,69 @@
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "redhttp/redhttp.h"
+
+#suite redhttp_response
+
+#test new_response
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
+ck_assert_str_eq(response->status_message, "OK");
+redhttp_response_free(response);
+
+#test header_add_and_get
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+char* value = NULL;
+redhttp_response_add_header(response, "key", "value");
+value = redhttp_response_get_header(response, "key");
+ck_assert_str_eq(value, "value");
+free(value);
+redhttp_response_free(response);
+
+#test header_date_add_and_get
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+char* value = NULL;
+redhttp_response_add_time_header(response, "Date", 0);
+value = redhttp_response_get_header(response, "date");
+ck_assert_str_eq(value, "Thu, 01 Jan 1970 00:00:00 GMT");
+free(value);
+redhttp_response_free(response);
+
+#test append_content
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
+redhttp_response_content_append(response, "int=%d str=%s", 5, "hello");
+ck_assert_str_eq(response->content_buffer, "int=5 str=hello");
+redhttp_response_free(response);
+
+#test new_with_content
+redhttp_response_t *response = redhttp_response_new_with_content("Hello World", 11, "text/plain");
+char *value;
+ck_assert_str_eq(response->status_message, "OK");
+ck_assert_msg(response->content_length == 11, "Content length is not correct");
+ck_assert_str_eq(response->content_buffer, "Hello World");
+value = redhttp_response_get_header(response, "content-type");
+ck_assert_str_eq(value, "text/plain");
+free(value);
+redhttp_response_free(response);
+
+#test new_redirect
+redhttp_response_t *response = redhttp_response_new_redirect("/foo/bar");
+char *value;
+ck_assert_str_eq(response->status_message, "Moved Permanently");
+ck_assert_msg(strstr(response->content_buffer,"<h1>301 Moved Permanently</h1>") != NULL, "Page has h1 title");
+ck_assert_msg(strstr(response->content_buffer,"<p>The document has moved <a href=\"/foo/bar\">here</a>.</p>") != NULL, "Page has redirect message.");
+value = redhttp_response_get_header(response, "location");
+ck_assert_str_eq(value, "/foo/bar");
+free(value);
+redhttp_response_free(response);
+
+#test new_error_page
+redhttp_response_t *response = redhttp_response_new_error_page(REDHTTP_NOT_FOUND, NULL);
+ck_assert_str_eq(response->status_message, "Not Found");
+ck_assert_msg(response->content_length > 100, "Content length is more than 100 bytes");
+ck_assert_msg(strstr(response->content_buffer,"<title>404 Not Found</title>") != NULL, "Page has <title>");
+ck_assert_msg(strstr(response->content_buffer,"<h1>404 Not Found</h1>") != NULL, "Page has h1 title");
+redhttp_response_free(response);
+
