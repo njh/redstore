@@ -5,11 +5,11 @@
 #include "redstore.h"
 
 
-http_response_t* handle_load_get(http_request_t *request, void* user_data)
+redhttp_response_t* handle_load_get(redhttp_request_t *request, void* user_data)
 {
-	http_response_t* response = http_response_new(HTTP_OK, NULL);
+	redhttp_response_t* response = redhttp_response_new(REDHTTP_OK, NULL);
 	page_append_html_header(response, "Load URI");
-	http_response_content_append(response,
+	redhttp_response_content_append(response,
         "<form method=\"post\" action=\"/load\"><div>\n"
         "<label for=\"uri\">URI:</label> <input id=\"uri\" name=\"uri\" type=\"text\" size=\"40\" /><br />\n"
         "<label for=\"base-uri\">Base URI:</label> <input id=\"base-uri\" name=\"base-uri\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
@@ -21,26 +21,26 @@ http_response_t* handle_load_get(http_request_t *request, void* user_data)
 	return response;
 }
 
-http_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph_uri)
+redhttp_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph_uri)
 {
-    http_response_t* response = NULL;
+    redhttp_response_t* response = NULL;
     librdf_node *graph = NULL;
 	size_t count = 0;
 
     graph = librdf_new_node_from_uri(world, graph_uri);
 	if (!graph) {
-		return redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "librdf_new_node_from_uri failed for Graph URI");
+		return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_new_node_from_uri failed for Graph URI");
     }
 
 	while(!librdf_stream_end(stream)) {
 		librdf_statement *statement = librdf_stream_get_object(stream);
 		if(!statement) {
-    		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to get statement from stream.");
+    		response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get statement from stream.");
 			break;
 		}
           
 		if (librdf_model_context_add_statement(model, graph, statement)) {
-    		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to add statement to graph.");
+    		response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to add statement to graph.");
 			break;
 		}
 		count++;
@@ -49,10 +49,10 @@ http_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph
 	
 	// FIXME: check for parse errors or parse warnings
 	if (!response) {
-		response = http_response_new(HTTP_OK, NULL);
+		response = redhttp_response_new(REDHTTP_OK, NULL);
 		page_append_html_header(response, "Success");
 		redstore_info("Added %d triples to graph.", count);
-		http_response_content_append(response, "<p>Added %d triples to graph: %s</p>", count, librdf_uri_as_string(graph_uri));
+		redhttp_response_content_append(response, "<p>Added %d triples to graph: %s</p>", count, librdf_uri_as_string(graph_uri));
 		page_append_html_footer(response);
 		import_count++;
 	}
@@ -62,24 +62,24 @@ http_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph
 	return response;
 }
 
-http_response_t* handle_load_post(http_request_t *request, void* user_data)
+redhttp_response_t* handle_load_post(redhttp_request_t *request, void* user_data)
 {
-	char* uri_arg = http_request_get_argument(request, "uri");
-	char* base_arg = http_request_get_argument(request, "base-uri");
-	char* graph_arg = http_request_get_argument(request, "graph");
+	char* uri_arg = redhttp_request_get_argument(request, "uri");
+	char* base_arg = redhttp_request_get_argument(request, "base-uri");
+	char* graph_arg = redhttp_request_get_argument(request, "graph");
     librdf_uri *uri = NULL, *base_uri = NULL, *graph_uri = NULL;
-    http_response_t* response = NULL;
+    redhttp_response_t* response = NULL;
     librdf_parser *parser = NULL;
     librdf_stream *stream = NULL;
 
     if (!uri_arg) {
-        response = redstore_error_page(REDSTORE_INFO, HTTP_BAD_REQUEST, "Missing URI to load");
+        response = redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Missing URI to load");
         goto CLEANUP;
     }
     
     uri = librdf_new_uri(world, (const unsigned char *)uri_arg);
 	if (!uri) {
-        response = redstore_error_page(REDSTORE_ERROR, HTTP_BAD_REQUEST, "librdf_new_uri failed for URI");
+        response = redstore_error_page(REDSTORE_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for URI");
         goto CLEANUP;
     }
     
@@ -89,7 +89,7 @@ http_response_t* handle_load_post(http_request_t *request, void* user_data)
     	base_uri = librdf_new_uri(world, (const unsigned char *)uri_arg);
     }
 	if (!base_uri) {
-        response = redstore_error_page(REDSTORE_ERROR, HTTP_BAD_REQUEST, "librdf_new_uri failed for Base URI");
+        response = redstore_error_page(REDSTORE_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for Base URI");
         goto CLEANUP;
     }
     
@@ -99,7 +99,7 @@ http_response_t* handle_load_post(http_request_t *request, void* user_data)
     	graph_uri = librdf_new_uri(world, (const unsigned char *)uri_arg);
     }
 	if (!graph_uri) {
-        response = redstore_error_page(REDSTORE_ERROR, HTTP_BAD_REQUEST, "librdf_new_uri failed for Graph URI");
+        response = redstore_error_page(REDSTORE_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for Graph URI");
         goto CLEANUP;
     }
 
@@ -110,13 +110,13 @@ http_response_t* handle_load_post(http_request_t *request, void* user_data)
 	// FIXME: allow user to choose the parser that is used
 	parser = librdf_new_parser(world, "guess", NULL, NULL);
 	if(!parser) {
-		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to create parser");
+		response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create parser");
 		goto CLEANUP;
 	}
     
     stream = librdf_parser_parse_as_stream(parser, uri, base_uri);
     if(!stream) {
-    	response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to parse RDF as stream.");
+    	response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to parse RDF as stream.");
 		goto CLEANUP;
 	}
     

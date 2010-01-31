@@ -86,8 +86,9 @@ AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
-	src/http/Makefile
+	src/redhttp/Makefile
 	tests/Makefile
+	tests/redhttp/Makefile
 ])
 
 AC_OUTPUT

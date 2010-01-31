@@ -10,9 +10,9 @@
 
   FIXME: do content negotiation properly
 */
-static char* parse_accept_header(http_request_t *request)
+static char* parse_accept_header(redhttp_request_t *request)
 {
-    char* accept_str = http_request_get_header(request, "Accept");
+    char* accept_str = redhttp_request_get_header(request, "Accept");
     int pos=-1, i;
     
     if (accept_str == NULL) return NULL;
@@ -40,11 +40,11 @@ static char* parse_accept_header(http_request_t *request)
     }
 }
 
-static char* get_format(http_request_t *request)
+static char* get_format(redhttp_request_t *request)
 {
     char *format_str;
 
-    format_str = http_request_get_argument(request, "format");
+    format_str = redhttp_request_get_argument(request, "format");
     redstore_debug("format_str: %s", format_str);
     if (!format_str) {
         format_str = parse_accept_header(request);
@@ -55,10 +55,10 @@ static char* get_format(http_request_t *request)
 }
 
 
-http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stream* stream, const char* format_str)
+redhttp_response_t* format_graph_stream_librdf(redhttp_request_t *request, librdf_stream* stream, const char* format_str)
 {
-    FILE* socket = http_request_get_socket(request);
-	http_response_t *response;
+    FILE* socket = redhttp_request_get_socket(request);
+	redhttp_response_t *response;
     librdf_serializer* serialiser;
     const char* format_name = NULL;
     const char* mime_type = NULL;
@@ -75,18 +75,18 @@ http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stre
     }
     
     if (!format_name) {
-        return redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Unknown file format.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown file format.");
     }
 
     serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
     if (!serialiser) {
-        return redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Failed to create serialised.");
+        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialised.");
     }
     
 	// Send back the response headers
-	response = http_response_new(HTTP_OK, NULL);
-	http_response_add_header(response, "Content-Type", mime_type);
-	http_request_send_response(request, response);
+	response = redhttp_response_new(REDHTTP_OK, NULL);
+	redhttp_response_add_header(response, "Content-Type", mime_type);
+	redhttp_request_send_response(request, response);
 
     if (librdf_serializer_serialize_stream_to_file_handle(serialiser, socket, NULL, stream)) {
         redstore_error("Failed to serialize graph");
@@ -99,14 +99,14 @@ http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stre
 }
 
 
-http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream* stream, const char* format_str)
+redhttp_response_t* format_graph_stream_html(redhttp_request_t *request, librdf_stream* stream, const char* format_str)
 {
-	http_response_t *response = http_response_new(HTTP_OK, NULL);
-    FILE* socket = http_request_get_socket(request);
+	redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    FILE* socket = redhttp_request_get_socket(request);
 
 	// Send back the response headers
-	http_response_add_header(response, "Content-Type", "text/html");
-	http_request_send_response(request, response);
+	redhttp_response_add_header(response, "Content-Type", "text/html");
+	redhttp_request_send_response(request, response);
     fprintf(socket, "<html><head><title>RedStore</title></head><body>");
     
     fprintf(socket, "<table class=\"triples\" border=\"1\">\n");
@@ -135,9 +135,9 @@ http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream
 }
 
 
-http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream)
+redhttp_response_t* format_graph_stream(redhttp_request_t *request, librdf_stream* stream)
 {
-    http_response_t* response;
+    redhttp_response_t* response;
     char *format_str;
 
     format_str = get_format(request);
@@ -157,10 +157,10 @@ http_response_t* format_graph_stream(http_request_t *request, librdf_stream* str
 }
 
 
-http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str)
+redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *request, librdf_query_results* results, const char* format_str)
 {
-    FILE* socket = http_request_get_socket(request);
-	http_response_t *response;
+    FILE* socket = redhttp_request_get_socket(request);
+	redhttp_response_t *response;
     librdf_uri *format_uri = NULL;
     const char *mime_type = NULL;
     unsigned int i;
@@ -182,13 +182,13 @@ http_response_t* format_bindings_query_result_librdf(http_request_t *request, li
     }
     
     if (!format_uri) {
-        return redstore_error_page(REDSTORE_INFO, HTTP_INTERNAL_SERVER_ERROR, "Failed to match file format.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to match file format.");
     }
 
 	// Send back the response headers
-	response = http_response_new(HTTP_OK, NULL);
-	http_response_add_header(response, "Content-Type", mime_type);
-	http_request_send_response(request, response);
+	response = redhttp_response_new(REDHTTP_OK, NULL);
+	redhttp_response_add_header(response, "Content-Type", mime_type);
+	redhttp_request_send_response(request, response);
     
     // Stream results back to client
 	if (librdf_query_results_to_file_handle(results, socket, format_uri, NULL)) {
@@ -201,15 +201,15 @@ http_response_t* format_bindings_query_result_librdf(http_request_t *request, li
     return response;
 }
 
-http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str)
+redhttp_response_t* format_bindings_query_result_html(redhttp_request_t *request, librdf_query_results* results, const char* format_str)
 {
-	http_response_t *response = http_response_new(HTTP_OK, NULL);
-    FILE* socket = http_request_get_socket(request);
+	redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    FILE* socket = redhttp_request_get_socket(request);
     int i, count;
 
 	// Send back the response headers
-	http_response_add_header(response, "Content-Type", "text/html");
-	http_request_send_response(request, response);
+	redhttp_response_add_header(response, "Content-Type", "text/html");
+	redhttp_request_send_response(request, response);
     fprintf(socket, "<html><head><title>RedStore</title></head><body>");
 
     count = librdf_query_results_get_bindings_count(results);
@@ -242,15 +242,15 @@ http_response_t* format_bindings_query_result_html(http_request_t *request, libr
     return response;
 }
 
-http_response_t* format_bindings_query_result_text(http_request_t *request, librdf_query_results* results, const char* format_str)
+redhttp_response_t* format_bindings_query_result_text(redhttp_request_t *request, librdf_query_results* results, const char* format_str)
 {
-	http_response_t *response = http_response_new(HTTP_OK, NULL);
-    FILE* socket = http_request_get_socket(request);
+	redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    FILE* socket = redhttp_request_get_socket(request);
     int i, count;
 
 	// Send back the response headers
-	http_response_add_header(response, "Content-Type", "text/plain");
-	http_request_send_response(request, response);
+	redhttp_response_add_header(response, "Content-Type", "text/plain");
+	redhttp_request_send_response(request, response);
     
     count = librdf_query_results_get_bindings_count(results);
     for(i=0; i < count; i++) {
@@ -282,9 +282,9 @@ http_response_t* format_bindings_query_result_text(http_request_t *request, libr
     return response;
 }
 
-http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results)
+redhttp_response_t* format_bindings_query_result(redhttp_request_t *request, librdf_query_results* results)
 {
-    http_response_t* response;
+    redhttp_response_t* response;
     char *format_str;
 
     format_str = get_format(request);

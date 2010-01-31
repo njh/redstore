@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include <redland.h>
-#include "http/redhttpd.h"
+#include "redhttp/redhttp.h"
 
 
 #ifndef _REDSTORE_H_
@@ -76,37 +76,37 @@ extern serialiser_info_t serialiser_info[];
 
 // ------- Prototypes -------
 
-http_response_t* handle_sparql_query(http_request_t *request, void* user_data);
-http_response_t* handle_page_home(http_request_t *request, void* user_data);
-http_response_t* handle_page_query(http_request_t *request, void* user_data);
-http_response_t* handle_page_info(http_request_t *request, void* user_data);
-http_response_t* handle_page_formats(http_request_t *request, void* user_data);
+redhttp_response_t* handle_sparql_query(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_page_home(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_page_query(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_page_info(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_page_formats(redhttp_request_t *request, void* user_data);
 
-http_response_t* redstore_error_page(int level, int code, const char* message);
-void page_append_html_header(http_response_t *response, const char* title);
-void page_append_html_footer(http_response_t *response);
+redhttp_response_t* redstore_error_page(int level, int code, const char* message);
+void page_append_html_header(redhttp_response_t *response, const char* title);
+void page_append_html_footer(redhttp_response_t *response);
 
-http_response_t* handle_graph_index(http_request_t *request, void* user_data);
-http_response_t* handle_graph_head(http_request_t *request, void* user_data);
-http_response_t* handle_graph_get(http_request_t *request, void* user_data);
-http_response_t* handle_graph_put(http_request_t *request, void* user_data);
-http_response_t* handle_graph_delete(http_request_t *request, void* user_data);
+redhttp_response_t* handle_graph_index(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_graph_head(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_graph_get(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_graph_put(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_graph_delete(redhttp_request_t *request, void* user_data);
 
-http_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph_uri);
-http_response_t* handle_load_get(http_request_t *request, void* user_data);
-http_response_t* handle_load_post(http_request_t *request, void* user_data);
+redhttp_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *graph_uri);
+redhttp_response_t* handle_load_get(redhttp_request_t *request, void* user_data);
+redhttp_response_t* handle_load_post(redhttp_request_t *request, void* user_data);
 
-http_response_t* format_bindings_query_result_librdf(http_request_t *request, librdf_query_results* results, const char* format_str);
-http_response_t* format_bindings_query_result_html(http_request_t *request, librdf_query_results* results, const char* format_str);
-http_response_t* format_bindings_query_result_text(http_request_t *request, librdf_query_results* results, const char* format_str);
-http_response_t* format_bindings_query_result(http_request_t *request, librdf_query_results* results);
+redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *request, librdf_query_results* results, const char* format_str);
+redhttp_response_t* format_bindings_query_result_html(redhttp_request_t *request, librdf_query_results* results, const char* format_str);
+redhttp_response_t* format_bindings_query_result_text(redhttp_request_t *request, librdf_query_results* results, const char* format_str);
+redhttp_response_t* format_bindings_query_result(redhttp_request_t *request, librdf_query_results* results);
 
-http_response_t* format_graph_stream_librdf(http_request_t *request, librdf_stream* stream, const char* format_str);
-http_response_t* format_graph_stream_html(http_request_t *request, librdf_stream* stream, const char* format_str);
-http_response_t* format_graph_stream_text(http_request_t *request, librdf_stream* stream, const char* format_str);
-http_response_t* format_graph_stream(http_request_t *request, librdf_stream* stream);
+redhttp_response_t* format_graph_stream_librdf(redhttp_request_t *request, librdf_stream* stream, const char* format_str);
+redhttp_response_t* format_graph_stream_html(redhttp_request_t *request, librdf_stream* stream, const char* format_str);
+redhttp_response_t* format_graph_stream_text(redhttp_request_t *request, librdf_stream* stream, const char* format_str);
+redhttp_response_t* format_graph_stream(redhttp_request_t *request, librdf_stream* stream);
 
-http_response_t* handle_image_favicon(http_request_t *request, void* user_data);
+redhttp_response_t* handle_image_favicon(redhttp_request_t *request, void* user_data);
 
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... );
 

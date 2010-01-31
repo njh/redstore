@@ -6,7 +6,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "redhttpd.h"
+#include "redhttp.h"
 
 
 static int hex_decode(const char ch)
@@ -23,7 +23,7 @@ static int hex_decode(const char ch)
 	return r;
 }
 
-char* http_url_unescape(const char* escaped)
+char* redhttp_url_unescape(const char* escaped)
 {
 	char *unescaped, *ptr;
 	size_t len = strlen(escaped);
@@ -59,7 +59,7 @@ char* http_url_unescape(const char* escaped)
 }
 
 
-static int isurisafe( int c )
+static int isurlsafe( int c )
 {
 	return ( (unsigned char)( c - 'a' ) < 26 )
 	    || ( (unsigned char)( c - 'A' ) < 26 )
@@ -67,7 +67,7 @@ static int isurisafe( int c )
 		|| ( strchr( "-._~", c ) != NULL );
 }
 
-char* http_url_escape(const char *unescaped)
+char* redhttp_url_escape(const char *unescaped)
 {
 	char *escaped, *ptr;
 	size_t len = strlen(unescaped);
@@ -76,7 +76,7 @@ char* http_url_escape(const char *unescaped)
 
 	// Phase 1: scan for unsafe characters
 	for(i=0; i<len; i++) {
-		if (!isurisafe(unescaped[i]))
+		if (!isurlsafe(unescaped[i]))
 			enc_len += 2;
 	}
 	
@@ -91,7 +91,7 @@ char* http_url_escape(const char *unescaped)
 		static const char hex[16] = "0123456789ABCDEF";
 		int c = unescaped[i];
 
-		if( isurisafe( c ) ) {
+		if( isurlsafe( c ) ) {
 			*ptr++ = c;
 		} else {
 			*ptr++ = '%';

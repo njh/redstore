@@ -10,16 +10,16 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "redhttpd.h"
+#include "redhttp.h"
 
 
-http_server_t* http_server_new(void)
+redhttp_server_t* redhttp_server_new(void)
 {
-    http_server_t* server = NULL;
+    redhttp_server_t* server = NULL;
 
-    server = calloc(1, sizeof(http_server_t));
+    server = calloc(1, sizeof(redhttp_server_t));
     if (!server) {
-        perror("failed to allocate memory for http_server_t");
+        perror("failed to allocate memory for redhttp_server_t");
         return NULL;
     } else {
         int i;
@@ -35,7 +35,7 @@ http_server_t* http_server_new(void)
     return server;
 }
 
-int http_server_listen(http_server_t* server, const char* host, const char* port, sa_family_t family)
+int redhttp_server_listen(redhttp_server_t* server, const char* host, const char* port, sa_family_t family)
 {
     struct addrinfo hints;
     struct addrinfo *res, *res0;
@@ -106,10 +106,10 @@ int http_server_listen(http_server_t* server, const char* host, const char* port
     return 0;
 }
 
-void http_server_add_handler(http_server_t *server, const char* method, const char* path, http_handler_func func, void *user_data)
+void redhttp_server_add_handler(redhttp_server_t *server, const char* method, const char* path, redhttp_handler_func func, void *user_data)
 {
-    http_handler_t *handler = calloc(1, sizeof(http_handler_t));
-    http_handler_t *it;
+    redhttp_handler_t *handler = calloc(1, sizeof(redhttp_handler_t));
+    redhttp_handler_t *it;
 
     handler->method = method ? strdup(method) : NULL;
     handler->path = path ? strdup(path) : NULL;
@@ -127,7 +127,7 @@ void http_server_add_handler(http_server_t *server, const char* method, const ch
     }
 }
 
-void http_server_run(http_server_t* server)
+void redhttp_server_run(redhttp_server_t* server)
 {
     struct sockaddr_storage ss;
     struct sockaddr *sa = (struct sockaddr *)&ss;
@@ -158,14 +158,14 @@ void http_server_run(http_server_t* server)
                 perror("accept"); 
                 exit(EXIT_FAILURE);
             } else {
-                http_server_handle_request(server, cs, sa, len);
+                redhttp_server_handle_request(server, cs, sa, len);
                 close(cs);
             }
         }
     }
 }
 
-static int match_route(http_handler_t *handler, http_request_t *request)
+static int match_route(redhttp_handler_t *handler, redhttp_request_t *request)
 {
 	size_t path_len;
 	
@@ -183,7 +183,7 @@ static int match_route(http_handler_t *handler, http_request_t *request)
 	path_len = strlen(handler->path);
 	if (handler->path[path_len-1] == '*' && strncasecmp(handler->path, request->path, path_len-1)==0) {
 		const char* glob = &request->path[path_len-1];
-		http_request_set_path_glob(request, glob);
+		redhttp_request_set_path_glob(request, glob);
 		return 1;
 	} else if (strcasecmp(handler->path, request->path)==0) {
 		// Matched whole path
@@ -194,16 +194,16 @@ static int match_route(http_handler_t *handler, http_request_t *request)
 	return 0;
 }
 
-int http_server_handle_request(http_server_t* server, int socket, struct sockaddr *sa, size_t sa_len)
+int redhttp_server_handle_request(redhttp_server_t* server, int socket, struct sockaddr *sa, size_t sa_len)
 {
-    http_request_t *request = NULL;
-    http_response_t *response = NULL;
-    http_handler_t *it = NULL;
+    redhttp_request_t *request = NULL;
+    redhttp_response_t *response = NULL;
+    redhttp_handler_t *it = NULL;
     
     assert(server != NULL);
     assert(socket >= 0);
 
-    request = http_request_new();
+    request = redhttp_request_new();
     if (!request) return -1;
     request->server = server;
     request->socket = fdopen(socket, "r+");;
@@ -213,34 +213,34 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
          NI_NUMERICHOST | NI_NUMERICSERV))
     {
         perror("could not get numeric hostname of client");
-        http_request_free(request);
+        redhttp_request_free(request);
         return -1;
     }    
     
-    if (http_request_read_status_line(request)) {
+    if (redhttp_request_read_status_line(request)) {
         // Invalid request
-        response = http_response_new_error_page(HTTP_BAD_REQUEST, NULL);
+        response = redhttp_response_new_error_page(REDHTTP_BAD_REQUEST, NULL);
     } else {
         if (strncmp(request->version, "0.9", 3)) {
             // Read in the headers
             while(!feof(request->socket)) {
-                char* line = http_request_read_line(request);
+                char* line = redhttp_request_read_line(request);
                 if (line == NULL || strlen(line)<1) {
                 	if (line) free(line);
                 	break;
                 }
-                http_headers_parse_line(&request->headers, line);
+                redhttp_headers_parse_line(&request->headers, line);
                 free(line);
             }
             
             // Read in PUT/POST content
             if (strncasecmp(request->method, "POST", 4)==0) {
-                char *content_type = http_headers_get(&request->headers, "Content-Type");
-                char *content_length = http_headers_get(&request->headers, "Content-Length");
+                char *content_type = redhttp_headers_get(&request->headers, "Content-Type");
+                char *content_length = redhttp_headers_get(&request->headers, "Content-Length");
                 int bytes_read = 0;
 
                 if (content_type==NULL || content_length==NULL) {
-                    response = http_response_new_error_page(HTTP_BAD_REQUEST, NULL);
+                    response = redhttp_response_new_error_page(REDHTTP_BAD_REQUEST, NULL);
                 } else if (strncasecmp(content_type, "application/x-www-form-urlencoded", 33)==0) {
                     request->content_length = atoi(content_length);
                     // FIXME: set maximum POST size
@@ -250,9 +250,9 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
                     bytes_read = fread(request->content_buffer, 1, request->content_length, request->socket);
                     if (bytes_read != request->content_length) {
                     	// FIXME: better response?
-                        response = http_response_new_error_page(HTTP_BAD_REQUEST, NULL);
+                        response = redhttp_response_new_error_page(REDHTTP_BAD_REQUEST, NULL);
                     } else {
-                    	http_request_parse_arguments(request, request->content_buffer);
+                    	redhttp_request_parse_arguments(request, request->content_buffer);
                     }
                 }
                 
@@ -277,22 +277,22 @@ int http_server_handle_request(http_server_t* server, int socket, struct sockadd
     
     // No response? - generate one using the default handler
     if (!response)
-        response = http_server_default_handler(server, request);
+        response = redhttp_server_default_handler(server, request);
 
     // Send response
-    http_request_send_response(request, response);
+    redhttp_request_send_response(request, response);
 
-    http_request_free(request);
-    http_response_free(response);
+    redhttp_request_free(request);
+    redhttp_response_free(response);
 
     // Success
     return 0;
 }
 
-http_response_t *http_server_default_handler(http_server_t* server, http_request_t *request)
+redhttp_response_t *redhttp_server_default_handler(redhttp_server_t* server, redhttp_request_t *request)
 {
-    http_response_t *response = NULL;
-    http_handler_t *it;
+    redhttp_response_t *response = NULL;
+    redhttp_handler_t *it;
     
     assert(server != NULL);
     assert(request != NULL);
@@ -303,20 +303,20 @@ http_response_t *http_server_default_handler(http_server_t* server, http_request
             if ((it->method && strcasecmp(it->method, "GET")==0) &&
                 (it->path && strcasecmp(it->path, request->path)==0))
             {
-                response = http_response_new(HTTP_OK, NULL);
+                response = redhttp_response_new(REDHTTP_OK, NULL);
                 break;
             }
         }
         
         if (!response)
-            response = http_response_new(HTTP_NOT_FOUND, NULL);
+            response = redhttp_response_new(REDHTTP_NOT_FOUND, NULL);
 
     } else {
         // Check if another method is allowed instead
         for (it = server->handlers; it; it = it->next) {
             if (it->path && strcasecmp(it->path, request->path)==0)
             {
-                response = http_response_new_error_page(HTTP_METHOD_NOT_ALLOWED, NULL);
+                response = redhttp_response_new_error_page(REDHTTP_METHOD_NOT_ALLOWED, NULL);
                 // FIXME: add list of allowed methods
                 break;
             }
@@ -325,12 +325,12 @@ http_response_t *http_server_default_handler(http_server_t* server, http_request
 
     // Must be a 404
     if (!response)
-        response = http_response_new_error_page(HTTP_NOT_FOUND, NULL);
+        response = redhttp_response_new_error_page(REDHTTP_NOT_FOUND, NULL);
 
     return response;
 }
 
-void http_server_set_signature(http_server_t* server, const char* signature)
+void redhttp_server_set_signature(redhttp_server_t* server, const char* signature)
 {
     assert(server != NULL);
     assert(signature != NULL);
@@ -341,25 +341,25 @@ void http_server_set_signature(http_server_t* server, const char* signature)
 }
 
 
-const char* http_server_get_signature(http_server_t* server)
+const char* redhttp_server_get_signature(redhttp_server_t* server)
 {
     assert(server != NULL);
     return server->signature;
 }
 
-void http_server_set_backlog_size(http_server_t* server, int backlog_size)
+void redhttp_server_set_backlog_size(redhttp_server_t* server, int backlog_size)
 {
 	server->backlog_size = backlog_size;
 }
 
-int http_server_get_backlog_size(http_server_t* server)
+int redhttp_server_get_backlog_size(redhttp_server_t* server)
 {
     return server->backlog_size;
 }
 
-void http_server_free(http_server_t* server)
+void redhttp_server_free(redhttp_server_t* server)
 {
-    http_handler_t *it, *next;
+    redhttp_handler_t *it, *next;
     int i;
 
     assert(server != NULL);

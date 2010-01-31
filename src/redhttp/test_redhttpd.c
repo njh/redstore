@@ -4,7 +4,7 @@
 #include <string.h>
 #include <getopt.h>
 
-#include "redhttpd.h"
+#include "redhttp.h"
 
 
 #define DEFAULT_PORT      "8080"
@@ -24,7 +24,7 @@ print_help(char *pname)
 }
 
 
-static http_response_t *handle_homepage(http_request_t *request, void *user_data)
+static redhttp_response_t *handle_homepage(redhttp_request_t *request, void *user_data)
 {
     const char* page =
         "<html><head><title>Homepage</title></head>"
@@ -40,16 +40,16 @@ static http_response_t *handle_homepage(http_request_t *request, void *user_data
         "<input type=\"submit\"></form></div>"
         "</body></html>";
 
-    return http_response_new_with_content(page, strlen(page), "text/html");
+    return redhttp_response_new_with_content(page, strlen(page), "text/html");
 }
 
-static http_response_t *handle_query(http_request_t *request, void *user_data)
+static redhttp_response_t *handle_query(redhttp_request_t *request, void *user_data)
 {
-    http_response_t* response = http_response_new(200, NULL);
-    FILE *socket = http_request_get_socket(request);
+    redhttp_response_t* response = redhttp_response_new(REDHTTP_OK, NULL);
+    FILE *socket = redhttp_request_get_socket(request);
 
-    http_response_add_header(response, "Content-Type", "text/html");
-    http_request_send_response(request, response);
+    redhttp_response_add_header(response, "Content-Type", "text/html");
+    redhttp_request_send_response(request, response);
     
     fprintf(socket, "<html><body><h1>Query Page</h1>");
 
@@ -65,19 +65,19 @@ static http_response_t *handle_query(http_request_t *request, void *user_data)
    
    	if (request->headers) {
 		fprintf(socket, "<pre><b>Request Headers</b>\n");
-		http_headers_send(&request->headers, socket);
+		redhttp_headers_send(&request->headers, socket);
 		fprintf(socket, "</pre>\n");
    	}
    
    	if (response->headers) {
 		fprintf(socket, "<pre><b>Response Headers</b>\n");
-		http_headers_send(&response->headers, socket);
+		redhttp_headers_send(&response->headers, socket);
 		fprintf(socket, "</pre>\n");
    	}
    	
    	if (request->arguments) {
 		fprintf(socket, "<pre><b>Arguments</b>\n");
-		http_headers_send(&request->arguments, socket);
+		redhttp_headers_send(&request->arguments, socket);
 		fprintf(socket, "</pre>\n");
 	}
    	
@@ -93,12 +93,12 @@ static http_response_t *handle_query(http_request_t *request, void *user_data)
 }
 
 
-static http_response_t *handle_redirect(http_request_t *request, void *user_data)
+static redhttp_response_t *handle_redirect(redhttp_request_t *request, void *user_data)
 {
-    return http_response_new_redirect("/query");
+    return redhttp_response_new_redirect("/query");
 }
 
-static http_response_t *handle_logging(http_request_t *request, void *user_data)
+static redhttp_response_t *handle_logging(redhttp_request_t *request, void *user_data)
 {
     printf("[%s:%s] %s: %s\n", request->remote_addr, request->remote_port, request->method, request->path);
     return NULL;
@@ -112,7 +112,7 @@ main(int argc, char **argv)
     sa_family_t sopt_family = PF_UNSPEC;       // PF_UNSPEC, PF_INET, PF_INET6
     char        *sopt_host = NULL;               // nodename for getaddrinfo(3)
     char        *sopt_service = DEFAULT_PORT;  // service name: "pop", "110"
-    http_server_t* server;
+    redhttp_server_t* server;
     int c;
 
 
@@ -143,20 +143,20 @@ main(int argc, char **argv)
     }
 
 
-    server = http_server_new();
+    server = redhttp_server_new();
     if (!server) {
         fprintf(stderr, "Failed to initialise HTTP server.\n");
         exit(EXIT_FAILURE);
     }
   
-    http_server_add_handler(server, NULL, NULL, handle_logging, NULL);
-    http_server_add_handler(server, "GET", "/", handle_homepage, NULL);
-    http_server_add_handler(server, "GET", "/query*", handle_query, NULL);
-    http_server_add_handler(server, "POST", "/query", handle_query, NULL);
-    http_server_add_handler(server, "GET", "/redirect", handle_redirect, NULL);
-    http_server_set_signature(server, "test_redhttpd/0.1");
+    redhttp_server_add_handler(server, NULL, NULL, handle_logging, NULL);
+    redhttp_server_add_handler(server, "GET", "/", handle_homepage, NULL);
+    redhttp_server_add_handler(server, "GET", "/query*", handle_query, NULL);
+    redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
+    redhttp_server_add_handler(server, "GET", "/redirect", handle_redirect, NULL);
+    redhttp_server_set_signature(server, "test_redhttpd/0.1");
 
-    if (http_server_listen(server, sopt_host, sopt_service, sopt_family)) {
+    if (redhttp_server_listen(server, sopt_host, sopt_service, sopt_family)) {
         fprintf(stderr, "Failed to create HTTP socket.\n");
         exit(EXIT_FAILURE);
     }
@@ -164,10 +164,10 @@ main(int argc, char **argv)
     printf("Listening on: %s\n", sopt_service);
 
     while(running) {
-        http_server_run(server);
+        redhttp_server_run(server);
     }
 
-    http_server_free(server);
+    redhttp_server_free(server);
 
     return 0;
 }

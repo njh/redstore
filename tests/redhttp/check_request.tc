@@ -1,0 +1,12 @@
+#include <check.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+#include "redhttp/redhttp.h"
+
+#suite redhttp_request
+
+#test create_and_free
+redhttp_request_t *request = redhttp_request_new();
+fail_if(request == NULL, "redhttp_request_new() returned null");
+redhttp_request_free(request);

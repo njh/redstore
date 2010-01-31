@@ -9,14 +9,14 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "redhttpd.h"
+#include "redhttp.h"
 
 
-http_request_t* http_request_new(void)
+redhttp_request_t* redhttp_request_new(void)
 {
-    http_request_t* request = calloc(1, sizeof(http_request_t));
+    redhttp_request_t* request = calloc(1, sizeof(redhttp_request_t));
     if (!request) {
-        perror("failed to allocate memory for http_request_t");
+        perror("failed to allocate memory for redhttp_request_t");
         return NULL;
     }
         
@@ -24,7 +24,7 @@ http_request_t* http_request_new(void)
 }
 
 
-char* http_request_read_line(http_request_t *request)
+char* redhttp_request_read_line(redhttp_request_t *request)
 {
     char *buffer = calloc(1, BUFSIZ);
     int buffer_size = BUFSIZ;
@@ -66,17 +66,17 @@ char* http_request_read_line(http_request_t *request)
     return buffer;
 }
 
-char* http_request_get_header(http_request_t *request, const char* key)
+char* redhttp_request_get_header(redhttp_request_t *request, const char* key)
 {
-    return http_headers_get(&request->headers, key);
+    return redhttp_headers_get(&request->headers, key);
 }
 
-char* http_request_get_argument(http_request_t *request, const char* key)
+char* redhttp_request_get_argument(redhttp_request_t *request, const char* key)
 {
-    return http_headers_get(&request->arguments, key);
+    return redhttp_headers_get(&request->arguments, key);
 }
 
-void http_request_set_path_glob(http_request_t *request, const char* path_glob)
+void redhttp_request_set_path_glob(redhttp_request_t *request, const char* path_glob)
 {
 	// Free the old glob
 	if (request->path_glob) {
@@ -91,12 +91,12 @@ void http_request_set_path_glob(http_request_t *request, const char* path_glob)
 	}
 }
 
-const char* http_request_get_path_glob(http_request_t *request)
+const char* redhttp_request_get_path_glob(redhttp_request_t *request)
 {
 	return request->path_glob;
 }
 
-void http_request_parse_arguments(http_request_t *request, const char *input)
+void redhttp_request_parse_arguments(redhttp_request_t *request, const char *input)
 {
     char *args, *ptr, *key, *value;
 
@@ -119,9 +119,9 @@ void http_request_parse_arguments(http_request_t *request, const char *input)
             *ptr++ = '\0';
         }
         
-        key = http_url_unescape(key);
-        value = http_url_unescape(value);
-        http_headers_add(&request->arguments, key, value);
+        key = redhttp_url_unescape(key);
+        value = redhttp_url_unescape(value);
+        redhttp_headers_add(&request->arguments, key, value);
         free(key);
         free(value);
     }
@@ -130,13 +130,13 @@ void http_request_parse_arguments(http_request_t *request, const char *input)
 }
 
 
-FILE* http_request_get_socket(http_request_t *request)
+FILE* redhttp_request_get_socket(redhttp_request_t *request)
 {
     return request->socket;
 }
 
 
-int http_request_read_status_line(http_request_t *request)
+int redhttp_request_read_status_line(redhttp_request_t *request)
 {
     char *line, *ptr;
     char *method = NULL;
@@ -145,11 +145,11 @@ int http_request_read_status_line(http_request_t *request)
     
     assert(request != NULL);
     
-    line = http_request_read_line(request);
+    line = redhttp_request_read_line(request);
     if (line == NULL || strlen(line) == 0) {
         // FAIL!
         if (line) free(line);
-        return HTTP_BAD_REQUEST;
+        return REDHTTP_BAD_REQUEST;
     }
 
     // Skip whitespace at the start
@@ -167,7 +167,7 @@ int http_request_read_status_line(http_request_t *request)
         ptr++;
     if (*ptr == '\n' || *ptr == '\0') {
         free(line);
-        return HTTP_BAD_REQUEST;
+        return REDHTTP_BAD_REQUEST;
     }
     url = ptr;
 
@@ -192,7 +192,7 @@ int http_request_read_status_line(http_request_t *request)
     // Is the URL valid?
     if (strlen(url)==0) {
         free(line);
-        return HTTP_BAD_REQUEST;
+        return REDHTTP_BAD_REQUEST;
     }
 
     request->method = strdup(method);
@@ -205,9 +205,9 @@ int http_request_read_status_line(http_request_t *request)
         *ptr = '\0';
         request->query_string = strdup(&ptr[1]);
     }
-    request->path = http_url_unescape(url);
+    request->path = redhttp_url_unescape(url);
     
-    http_request_parse_arguments(request, request->query_string);
+    redhttp_request_parse_arguments(request, request->query_string);
 
     free(line);
 
@@ -215,31 +215,31 @@ int http_request_read_status_line(http_request_t *request)
     return 0;
 }
 
-void http_request_send_response(http_request_t *request, http_response_t *response)
+void redhttp_request_send_response(redhttp_request_t *request, redhttp_response_t *response)
 {
     assert(request != NULL);
     assert(response != NULL);
     
     if (!response->headers_sent) {
-    	const char *signature = http_server_get_signature(request->server);
+    	const char *signature = redhttp_server_get_signature(request->server);
     
-        http_response_add_time_header(response, "Date", time(NULL));
-        http_response_add_header(response, "Connection", "Close");
+        redhttp_response_add_time_header(response, "Date", time(NULL));
+        redhttp_response_add_header(response, "Connection", "Close");
         
         if (signature)
-        	http_response_add_header(response, "Server", signature);
+        	redhttp_response_add_header(response, "Server", signature);
       
         if (response->content_length) {
             // FIXME: must be better way to do int to string
             char *length_str = malloc(BUFSIZ);
             snprintf(length_str, BUFSIZ, "%d", (int)response->content_length);
-            http_response_add_header(response, "Content-Length", length_str);
+            redhttp_response_add_header(response, "Content-Length", length_str);
             free(length_str);
         }
     
         if (strncmp(request->version, "0.9", 3)) {
             fprintf(request->socket, "HTTP/1.0 %d %s\r\n", response->status_code, response->status_message);
-            http_headers_send(&response->headers, request->socket);
+            redhttp_headers_send(&response->headers, request->socket);
             fputs("\r\n", request->socket);
         }
         
@@ -253,7 +253,7 @@ void http_request_send_response(http_request_t *request, http_response_t *respon
 	}
 }
 
-void http_request_free(http_request_t* request)
+void redhttp_request_free(redhttp_request_t* request)
 {
     assert(request != NULL);
 
@@ -266,8 +266,8 @@ void http_request_free(http_request_t* request)
     
     if (request->socket) fclose(request->socket);
 
-    http_headers_free(&request->headers);
-    http_headers_free(&request->arguments);
+    redhttp_headers_free(&request->headers);
+    redhttp_headers_free(&request->arguments);
     
     free(request);
 }

@@ -10,12 +10,12 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "redhttpd.h"
+#include "redhttp.h"
 
 
-void http_headers_send(http_header_t** first, FILE* socket)
+void redhttp_headers_send(redhttp_header_t** first, FILE* socket)
 {
-    http_header_t* it;
+    redhttp_header_t* it;
 
     assert(first != NULL);
     assert(socket != NULL);
@@ -25,10 +25,10 @@ void http_headers_send(http_header_t** first, FILE* socket)
     }
 }
 
-void http_headers_add(http_header_t** first, const char* key, const char* value)
+void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* value)
 {
-    http_header_t *header;
-    http_header_t *it;
+    redhttp_header_t *header;
+    redhttp_header_t *it;
 
     assert(first != NULL);
     assert(key != NULL);
@@ -40,7 +40,7 @@ void http_headers_add(http_header_t** first, const char* key, const char* value)
     // FIXME: append value if header already exists
 
 	// Create new header item
-	header = calloc(1, sizeof(http_header_t));
+	header = calloc(1, sizeof(redhttp_header_t));
     header->key = strdup(key);
     header->value = strdup(value);
     header->next = NULL;
@@ -55,9 +55,9 @@ void http_headers_add(http_header_t** first, const char* key, const char* value)
     }
 }
 
-char* http_headers_get(http_header_t** first, const char* key)
+char* redhttp_headers_get(redhttp_header_t** first, const char* key)
 {
-    http_header_t* it;
+    redhttp_header_t* it;
 
     assert(first != NULL);
     assert(key != NULL);
@@ -71,7 +71,7 @@ char* http_headers_get(http_header_t** first, const char* key)
 }
 
 
-void http_headers_parse_line(http_header_t** first, const char* input)
+void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
 {
     char *line, *ptr, *key, *value;
 
@@ -93,14 +93,14 @@ void http_headers_parse_line(http_header_t** first, const char* input)
 
     value = ptr;
 
-    http_headers_add(first, key, value);
+    redhttp_headers_add(first, key, value);
     
     free(line);
 }
 
-void http_headers_free(http_header_t** first)
+void redhttp_headers_free(redhttp_header_t** first)
 {
-    http_header_t *it, *next;
+    redhttp_header_t *it, *next;
 
     assert(first != NULL);
 

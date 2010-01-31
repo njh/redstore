@@ -97,7 +97,7 @@ void redstore_log( RedstoreLogLevel level, const char* fmt, ... )
     }
 }
 
-static http_response_t* request_counter(http_request_t *request, void* user_data)
+static redhttp_response_t* request_counter(redhttp_request_t *request, void* user_data)
 {
 	request_count++;
 	return NULL;
@@ -142,7 +142,7 @@ static void usage()
 
 int main(int argc, char *argv[])
 {
-    http_server_t *server = NULL;
+    redhttp_server_t *server = NULL;
     librdf_hash *storage_options = NULL;
     char* port = DEFAULT_PORT;
     const char* storage_options_str = DEFAULT_STORAGE_OPTIONS;
@@ -195,33 +195,33 @@ int main(int argc, char *argv[])
     signal(SIGHUP, termination_handler);
 
     // Create HTTP server
-    server = http_server_new();
+    server = redhttp_server_new();
     if (!server) {
         fprintf(stderr, "Failed to initialise HTTP server.\n");
         exit(EXIT_FAILURE);
     }
 
     // Configure routing
-    http_server_add_handler(server, NULL, NULL, request_counter, &request_count);
-    http_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
-    http_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
-    http_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
-    http_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
-    http_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
-    http_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
-    http_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
-    http_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
-    http_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
-    http_server_add_handler(server, "GET", "/", handle_page_home, NULL);
-    http_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
-    http_server_add_handler(server, "GET", "/info", handle_page_info, NULL);
-    http_server_add_handler(server, "GET", "/formats", handle_page_formats, NULL);
-    http_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
-    //http_server_add_handler(server, "GET", NULL, handle_remove_trailing_slash, NULL);
+    redhttp_server_add_handler(server, NULL, NULL, request_counter, &request_count);
+    redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
+    redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
+    redhttp_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
+    redhttp_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
+    redhttp_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
+    redhttp_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
+    redhttp_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
+    redhttp_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
+    redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
+    redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
+    redhttp_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
+    redhttp_server_add_handler(server, "GET", "/info", handle_page_info, NULL);
+    redhttp_server_add_handler(server, "GET", "/formats", handle_page_formats, NULL);
+    redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
+    //redhttp_server_add_handler(server, "GET", NULL, handle_remove_trailing_slash, NULL);
     
     // Set the server signature
     // FIXME: add Redland libraries to this?
-    http_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);
+    redhttp_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);
 
 
     // Setup Redland storage
@@ -249,20 +249,20 @@ int main(int argc, char *argv[])
 
     // Start listening for connections
     redstore_info("Starting HTTP server on port %s", port);
-    if (http_server_listen(server, NULL, port, PF_UNSPEC)) {
+    if (redhttp_server_listen(server, NULL, port, PF_UNSPEC)) {
         fprintf(stderr, "Failed to create HTTP socket.\n");
         exit(EXIT_FAILURE);
     }
 
     while(running) {
-        http_server_run(server);
+        redhttp_server_run(server);
     }
     
     librdf_free_storage(storage);
     librdf_free_hash(storage_options);
     librdf_free_world(world);
 
-    http_server_free(server);
+    redhttp_server_free(server);
  
     return 0;   // FIXME: should return non-zero if there was a fatal error
 }

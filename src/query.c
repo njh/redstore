@@ -5,28 +5,28 @@
 #include "redstore.h"
 
 
-http_response_t* handle_sparql_query(http_request_t *request, void* user_data)
+redhttp_response_t* handle_sparql_query(redhttp_request_t *request, void* user_data)
 {
     char *query_string = NULL;
     librdf_query* query = NULL;
     librdf_query_results* results = NULL;
-    http_response_t* response = NULL;
+    redhttp_response_t* response = NULL;
 
-    query_string = http_request_get_argument(request, "query");
+    query_string = redhttp_request_get_argument(request, "query");
     if (!query_string) {
-        response = redstore_error_page(REDSTORE_DEBUG, HTTP_BAD_REQUEST, "query was missing query string");
+        response = redstore_error_page(REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "query was missing query string");
         goto CLEANUP;
     }
 
     query = librdf_new_query(world, "sparql", NULL, (unsigned char *)query_string, NULL);
     if (!query) {
-        response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "librdf_new_query failed");
+        response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_new_query failed");
         goto CLEANUP;
     }
 
     results = librdf_model_query_execute(model, query);
     if (!results) {
-		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "librdf_model_query_execute failed");
+		response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_model_query_execute failed");
         goto CLEANUP;
     }
     
@@ -39,11 +39,11 @@ http_response_t* handle_sparql_query(http_request_t *request, void* user_data)
         response = format_graph_stream(request, stream);
         librdf_free_stream(stream);
     } else if (librdf_query_results_is_boolean(results)) {
-		response = redstore_error_page(REDSTORE_INFO, HTTP_NOT_IMPLEMENTED, "Boolean result format is not supported.");
+		response = redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_IMPLEMENTED, "Boolean result format is not supported.");
     } else if (librdf_query_results_is_syntax(results)) {
-		response = redstore_error_page(REDSTORE_INFO, HTTP_NOT_IMPLEMENTED, "Syntax results format is not supported.");
+		response = redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_IMPLEMENTED, "Syntax results format is not supported.");
     } else {
-		response = redstore_error_page(REDSTORE_ERROR, HTTP_INTERNAL_SERVER_ERROR, "Unknown results type.");
+		response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown results type.");
     }
 
 

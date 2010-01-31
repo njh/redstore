@@ -1,0 +1,22 @@
+#include <check.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+#include "redhttp/redhttp.h"
+
+#suite redhttp_url
+
+#test test_redhttp_url_unescape
+char *unescaped = redhttp_url_unescape("hello+world%20%2a%2B");
+ck_assert_str_eq(unescaped, "hello world *+");
+free(unescaped);
+
+#test test_redhttp_url_unescape_invalid
+char *unescaped = redhttp_url_unescape("hello%2G%2");
+ck_assert_str_eq(unescaped, "hello%2G%2");
+free(unescaped);
+
+#test test_redhttp_url_escape
+char *escaped = redhttp_url_escape("-Hello World_.html");
+ck_assert_str_eq(escaped, "-Hello%20World_.html");
+free(escaped);

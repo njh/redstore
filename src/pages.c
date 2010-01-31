@@ -6,15 +6,15 @@
 #include "redstore.h"
 
 
-http_response_t* redstore_error_page(int level, int code, const char* message)
+redhttp_response_t* redstore_error_page(int level, int code, const char* message)
 {
 	redstore_log(level, message);
-	return http_response_new_error_page(code, message);
+	return redhttp_response_new_error_page(code, message);
 }
 
-void page_append_html_header(http_response_t *response, const char* title)
+void page_append_html_header(redhttp_response_t *response, const char* title)
 {
-	http_response_content_append(response,         
+	redhttp_response_content_append(response,         
 		"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
         "          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
@@ -27,9 +27,9 @@ void page_append_html_header(http_response_t *response, const char* title)
 	);
 }
 
-void page_append_html_footer(http_response_t *response)
+void page_append_html_footer(redhttp_response_t *response)
 {
-	http_response_content_append(response,         
+	redhttp_response_content_append(response,         
         "<hr /><address>%s librdf/%s raptor/%s rasqal/%s</address>\n"
         "</body></html>\n",
         PACKAGE_NAME "/" PACKAGE_VERSION,
@@ -39,11 +39,11 @@ void page_append_html_footer(http_response_t *response)
 	);
 }
 
-http_response_t* handle_page_home(http_request_t *request, void* user_data)
+redhttp_response_t* handle_page_home(redhttp_request_t *request, void* user_data)
 {
-	http_response_t* response = http_response_new(HTTP_OK, NULL);
+	redhttp_response_t* response = redhttp_response_new(REDHTTP_OK, NULL);
 	page_append_html_header(response, "RedStore");
-	http_response_content_append(response,
+	redhttp_response_content_append(response,
         "<ul>\n"
         "  <li><a href=\"/query\">SPARQL Query Page</a></li>\n"
         "  <li><a href=\"/load\">Load URI</a></li>\n"
@@ -56,50 +56,50 @@ http_response_t* handle_page_home(http_request_t *request, void* user_data)
 	return response;
 }
 
-http_response_t* handle_page_formats(http_request_t *request, void* user_data)
+redhttp_response_t* handle_page_formats(redhttp_request_t *request, void* user_data)
 {
-	http_response_t* response;
+	redhttp_response_t* response;
 	int i;
 	
-	response = http_response_new(HTTP_OK, NULL);
+	response = redhttp_response_new(REDHTTP_OK, NULL);
 	page_append_html_header(response, "Supported Formats");
     
-    http_response_content_append(response, "<h2>RDF Parsers</h2>\n");
-    http_response_content_append(response, "<table border=\"1\">\n");
-    http_response_content_append(response, "<tr><th>Name</th><th>Description</th></tr>\n");
+    redhttp_response_content_append(response, "<h2>RDF Parsers</h2>\n");
+    redhttp_response_content_append(response, "<table border=\"1\">\n");
+    redhttp_response_content_append(response, "<tr><th>Name</th><th>Description</th></tr>\n");
     for(i=0; 1; i++) {
         const char *name, *label;
         if(librdf_parser_enumerate(world, i, &name, &label))
             break;
-        http_response_content_append(response, "<tr><td>%s</td><td>%s</td></tr>\n", name, label);
+        redhttp_response_content_append(response, "<tr><td>%s</td><td>%s</td></tr>\n", name, label);
     }
-    http_response_content_append(response, "</table>\n");
+    redhttp_response_content_append(response, "</table>\n");
 
-    http_response_content_append(response, "<h2>RDF Serialisers</h2>\n");
-    http_response_content_append(response, "<table border=\"1\">\n");
-    http_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
+    redhttp_response_content_append(response, "<h2>RDF Serialisers</h2>\n");
+    redhttp_response_content_append(response, "<table border=\"1\">\n");
+    redhttp_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
     for(i=0; serialiser_info[i].name; i++) {
         if(!serialiser_info[i].label) continue;
-        http_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td>",
+        redhttp_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td>",
                 serialiser_info[i].name, serialiser_info[i].label, serialiser_info[i].mime_type);
         if (serialiser_info[i].uri) {
-        	http_response_content_append(response, "<td><a href=\"%s\">More Info</a></td>\n", serialiser_info[i].uri);
+        	redhttp_response_content_append(response, "<td><a href=\"%s\">More Info</a></td>\n", serialiser_info[i].uri);
         }
-        http_response_content_append(response, "</tr>\n");
+        redhttp_response_content_append(response, "</tr>\n");
     }
-    http_response_content_append(response, "</table>\n");
+    redhttp_response_content_append(response, "</table>\n");
 
-    http_response_content_append(response, "<h2>Query Result Formatters</h2>\n");
-    http_response_content_append(response, "<table border=\"1\">\n");
-    http_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
+    redhttp_response_content_append(response, "<h2>Query Result Formatters</h2>\n");
+    redhttp_response_content_append(response, "<table border=\"1\">\n");
+    redhttp_response_content_append(response, "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URI</th></tr>\n");
     for(i=0; 1; i++) {
         const char *name, *label, *mime_type;
         const unsigned char *uri;
         if(librdf_query_results_formats_enumerate(world, i, &name, &label, &uri, &mime_type))
             break;
-        http_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td><td><a href=\"%s\">More Info</a></td></tr>\n", name, label, mime_type, uri);
+        redhttp_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td><td><a href=\"%s\">More Info</a></td></tr>\n", name, label, mime_type, uri);
     }
-    http_response_content_append(response, "</table>\n");
+    redhttp_response_content_append(response, "</table>\n");
 	page_append_html_footer(response);
 
     return response;
@@ -129,32 +129,32 @@ static int context_count(librdf_storage *storage)
 }
 
 
-http_response_t* handle_page_info(http_request_t *request, void* user_data)
+redhttp_response_t* handle_page_info(redhttp_request_t *request, void* user_data)
 {
-	http_response_t* response;
+	redhttp_response_t* response;
 
-	response = http_response_new(HTTP_OK, NULL);
+	response = redhttp_response_new(REDHTTP_OK, NULL);
 	page_append_html_header(response, "Store Information");
-    http_response_content_append(response, "<dl>\n");
-    http_response_content_append(response, "<dt>Storage Name</dt><dd>%s</dd>\n", storage_name);
-    http_response_content_append(response, "<dt>Storage Type</dt><dd>%s</dd>\n", storage_type);
-    http_response_content_append(response, "<dt>Triple Count</dt><dd>%d</dd>\n", librdf_storage_size(storage));
-    http_response_content_append(response, "<dt>Named Graph Count</dt><dd>%d</dd>\n", context_count(storage));
-    http_response_content_append(response, "<dt>HTTP Request Count</dt><dd>%lu</dd>\n", request_count);
-    http_response_content_append(response, "<dt>Successful Import Count</dt><dd>%lu</dd>\n", import_count);
-    http_response_content_append(response, "<dt>SPARQL Query Count</dt><dd>%lu</dd>\n", query_count);
-    http_response_content_append(response, "</dl>\n");
+    redhttp_response_content_append(response, "<dl>\n");
+    redhttp_response_content_append(response, "<dt>Storage Name</dt><dd>%s</dd>\n", storage_name);
+    redhttp_response_content_append(response, "<dt>Storage Type</dt><dd>%s</dd>\n", storage_type);
+    redhttp_response_content_append(response, "<dt>Triple Count</dt><dd>%d</dd>\n", librdf_storage_size(storage));
+    redhttp_response_content_append(response, "<dt>Named Graph Count</dt><dd>%d</dd>\n", context_count(storage));
+    redhttp_response_content_append(response, "<dt>HTTP Request Count</dt><dd>%lu</dd>\n", request_count);
+    redhttp_response_content_append(response, "<dt>Successful Import Count</dt><dd>%lu</dd>\n", import_count);
+    redhttp_response_content_append(response, "<dt>SPARQL Query Count</dt><dd>%lu</dd>\n", query_count);
+    redhttp_response_content_append(response, "</dl>\n");
 	page_append_html_footer(response);
 
     return response;
 }
 
-http_response_t* handle_page_query(http_request_t *request, void* user_data)
+redhttp_response_t* handle_page_query(redhttp_request_t *request, void* user_data)
 {
-	http_response_t* response = http_response_new(HTTP_OK, NULL);
+	redhttp_response_t* response = redhttp_response_new(REDHTTP_OK, NULL);
 	page_append_html_header(response, "SPARQL Query");
     
-    http_response_content_append(response, 
+    redhttp_response_content_append(response, 
         "<form action=\"../sparql\" method=\"get\">\n"
         "<textarea name=\"query\" cols=\"80\" rows=\"18\">\n"
         "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
