@@ -20,8 +20,8 @@
 // ------- Constants -------
 #define DEFAULT_PORT            "8080"
 #define DEFAULT_STORAGE_NAME    "redstore"
-#define DEFAULT_STORAGE_TYPE    "hashes"
-#define DEFAULT_STORAGE_OPTIONS "hash-type='bdb',dir='.'"
+#define DEFAULT_STORAGE_TYPE    "memory"
+#define DEFAULT_STORAGE_OPTIONS ""
 #define DEFAULT_RESULTS_FORMAT  "application/sparql-results+xml"
 
 
