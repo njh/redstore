@@ -47,7 +47,8 @@ redhttp_response_t* redhttp_response_new(int code, const char* message)
                 default:                         message = "Unknown"; break;
             }
         }
-        response->status_message = strdup(message);
+        response->status_message = calloc(1,strlen(message)+1);
+        strcpy(response->status_message, message);
     }
         
     return response;
@@ -140,7 +141,7 @@ void redhttp_response_content_append(redhttp_response_t* response, const char* f
     va_end(args);
 }
 
-char *redhttp_response_get_header(redhttp_response_t* response, const char* key)
+const char *redhttp_response_get_header(redhttp_response_t* response, const char* key)
 {
     return redhttp_headers_get(&response->headers, key);
 }

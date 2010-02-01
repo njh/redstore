@@ -44,9 +44,6 @@ AC_ARG_ENABLE(debug,
 
 dnl ############## Compiler and Linker Flags
 
-# FIXME: make Redstore POSIX compatible
-AC_DEFINE(_GNU_SOURCE, 1, [Enable GNU Extensions])
-
 # FIXME: use AC PROG CC C99
 CFLAGS="$CFLAGS -std=c99"
 

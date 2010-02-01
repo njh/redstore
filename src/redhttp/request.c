@@ -66,7 +66,7 @@ char* redhttp_request_read_line(redhttp_request_t *request)
     return buffer;
 }
 
-char* redhttp_request_get_header(redhttp_request_t *request, const char* key)
+const char* redhttp_request_get_header(redhttp_request_t *request, const char* key)
 {
     return redhttp_headers_get(&request->headers, key);
 }
@@ -76,7 +76,7 @@ void redhttp_request_add_header(redhttp_request_t *request, const char* key, con
     redhttp_headers_add(&request->headers, key, value);
 }
 
-char* redhttp_request_get_argument(redhttp_request_t *request, const char* key)
+const char* redhttp_request_get_argument(redhttp_request_t *request, const char* key)
 {
     return redhttp_headers_get(&request->arguments, key);
 }
@@ -90,7 +90,8 @@ void redhttp_request_set_path_glob(redhttp_request_t *request, const char* path_
 	
 	// Store the new glob
 	if (path_glob && strlen(path_glob)) {
-		request->path_glob = strdup(path_glob);
+		request->path_glob = calloc(1, strlen(path_glob)+1);
+		strcpy(request->path_glob, path_glob);
 	} else {
 		request->path_glob = NULL;
 	}
@@ -107,7 +108,8 @@ void redhttp_request_parse_arguments(redhttp_request_t *request, const char *inp
 
     assert(request != NULL);
     if (input == NULL) return;
-    args = strdup(input);
+    args = calloc(1, strlen(input)+1);
+    strcpy(args, input);
     
     for(ptr = args; ptr && *ptr;)
     {
@@ -132,6 +134,111 @@ void redhttp_request_parse_arguments(redhttp_request_t *request, const char *inp
     }
     
     free(args);
+}
+
+void redhttp_request_set_method(redhttp_request_t *request, const char* method)
+{
+    assert(request != NULL);
+
+    // FIXME: repeated code
+    if (request->method)
+        free(request->method);
+        
+    if (method) {
+        request->method = calloc(1, strlen(method)+1);
+        strcpy(request->method, method);
+    } else {
+        request->method = NULL;
+    }
+}
+
+const char* redhttp_request_get_method(redhttp_request_t *request)
+{
+    return request->method;
+}
+
+void redhttp_request_set_url(redhttp_request_t *request, const char* url)
+{
+    assert(request != NULL);
+
+    // FIXME: repeated code
+    if (request->url)
+        free(request->url);
+        
+    if (url) {
+        request->url = calloc(1, strlen(url)+1);
+        strcpy(request->url, url);
+    } else {
+        request->url = NULL;
+    }
+}
+
+const char* redhttp_request_get_url(redhttp_request_t *request)
+{
+    return request->url;
+}
+
+void redhttp_request_set_path(redhttp_request_t *request, const char* path)
+{
+    assert(request != NULL);
+
+    // FIXME: repeated code
+    if (request->path)
+        free(request->path);
+        
+    if (path) {
+        request->path = calloc(1, strlen(path)+1);
+        strcpy(request->path, path);
+    } else {
+        request->path = NULL;
+    }
+}
+
+const char* redhttp_request_get_path(redhttp_request_t *request)
+{
+    return request->path;
+}
+
+void redhttp_request_set_version(redhttp_request_t *request, const char* version)
+{
+    assert(request != NULL);
+
+    // FIXME: repeated code
+    if (request->version)
+        free(request->version);
+        
+    if (version) {
+        request->version = calloc(1, strlen(version)+1);
+        strcpy(request->version, version);
+    } else {
+        request->version = NULL;
+    }
+}
+
+const char* redhttp_request_get_version(redhttp_request_t *request)
+{
+    return request->version;
+}
+
+void redhttp_request_set_query_string(redhttp_request_t *request, const char* query_string)
+{
+    assert(request != NULL);
+
+    // FIXME: repeated code
+    if (request->query_string)
+        free(request->query_string);
+        
+    if (query_string) {
+        request->query_string = calloc(1, strlen(query_string)+1);
+        strcpy(request->query_string, query_string);
+    } else {
+        request->query_string = NULL;
+    }
+}
+
+const char* redhttp_request_get_query_string(redhttp_request_t *request)
+{
+    return request->query_string;
 }
 
 void redhttp_request_set_socket(redhttp_request_t *request, FILE* socket)
@@ -198,15 +305,15 @@ int redhttp_request_read_status_line(redhttp_request_t *request)
         version = "0.9";
     }
 
-    request->method = strdup(method);
-    request->url = strdup(url);
-    request->version = strdup(version);
+    redhttp_request_set_method(request, method);
+    redhttp_request_set_url(request, url);
+    redhttp_request_set_version(request, version);
     
     // Separate the path from the query string
     for(ptr = url; *ptr && *ptr != '?'; ptr++);
     if (*ptr == '?') {
         *ptr = '\0';
-        request->query_string = strdup(&ptr[1]);
+        redhttp_request_set_query_string(request, &ptr[1]);
     }
     request->path = redhttp_url_unescape(url);
     
@@ -238,8 +345,8 @@ int redhttp_request_read(redhttp_request_t *request)
         
         // Read in PUT/POST content
         if (strncasecmp(request->method, "POST", 4)==0) {
-            char *content_type = redhttp_headers_get(&request->headers, "Content-Type");
-            char *content_length = redhttp_headers_get(&request->headers, "Content-Length");
+            const char *content_type = redhttp_headers_get(&request->headers, "Content-Type");
+            const char *content_length = redhttp_headers_get(&request->headers, "Content-Length");
             int bytes_read = 0;
     
             if (content_type==NULL || content_length==NULL) {
@@ -258,9 +365,6 @@ int redhttp_request_read(redhttp_request_t *request)
                     redhttp_request_parse_arguments(request, request->content_buffer);
                 }
             }
-            
-            free(content_type);
-            free(content_length);
         }
     }
     

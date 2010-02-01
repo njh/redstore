@@ -40,10 +40,12 @@ void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* 
 
     // FIXME: append value if header already exists
 
-	// Create new header item
-	header = calloc(1, sizeof(redhttp_header_t));
-    header->key = strdup(key);
-    header->value = strdup(value);
+    // Create new header item
+    header = calloc(1, sizeof(redhttp_header_t));
+    header->key = calloc(1, strlen(key)+1);
+    stpcpy(header->key, key);
+    header->value = calloc(1, strlen(value)+1);
+    stpcpy(header->value, value);
     header->next = NULL;
     
     // append the new method to the list
@@ -70,7 +72,7 @@ int redhttp_headers_count(redhttp_header_t** first)
     return count;
 }
 
-char* redhttp_headers_get(redhttp_header_t** first, const char* key)
+const char* redhttp_headers_get(redhttp_header_t** first, const char* key)
 {
     redhttp_header_t* it;
 
@@ -79,7 +81,7 @@ char* redhttp_headers_get(redhttp_header_t** first, const char* key)
     
     for (it = *first; it; it = it->next) {
         if (strcasecmp(key, it->key)==0)
-            return strdup(it->value);
+            return it->value;
     }
 
     return NULL;
@@ -97,7 +99,8 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
 
     // FIXME: is there whitespace at the start?
 
-    line = strdup(input);
+    line = calloc(1, strlen(input)+1);
+    stpcpy(line, input);
     key = line;
     for (ptr = line; *ptr && *ptr != ':'; ptr++)
         continue;
