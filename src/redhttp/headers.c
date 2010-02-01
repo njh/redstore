@@ -13,6 +13,18 @@
 #include "redhttp.h"
 
 
+static int redhttp_strcasecmp(const char* s1, const char* s2)
+{
+	int r = 0;
+
+	while ( ((s1 == s2) ||
+			 !(r = ((int)( tolower(*((char *)s1))))
+			   - tolower(*((char *)s2))))
+			&& (++s2, *s1++));
+
+	return r;
+}
+
 void redhttp_headers_send(redhttp_header_t** first, FILE* socket)
 {
     redhttp_header_t* it;
@@ -80,7 +92,7 @@ const char* redhttp_headers_get(redhttp_header_t** first, const char* key)
     assert(key != NULL);
     
     for (it = *first; it; it = it->next) {
-        if (strcasecmp(key, it->key)==0)
+        if (redhttp_strcasecmp(key, it->key)==0)
             return it->value;
     }
 

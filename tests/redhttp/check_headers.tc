@@ -10,20 +10,17 @@ redhttp_header_t *first = NULL;
 ck_assert_int_eq(redhttp_headers_count(&first), 0);
 redhttp_headers_free(&first);
 
-
 #test get_nonexistant
 redhttp_header_t *first = NULL;
 const char* value = redhttp_headers_get(&first, "a_key");
-fail_unless(value == NULL, "redhttp_headers_get() didn't return NULL for nonexistant header");
+ck_assert_msg(value == NULL, "redhttp_headers_get() didn't return NULL for nonexistant header");
 redhttp_headers_free(&first);
-
 
 #test add
 redhttp_header_t *first = NULL;
 redhttp_headers_add(&first, "mykey", "myvalue");
-fail_if(first == NULL, "redhttp_headers_add() didn't create headers");
+ck_assert_msg(first != NULL, "redhttp_headers_add() didn't create headers");
 redhttp_headers_free(&first);
-
 
 #test add_and_count
 redhttp_header_t *first = NULL;
@@ -33,14 +30,12 @@ redhttp_headers_add(&first, "key3", "value3");
 ck_assert_int_eq(redhttp_headers_count(&first), 3);
 redhttp_headers_free(&first);
 
-
 #test add_empty
 redhttp_header_t *first = NULL;
 redhttp_headers_add(&first, "key1", "value1");
 redhttp_headers_add(&first, "key2", "");
 ck_assert_int_eq(redhttp_headers_count(&first), 1);
 redhttp_headers_free(&first);
-
 
 #test add_and_get
 redhttp_header_t *first = NULL;
@@ -49,7 +44,6 @@ redhttp_headers_add(&first, "key2", "value2");
 ck_assert_str_eq(redhttp_headers_get(&first, "key1"), "value1");
 ck_assert_str_eq(redhttp_headers_get(&first, "key2"), "value2");
 redhttp_headers_free(&first);
-
 
 #test parse_line
 redhttp_header_t *first = NULL;
@@ -60,4 +54,3 @@ redhttp_headers_parse_line(&first, "emptier:");
 ck_assert_int_eq(redhttp_headers_count(&first), 1);
 ck_assert_str_eq(redhttp_headers_get(&first, "foo"), "bar");
 redhttp_headers_free(&first);
-

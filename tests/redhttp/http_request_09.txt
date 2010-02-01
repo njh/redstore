@@ -1,1 +1,1 @@
-GET	/foaf.rdf
+get	/foaf.rdf

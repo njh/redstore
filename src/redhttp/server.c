@@ -180,7 +180,7 @@ static int match_route(redhttp_handler_t *handler, redhttp_request_t *request)
 	size_t path_len;
 	
 	// Does the method match?
-	if (!(handler->method == NULL || strcasecmp(handler->method, request->method)==0)) {
+	if (!(handler->method == NULL || strcmp(handler->method, request->method)==0)) {
 		return 0;
 	}
 	
@@ -191,11 +191,11 @@ static int match_route(redhttp_handler_t *handler, redhttp_request_t *request)
 
 	// Glob on the end of the path?
 	path_len = strlen(handler->path);
-	if (handler->path[path_len-1] == '*' && strncasecmp(handler->path, request->path, path_len-1)==0) {
+	if (handler->path[path_len-1] == '*' && strncmp(handler->path, request->path, path_len-1)==0) {
 		const char* glob = &request->path[path_len-1];
 		redhttp_request_set_path_glob(request, glob);
 		return 1;
-	} else if (strcasecmp(handler->path, request->path)==0) {
+	} else if (strcmp(handler->path, request->path)==0) {
 		// Matched whole path
 		return 1;
 	}
@@ -266,10 +266,10 @@ redhttp_response_t *redhttp_server_default_handler(redhttp_server_t* server, red
     assert(request != NULL);
     
     // Is it a HEAD request?
-    if (strncasecmp("HEAD",request->method,4)==0) {
+    if (strncmp("HEAD",request->method,4)==0) {
         for (it = server->handlers; it; it = it->next) {
-            if ((it->method && strcasecmp(it->method, "GET")==0) &&
-                (it->path && strcasecmp(it->path, request->path)==0))
+            if ((it->method && strcmp(it->method, "GET")==0) &&
+                (it->path && strcmp(it->path, request->path)==0))
             {
                 response = redhttp_response_new(REDHTTP_OK, NULL);
                 break;
@@ -282,7 +282,7 @@ redhttp_response_t *redhttp_server_default_handler(redhttp_server_t* server, red
     } else {
         // Check if another method is allowed instead
         for (it = server->handlers; it; it = it->next) {
-            if (it->path && strcasecmp(it->path, request->path)==0)
+            if (it->path && strcmp(it->path, request->path)==0)
             {
                 response = redhttp_response_new_error_page(REDHTTP_METHOD_NOT_ALLOWED, NULL);
                 // FIXME: add list of allowed methods

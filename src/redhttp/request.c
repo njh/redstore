@@ -140,13 +140,16 @@ void redhttp_request_set_method(redhttp_request_t *request, const char* method)
 {
     assert(request != NULL);
 
-    // FIXME: repeated code
     if (request->method)
         free(request->method);
         
     if (method) {
-        request->method = calloc(1, strlen(method)+1);
-        strcpy(request->method, method);
+	int i, len = strlen(method);
+        request->method = calloc(1,len+1);
+	for(i=0; i<len; i++) {
+            request->method[i] = toupper(method[i]);
+	}
+        request->method[i] = '\0';
     } else {
         request->method = NULL;
     }
