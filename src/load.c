@@ -64,9 +64,9 @@ redhttp_response_t* load_stream_into_graph(librdf_stream *stream, librdf_uri *gr
 
 redhttp_response_t* handle_load_post(redhttp_request_t *request, void* user_data)
 {
-	char* uri_arg = redhttp_request_get_argument(request, "uri");
-	char* base_arg = redhttp_request_get_argument(request, "base-uri");
-	char* graph_arg = redhttp_request_get_argument(request, "graph");
+	const char* uri_arg = redhttp_request_get_argument(request, "uri");
+	const char* base_arg = redhttp_request_get_argument(request, "base-uri");
+	const char* graph_arg = redhttp_request_get_argument(request, "graph");
     librdf_uri *uri = NULL, *base_uri = NULL, *graph_uri = NULL;
     redhttp_response_t* response = NULL;
     librdf_parser *parser = NULL;
@@ -130,9 +130,6 @@ CLEANUP:
 	if (graph_uri) librdf_free_uri(graph_uri);
 	if (base_uri) librdf_free_uri(base_uri);
 	if (uri) librdf_free_uri(uri);
-	if (base_arg) free(base_arg);
-	if (graph_arg) free(graph_arg);
-	if (uri_arg) free(uri_arg);
 
 	return response;
 }

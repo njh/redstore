@@ -12,7 +12,7 @@
 */
 static char* parse_accept_header(redhttp_request_t *request)
 {
-    char* accept_str = redhttp_request_get_header(request, "Accept");
+    const char* accept_str = redhttp_request_get_header(request, "Accept");
     int pos=-1, i;
     
     if (accept_str == NULL) return NULL;
@@ -32,17 +32,15 @@ static char* parse_accept_header(redhttp_request_t *request)
         char* result = malloc(pos+1);
         strncpy(result, accept_str, pos);
         result[pos] = '\0';
-        free(accept_str);
         return result;
-    } else {
-    	free(accept_str);
-        return NULL;
     }
+
+    return NULL;
 }
 
-static char* get_format(redhttp_request_t *request)
+static const char* get_format(redhttp_request_t *request)
 {
-    char *format_str;
+    const char *format_str;
 
     format_str = redhttp_request_get_argument(request, "format");
     redstore_debug("format_str: %s", format_str);
@@ -138,7 +136,7 @@ redhttp_response_t* format_graph_stream_html(redhttp_request_t *request, librdf_
 redhttp_response_t* format_graph_stream(redhttp_request_t *request, librdf_stream* stream)
 {
     redhttp_response_t* response;
-    char *format_str;
+    const char *format_str;
 
     format_str = get_format(request);
     if (format_str == NULL ||
@@ -151,8 +149,6 @@ redhttp_response_t* format_graph_stream(redhttp_request_t *request, librdf_strea
         response = format_graph_stream_librdf(request, stream, format_str);
     }
 
-    if (format_str) free(format_str);
-    
     return response;
 }
 
@@ -285,7 +281,7 @@ redhttp_response_t* format_bindings_query_result_text(redhttp_request_t *request
 redhttp_response_t* format_bindings_query_result(redhttp_request_t *request, librdf_query_results* results)
 {
     redhttp_response_t* response;
-    char *format_str;
+    const char *format_str;
 
     format_str = get_format(request);
     if (format_str == NULL || strcmp(format_str, "html")==0) {
@@ -297,8 +293,6 @@ redhttp_response_t* format_bindings_query_result(redhttp_request_t *request, lib
     }
 
     redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
-    
-    if (format_str) free(format_str);
     
     return response;
 }

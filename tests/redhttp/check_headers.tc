@@ -13,7 +13,7 @@ redhttp_headers_free(&first);
 
 #test get_nonexistant
 redhttp_header_t *first = NULL;
-char* value = redhttp_headers_get(&first, "a_key");
+const char* value = redhttp_headers_get(&first, "a_key");
 fail_unless(value == NULL, "redhttp_headers_get() didn't return NULL for nonexistant header");
 redhttp_headers_free(&first);
 
@@ -44,25 +44,20 @@ redhttp_headers_free(&first);
 
 #test add_and_get
 redhttp_header_t *first = NULL;
-char* value = NULL;
 redhttp_headers_add(&first, "key1", "value1");
 redhttp_headers_add(&first, "key2", "value2");
-value = redhttp_headers_get(&first, "key2");
-ck_assert_str_eq(value, "value2");
-free(value);
+ck_assert_str_eq(redhttp_headers_get(&first, "key1"), "value1");
+ck_assert_str_eq(redhttp_headers_get(&first, "key2"), "value2");
 redhttp_headers_free(&first);
 
 
 #test parse_line
 redhttp_header_t *first = NULL;
-char* value = NULL;
 redhttp_headers_parse_line(&first, "Foo:  bar");
 redhttp_headers_parse_line(&first, "invalid");
 redhttp_headers_parse_line(&first, "empty:  ");
 redhttp_headers_parse_line(&first, "emptier:");
 ck_assert_int_eq(redhttp_headers_count(&first), 1);
-
-value = redhttp_headers_get(&first, "foo");
-ck_assert_str_eq(value, "bar");
-free(value);
+ck_assert_str_eq(redhttp_headers_get(&first, "foo"), "bar");
 redhttp_headers_free(&first);
+

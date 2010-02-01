@@ -119,8 +119,8 @@ redhttp_response_t* handle_graph_get(redhttp_request_t *request, void* user_data
 redhttp_response_t* handle_graph_put(redhttp_request_t *request, void* user_data)
 {
 	const char* uri = redhttp_request_get_path_glob(request);
-	char* content_length = redhttp_request_get_header(request, "content-length");
-	char* content_type = redhttp_request_get_header(request, "content-type");
+	const char* content_length = redhttp_request_get_header(request, "Content-Length");
+	const char* content_type = redhttp_request_get_header(request, "Content-Type");
 	const char* parser_name = NULL;
     redhttp_response_t* response = NULL;
     librdf_stream *stream = NULL;
@@ -183,8 +183,6 @@ CLEANUP:
     if (stream) librdf_free_stream(stream);
     if (parser) librdf_free_parser(parser);
     if (graph_uri) librdf_free_uri(graph_uri);
-    if (content_length) free(content_length);
-    if (content_type) free(content_type);
     if (buffer) free(buffer);
 
     return response;

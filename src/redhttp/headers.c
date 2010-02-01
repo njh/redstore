@@ -43,9 +43,9 @@ void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* 
     // Create new header item
     header = calloc(1, sizeof(redhttp_header_t));
     header->key = calloc(1, strlen(key)+1);
-    stpcpy(header->key, key);
+    strcpy(header->key, key);
     header->value = calloc(1, strlen(value)+1);
-    stpcpy(header->value, value);
+    strcpy(header->value, value);
     header->next = NULL;
     
     // append the new method to the list
@@ -100,7 +100,7 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
     // FIXME: is there whitespace at the start?
 
     line = calloc(1, strlen(input)+1);
-    stpcpy(line, input);
+    strcpy(line, input);
     key = line;
     for (ptr = line; *ptr && *ptr != ':'; ptr++)
         continue;

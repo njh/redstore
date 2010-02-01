@@ -7,7 +7,7 @@
 
 redhttp_response_t* handle_sparql_query(redhttp_request_t *request, void* user_data)
 {
-    char *query_string = NULL;
+    const char *query_string = NULL;
     librdf_query* query = NULL;
     librdf_query_results* results = NULL;
     redhttp_response_t* response = NULL;
@@ -50,7 +50,6 @@ redhttp_response_t* handle_sparql_query(redhttp_request_t *request, void* user_d
 CLEANUP:
     if (results) librdf_free_query_results(results);
     if (query) librdf_free_query(query);
-    if (query_string) free(query_string);
 
     return response;
 }

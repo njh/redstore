@@ -20,11 +20,8 @@ redhttp_request_free(request);
 
 #test header_add_and_get
 redhttp_request_t *request = redhttp_request_new();
-char* value = NULL;
 redhttp_request_add_header(request, "key", "value");
-value = redhttp_request_get_header(request, "key");
-ck_assert_str_eq(value, "value");
-free(value);
+ck_assert_str_eq(redhttp_request_get_header(request, "key"), "value");
 redhttp_request_free(request);
 
 #test set_path_glob
@@ -48,11 +45,8 @@ redhttp_request_free(request);
 
 #test parse_argument
 redhttp_request_t *request = redhttp_request_new();
-char *value = NULL;
 redhttp_request_parse_arguments(request, "key1=value1");
-value = redhttp_request_get_argument(request, "key1");
-ck_assert_str_eq(value, "value1");
-free(value);
+ck_assert_str_eq(redhttp_request_get_argument(request, "key1"), "value1");
 redhttp_request_free(request);
 
 #test parse_invalid
@@ -96,7 +90,6 @@ redhttp_request_free(request);
 
 #test read_status_line
 redhttp_request_t *request = redhttp_request_new();
-char *value;
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_crlf.txt", "rb"));
 ck_assert_msg(request->socket != NULL, "fopen() returned null");
@@ -106,9 +99,7 @@ ck_assert_str_eq(request->url, "/foaf.rdf?format=xml");
 ck_assert_str_eq(request->version, "1.0");
 ck_assert_str_eq(request->query_string, "format=xml");
 ck_assert_str_eq(request->path, "/foaf.rdf");
-value = redhttp_request_get_argument(request, "format");
-ck_assert_str_eq(value, "xml");
-free(value);
+ck_assert_str_eq(redhttp_request_get_argument(request, "format"), "xml");
 redhttp_request_free(request);
 
 #test read_status_line_empty
@@ -177,7 +168,6 @@ redhttp_request_free(request);
 
 #test read_request_post
 redhttp_request_t *request = redhttp_request_new();
-char* value;
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_post.txt", "rb"));
 ck_assert_msg(request->socket != NULL, "fopen() returned null");
@@ -185,12 +175,8 @@ ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
 ck_assert_str_eq(request->method, "POST");
 ck_assert_str_eq(request->url, "/buy");
 ck_assert_str_eq(request->version, "1.0");
-value = redhttp_request_get_argument(request, "animal");
-ck_assert_str_eq(value, "rat");
-free(value);
-value = redhttp_request_get_argument(request, "colour");
-ck_assert_str_eq(value, "white");
-free(value);
+ck_assert_str_eq(redhttp_request_get_argument(request, "animal"), "rat");
+ck_assert_str_eq(redhttp_request_get_argument(request, "colour"), "white");
 redhttp_request_free(request);
 
 #test read_request_post_invalid
