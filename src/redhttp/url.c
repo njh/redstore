@@ -30,7 +30,7 @@ char* redhttp_url_unescape(const char* escaped)
 	size_t i;
 	
 	// Allocate memory for the new string
-	unescaped = strdup(escaped);
+	unescaped = calloc(1,len+1);
 	if (unescaped==NULL) return NULL;
 	ptr = unescaped;
 
