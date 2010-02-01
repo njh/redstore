@@ -129,10 +129,10 @@ main(int argc, char **argv)
                 }
             break;
             case 'a':
-                sopt_host = strdup(optarg);
+                sopt_host = optarg;
             break;
             case 'p':
-                sopt_service = strdup(optarg);
+                sopt_service = optarg;
             break;
             case 'h':
             default:
