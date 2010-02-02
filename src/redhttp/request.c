@@ -299,7 +299,7 @@ int redhttp_request_read_status_line(redhttp_request_t *request)
         ptr--;
     
     // Is there a version string at the end?
-    if (ptr > url && strncasecmp("HTTP/",&ptr[1],5)==0) {
+    if (ptr > url && (strncmp("HTTP/",&ptr[1],5)==0 || strncmp("http/",&ptr[1],5)==0)) {
         version = &ptr[6];
         while (isspace(*ptr) && ptr > url)
             ptr--;
@@ -347,14 +347,14 @@ int redhttp_request_read(redhttp_request_t *request)
         }
         
         // Read in PUT/POST content
-        if (strncasecmp(request->method, "POST", 4)==0) {
+        if (strncmp(request->method, "POST", 4)==0) {
             const char *content_type = redhttp_headers_get(&request->headers, "Content-Type");
             const char *content_length = redhttp_headers_get(&request->headers, "Content-Length");
             int bytes_read = 0;
     
             if (content_type==NULL || content_length==NULL) {
                 return REDHTTP_BAD_REQUEST;
-            } else if (strncasecmp(content_type, "application/x-www-form-urlencoded", 33)==0) {
+            } else if (strncmp(content_type, "application/x-www-form-urlencoded", 33)==0) {
                 request->content_length = atoi(content_length);
                 // FIXME: set maximum POST size
                 request->content_buffer = calloc(1,request->content_length+1);
