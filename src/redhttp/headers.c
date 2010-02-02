@@ -118,8 +118,10 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
     key = line;
     for (ptr = line; *ptr && *ptr != ':'; ptr++)
         continue;
-    if (!*ptr)
+    if (!*ptr) {
+        free(line);
         return;
+    }
     *ptr++ = '\0';
 
     // Skip whitespace
