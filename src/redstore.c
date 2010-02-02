@@ -57,7 +57,7 @@ static void termination_handler (int signum)
 void redstore_log( RedstoreLogLevel level, const char* fmt, ... )
 {
     time_t t=time(NULL);
-    char time_str[32];
+    char *time_str;
     va_list args;
     
     
@@ -77,7 +77,7 @@ void redstore_log( RedstoreLogLevel level, const char* fmt, ... )
     }
 
     // Display timestamp
-    ctime_r( &t, time_str );
+    time_str = ctime(&t);
     time_str[strlen(time_str)-1]=0; // remove \n
     printf( "%s  ", time_str );
     

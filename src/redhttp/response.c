@@ -157,11 +157,10 @@ void redhttp_response_add_time_header(redhttp_response_t* response, const char* 
 {
     static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
     char *date_str = malloc(BUFSIZ);
-    struct tm time_tm;
+    struct tm *time_tm = gmtime(&timer);
 
     // FIXME: calculate the length of the date string instead of using BUFSIZ
-    gmtime_r(&timer, &time_tm);
-    strftime(date_str, BUFSIZ, RFC1123FMT, &time_tm);
+    strftime(date_str, BUFSIZ, RFC1123FMT, time_tm);
     redhttp_headers_add(&response->headers, key, date_str);
     
     free(date_str);
