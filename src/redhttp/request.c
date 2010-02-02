@@ -387,6 +387,7 @@ void redhttp_request_free(redhttp_request_t* request)
     if (request->path) free(request->path);
     if (request->path_glob) free(request->path_glob);
     if (request->query_string) free(request->query_string);
+    if (request->content_buffer) free(request->content_buffer);
     
     if (request->socket) fclose(request->socket);
 
