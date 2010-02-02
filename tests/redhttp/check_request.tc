@@ -18,6 +18,75 @@ redhttp_request_set_socket(request, socket);
 ck_assert_msg(redhttp_request_get_socket(request) == socket, "redhttp_request_get_socket() failed");
 redhttp_request_free(request);
 
+#test set_and_get_method
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_method(request, "geT");
+ck_assert_str_eq(redhttp_request_get_method(request), "GET");
+redhttp_request_free(request);
+
+#test set_and_get_null_method
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_method(request, "ignore");
+redhttp_request_set_method(request, NULL);
+ck_assert(redhttp_request_get_method(request) == NULL);
+redhttp_request_free(request);
+
+#test set_and_get_url
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_url(request, "ignore");
+redhttp_request_set_url(request, "/foo/BAR?rat=white");
+ck_assert_str_eq(redhttp_request_get_url(request), "/foo/BAR?rat=white");
+redhttp_request_free(request);
+
+#test set_and_get_null_url
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_url(request, "ignore");
+redhttp_request_set_url(request, NULL);
+ck_assert(redhttp_request_get_url(request) == NULL);
+redhttp_request_free(request);
+
+#test set_and_get_path
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_path(request, "ignore");
+redhttp_request_set_path(request, "/foo/BAR");
+ck_assert_str_eq(redhttp_request_get_path(request), "/foo/BAR");
+redhttp_request_free(request);
+
+#test set_and_get_null_path
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_path(request, "ignore");
+redhttp_request_set_path(request, NULL);
+ck_assert(redhttp_request_get_path(request) == NULL);
+redhttp_request_free(request);
+
+#test set_and_get_version
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_version(request, "ignore");
+redhttp_request_set_version(request, "1.0");
+ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
+redhttp_request_free(request);
+
+#test set_and_get_null_version
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_version(request, "ignore");
+redhttp_request_set_version(request, NULL);
+ck_assert(redhttp_request_get_version(request) == NULL);
+redhttp_request_free(request);
+
+#test set_and_get_query_string
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_query_string(request, "ignore");
+redhttp_request_set_query_string(request, "rat=white");
+ck_assert_str_eq(redhttp_request_get_query_string(request), "rat=white");
+redhttp_request_free(request);
+
+#test set_and_get_null_query_string
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_set_query_string(request, "ignore");
+redhttp_request_set_query_string(request, NULL);
+ck_assert(redhttp_request_get_query_string(request) == NULL);
+redhttp_request_free(request);
+
 #test header_add_and_get
 redhttp_request_t *request = redhttp_request_new();
 redhttp_request_add_header(request, "key", "value");
