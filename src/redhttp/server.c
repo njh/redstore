@@ -210,7 +210,6 @@ int redhttp_server_handle_request(redhttp_server_t* server, int socket, struct s
 {
     redhttp_request_t *request = NULL;
     redhttp_response_t *response = NULL;
-    redhttp_handler_t *it = NULL;
     
     assert(server != NULL);
     assert(socket >= 0);
@@ -235,19 +234,8 @@ int redhttp_server_handle_request(redhttp_server_t* server, int socket, struct s
     }
     
     // Dispatch the request
-    if (!response) {
-        for (it = server->handlers; it; it = it->next) {
-            if (match_route(it, request))
-            {
-                response = it->func(request, it->user_data);
-                if (response) break;
-            }
-        }
-    }
-    
-    // No response? - generate one using the default handler
     if (!response)
-        response = redhttp_server_default_handler(server, request);
+        response = redhttp_server_dispatch_request(server, request);
 
     // Send response
     redhttp_response_send(response, request);
@@ -259,13 +247,21 @@ int redhttp_server_handle_request(redhttp_server_t* server, int socket, struct s
     return 0;
 }
 
-redhttp_response_t *redhttp_server_default_handler(redhttp_server_t* server, redhttp_request_t *request)
+redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t* server, redhttp_request_t *request)
 {
     redhttp_response_t *response = NULL;
     redhttp_handler_t *it;
     
     assert(server != NULL);
     assert(request != NULL);
+
+    for (it = server->handlers; it; it = it->next) {
+        if (match_route(it, request))
+        {
+            response = it->func(request, it->user_data);
+            if (response) return response;
+        }
+    }
     
     // Is it a HEAD request?
     if (strncmp("HEAD",request->method,4)==0) {

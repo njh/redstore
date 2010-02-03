@@ -23,3 +23,19 @@ redhttp_server_t *server = redhttp_server_new();
 redhttp_server_set_signature(server, "foo/bar");
 ck_assert_str_eq(redhttp_server_get_signature(server), "foo/bar");
 redhttp_server_free(server);
+
+#test set_and_get_null_signature
+redhttp_server_t *server = redhttp_server_new();
+redhttp_server_set_signature(server, "ignore");
+redhttp_server_set_signature(server, NULL);
+ck_assert(redhttp_server_get_signature(server) == NULL);
+redhttp_server_free(server);
+
+#test dispatch_404
+redhttp_server_t *server = redhttp_server_new();
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foobar", "1.0");
+redhttp_response_t *response = redhttp_server_dispatch_request(server, request);
+ck_assert(redhttp_response_get_status_code(response) == REDHTTP_NOT_FOUND);
+redhttp_response_free(response);
+redhttp_request_free(request);
+redhttp_server_free(server);

@@ -25,6 +25,14 @@ redhttp_request_t* redhttp_request_new(void)
     return request;
 }
 
+redhttp_request_t* redhttp_request_new_with_args(const char *method, const char *url, const char *version)
+{
+    redhttp_request_t* request = redhttp_request_new();
+    redhttp_request_set_method(request, method);
+    redhttp_request_set_url(request, url);
+    redhttp_request_set_version(request, version);
+    return request;
+}
 
 char* redhttp_request_read_line(redhttp_request_t *request)
 {

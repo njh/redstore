@@ -219,6 +219,16 @@ void redhttp_response_send(redhttp_response_t *response, redhttp_request_t *requ
 	}
 }
 
+int redhttp_response_get_status_code(redhttp_response_t *response)
+{
+    return response->status_code;
+}
+
+const char* redhttp_response_get_status_message(redhttp_response_t *response)
+{
+    return response->status_message;
+}
+
 void redhttp_response_free(redhttp_response_t* response)
 {
     assert(response != NULL);

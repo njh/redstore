@@ -117,6 +117,7 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* line);
 void redhttp_headers_free(redhttp_header_t** first);
 
 redhttp_request_t* redhttp_request_new(void);
+redhttp_request_t* redhttp_request_new_with_args(const char *method, const char *url, const char *version);
 char* redhttp_request_read_line(redhttp_request_t *request);
 const char* redhttp_request_get_header(redhttp_request_t *request, const char* key);
 void redhttp_request_add_header(redhttp_request_t *request, const char* key, const char* value);
@@ -150,6 +151,8 @@ void redhttp_response_add_header(redhttp_response_t* response, const char* key, 
 void redhttp_response_add_time_header(redhttp_response_t* response, const char* key, time_t timer);
 void redhttp_response_set_content(redhttp_response_t* response, const char* data, size_t length, const char* type);
 void redhttp_response_send(redhttp_response_t *response, redhttp_request_t *request);
+int redhttp_response_get_status_code(redhttp_response_t *response);
+const char* redhttp_response_get_status_message(redhttp_response_t *response);
 void redhttp_response_free(redhttp_response_t* response);
 
 redhttp_server_t* redhttp_server_new(void);
@@ -157,7 +160,7 @@ int redhttp_server_listen(redhttp_server_t* server, const char* host, const char
 void redhttp_server_add_handler(redhttp_server_t *server, const char* method, const char* path, redhttp_handler_func func, void *user_data);
 void redhttp_server_run(redhttp_server_t* server);
 int redhttp_server_handle_request(redhttp_server_t* server, int socket, struct sockaddr *sa, size_t sa_len);
-redhttp_response_t *redhttp_server_default_handler(redhttp_server_t* server, redhttp_request_t *request);
+redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t* server, redhttp_request_t *request);
 void redhttp_server_set_signature(redhttp_server_t* server, const char* signature);
 const char* redhttp_server_get_signature(redhttp_server_t* server);
 void redhttp_server_set_backlog_size(redhttp_server_t* server, int backlog_size);
