@@ -9,7 +9,8 @@
 #test new_response
 redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
 ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
-ck_assert_str_eq(response->status_message, "OK");
+ck_assert(redhttp_response_get_status_code(response) == REDHTTP_OK);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
 redhttp_response_free(response);
 
 #test header_add_and_get
@@ -33,7 +34,7 @@ redhttp_response_free(response);
 
 #test new_with_content
 redhttp_response_t *response = redhttp_response_new_with_content("Hello World", 11, "text/plain");
-ck_assert_str_eq(response->status_message, "OK");
+ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
 ck_assert_msg(response->content_length == 11, "Content length should be 11 bytes long");
 ck_assert_msg(strncmp(response->content_buffer, "Hello World", 11)==0, "Content buffer should contain \"Hello World\"");
 ck_assert_str_eq(redhttp_response_get_header(response, "Content-Type"), "text/plain");
@@ -41,7 +42,7 @@ redhttp_response_free(response);
 
 #test new_redirect
 redhttp_response_t *response = redhttp_response_new_redirect("/foo/bar");
-ck_assert_str_eq(response->status_message, "Moved Permanently");
+ck_assert_str_eq(redhttp_response_get_status_message(response), "Moved Permanently");
 ck_assert_msg(strstr(response->content_buffer,"<h1>301 Moved Permanently</h1>") != NULL, "Page has h1 title");
 ck_assert_msg(strstr(response->content_buffer,"<p>The document has moved <a href=\"/foo/bar\">here</a>.</p>") != NULL, "Page has redirect message.");
 ck_assert_str_eq(redhttp_response_get_header(response, "Location"), "/foo/bar");
@@ -49,9 +50,8 @@ redhttp_response_free(response);
 
 #test new_error_page
 redhttp_response_t *response = redhttp_response_new_error_page(REDHTTP_NOT_FOUND, NULL);
-ck_assert_str_eq(response->status_message, "Not Found");
+ck_assert_str_eq(redhttp_response_get_status_message(response), "Not Found");
 ck_assert_msg(response->content_length > 100, "Content length is more than 100 bytes");
 ck_assert_msg(strstr(response->content_buffer,"<title>404 Not Found</title>") != NULL, "Page has <title>");
 ck_assert_msg(strstr(response->content_buffer,"<h1>404 Not Found</h1>") != NULL, "Page has h1 title");
 redhttp_response_free(response);
-
