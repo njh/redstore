@@ -11,6 +11,16 @@ redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_free(request);
 
+#test new_with_args
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo%2fbar?rat=white", "1.0");
+ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
+ck_assert_str_eq(redhttp_request_get_method(request), "GET");
+ck_assert_str_eq(redhttp_request_get_url(request), "/foo%2fbar?rat=white");
+ck_assert_str_eq(redhttp_request_get_path(request), "/foo/bar");
+ck_assert_str_eq(redhttp_request_get_query_string(request), "rat=white");
+ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
+redhttp_request_free(request);
+
 #test set_and_get_socket
 redhttp_request_t *request = redhttp_request_new();
 FILE* socket = fopen("http_request_crlf.txt", "rb");
@@ -36,6 +46,8 @@ redhttp_request_t *request = redhttp_request_new();
 redhttp_request_set_url(request, "ignore");
 redhttp_request_set_url(request, "/foo/BAR?rat=white");
 ck_assert_str_eq(redhttp_request_get_url(request), "/foo/BAR?rat=white");
+ck_assert_str_eq(redhttp_request_get_path(request), "/foo/BAR");
+ck_assert_str_eq(redhttp_request_get_query_string(request), "rat=white");
 redhttp_request_free(request);
 
 #test set_and_get_null_url

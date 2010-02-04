@@ -124,13 +124,13 @@ void redhttp_request_parse_arguments(redhttp_request_t *request, const char *inp
     for(ptr = args; ptr && *ptr;)
     {
         key = ptr;
-        ptr = strstr(key, "=");
+        ptr = strchr(key, '=');
         if (ptr == NULL)
             break;
         *ptr++ = '\0';
         
         value = ptr;
-        ptr = strstr(value, "&");
+        ptr = strchr(value, '&');
         if (ptr != NULL)
         {
             *ptr++ = '\0';
@@ -174,13 +174,35 @@ void redhttp_request_set_url(redhttp_request_t *request, const char* url)
 {
     assert(request != NULL);
 
-    // FIXME: repeated code
     if (request->url)
         free(request->url);
         
     if (url) {
+        char *ptr = NULL;
+        char *path = NULL;
+        size_t path_len = 0;
+        
+        // Store a copy of the URL
         request->url = calloc(1, strlen(url)+1);
         strcpy(request->url, url);
+        
+        // Check for query string
+        ptr = strchr(url, '?');
+        if (ptr) {
+            path_len = (ptr - url);
+            redhttp_request_set_query_string(request, &ptr[1]);
+            redhttp_request_parse_arguments(request, &ptr[1]);
+        } else {
+            path_len = strlen(url);
+        }
+        
+        // Unescape the path
+        path = calloc(1, path_len+1);
+        strncpy(path, url, path_len);
+        path[path_len] = '\0';
+        request->path = redhttp_url_unescape(path);
+        free(path);
+
     } else {
         request->url = NULL;
     }
@@ -321,16 +343,6 @@ int redhttp_request_read_status_line(redhttp_request_t *request)
     redhttp_request_set_method(request, method);
     redhttp_request_set_url(request, url);
     redhttp_request_set_version(request, version);
-    
-    // Separate the path from the query string
-    for(ptr = url; *ptr && *ptr != '?'; ptr++);
-    if (*ptr == '?') {
-        *ptr = '\0';
-        redhttp_request_set_query_string(request, &ptr[1]);
-    }
-    request->path = redhttp_url_unescape(url);
-    
-    redhttp_request_parse_arguments(request, request->query_string);
 
     free(line);
 
