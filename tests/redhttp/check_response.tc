@@ -28,7 +28,10 @@ redhttp_response_free(response);
 #test append_content
 redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
 ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
-redhttp_response_content_append(response, "int=%d str=%s", 5, "hello");
+redhttp_response_content_append(response, "int=%d", 5);
+redhttp_response_content_append(response, " str=%s", "hello");
+redhttp_response_content_append(response, "");
+redhttp_response_content_append(response, NULL);
 ck_assert_str_eq(response->content_buffer, "int=5 str=hello");
 redhttp_response_free(response);
 
@@ -55,3 +58,30 @@ ck_assert_msg(response->content_length > 100, "Content length is more than 100 b
 ck_assert_msg(strstr(response->content_buffer,"<title>404 Not Found</title>") != NULL, "Page has <title>");
 ck_assert_msg(strstr(response->content_buffer,"<h1>404 Not Found</h1>") != NULL, "Page has h1 title");
 redhttp_response_free(response);
+
+
+#test response_send
+redhttp_response_t *response = redhttp_response_new_with_content("Hello World", 11, "text/plain");
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/hello", "1.0");
+char *buffer = malloc(BUFSIZ);
+
+// Send response
+request->server = redhttp_server_new();
+request->socket = tmpfile();
+redhttp_response_send(response, request);
+rewind(request->socket);
+
+// Now read it back in
+fgets(buffer, BUFSIZ, request->socket);
+ck_assert_str_eq(buffer, "HTTP/1.0 200 OK\r\n");
+do {
+    fgets(buffer, BUFSIZ, request->socket);
+} while (strcmp(buffer, "\r\n"));
+fgets(buffer, BUFSIZ, request->socket);
+ck_assert_str_eq(buffer, "Hello World");
+
+free(buffer);
+redhttp_server_free(request->server);
+redhttp_request_free(request);
+redhttp_response_free(response);
+
