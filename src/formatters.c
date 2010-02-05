@@ -58,7 +58,7 @@ static const char* get_format(redhttp_request_t *request)
 redhttp_response_t* format_graph_stream_librdf(redhttp_request_t *request, librdf_stream* stream, const char* format_str)
 {
     FILE* socket = redhttp_request_get_socket(request);
-	redhttp_response_t *response;
+    redhttp_response_t *response;
     librdf_serializer* serialiser;
     const char* format_name = NULL;
     const char* mime_type = NULL;
@@ -71,6 +71,7 @@ redhttp_response_t* format_graph_stream_librdf(redhttp_request_t *request, librd
         {
             format_name = serialiser_info[i].name;
             mime_type = serialiser_info[i].mime_type;
+            break;
         }
     }
     
@@ -83,10 +84,10 @@ redhttp_response_t* format_graph_stream_librdf(redhttp_request_t *request, librd
         return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialised.");
     }
     
-	// Send back the response headers
-	response = redhttp_response_new(REDHTTP_OK, NULL);
-	redhttp_response_add_header(response, "Content-Type", mime_type);
-	redhttp_response_send(response, request);
+    // Send back the response headers
+    response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_add_header(response, "Content-Type", mime_type);
+    redhttp_response_send(response, request);
 
     if (librdf_serializer_serialize_stream_to_file_handle(serialiser, socket, NULL, stream)) {
         redstore_error("Failed to serialize graph");
@@ -158,10 +159,12 @@ redhttp_response_t* format_graph_stream(redhttp_request_t *request, librdf_strea
 redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *request, librdf_query_results* results, const char* format_str)
 {
     FILE* socket = redhttp_request_get_socket(request);
+    raptor_iostream* iostream = NULL;
     redhttp_response_t *response = NULL;
-    librdf_uri *format_uri = NULL;
+    librdf_query_results_formatter *formatter = NULL;
     const char *mime_type = NULL;
     unsigned int i;
+
     
     for(i=0; 1; i++) {
         const char *name, *mime;
@@ -172,28 +175,41 @@ redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *reque
             (uri && strcmp(format_str, (char*)uri)==0) ||
             (mime && strcmp(format_str, mime)==0))
         {
-            format_uri = librdf_new_uri(world, uri);
+            formatter = librdf_new_query_results_formatter(results, name, NULL);
             mime_type = mime;
+            break;
         }
     }
     
-    if (!format_uri) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to match file format.");
+    if (!formatter) {
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
+            "Failed to match file format."
+        );
     }
+
+    iostream = raptor_new_iostream_to_file_handle(socket);
+    if (!iostream) {
+        librdf_free_query_results_formatter(formatter);
+        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+            "Failed to create raptor_iostream for results output."
+        );
+    }    
 
     // Send back the response headers
     response = redhttp_response_new(REDHTTP_OK, NULL);
-    redhttp_response_add_header(response, "Content-Type", mime_type);
+    if (mime_type)
+        redhttp_response_add_header(response, "Content-Type", mime_type);
     redhttp_response_send(response, request);
     
     // Stream results back to client
-    if (librdf_query_results_to_file_handle(results, socket, format_uri, NULL)) {
+    if (librdf_query_results_formatter_write(iostream, formatter, results, NULL)) {
         redstore_error("Failed to serialise query results");
         // FIXME: send something to the browser?
     }
 
-    librdf_free_uri(format_uri);
-
+    raptor_free_iostream(iostream);
+    librdf_free_query_results_formatter(formatter);
+    
     return response;
 }
 
