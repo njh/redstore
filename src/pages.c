@@ -85,7 +85,7 @@ redhttp_response_t* handle_page_formats(redhttp_request_t *request, void* user_d
         redhttp_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td>",
                 serialiser_info[i].name, serialiser_info[i].label, serialiser_info[i].mime_type);
         if (serialiser_info[i].uri) {
-        	redhttp_response_content_append(response, "<td><a href=\"%s\">More Info</a></td>\n", serialiser_info[i].uri);
+        	  redhttp_response_content_append(response, "<td><a href=\"%s\">More Info</a></td>\n", serialiser_info[i].uri);
         }
         redhttp_response_content_append(response, "</tr>\n");
     }
@@ -99,10 +99,14 @@ redhttp_response_t* handle_page_formats(redhttp_request_t *request, void* user_d
         const unsigned char *uri;
         if(librdf_query_results_formats_enumerate(world, i, &name, &label, &uri, &mime_type))
             break;
-        redhttp_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td><td><a href=\"%s\">More Info</a></td></tr>\n", name, label, mime_type, uri);
+        redhttp_response_content_append(response, "<tr><td>%s</td><td>%s</td><td>%s</td>", name, label, mime_type, uri);
+        if (uri) {
+            redhttp_response_content_append(response, "<td><a href=\"%s\">More Info</a></td>", uri);
+        }
+        redhttp_response_content_append(response, "</tr>\n");
     }
     redhttp_response_content_append(response, "</table>\n");
-	page_append_html_footer(response);
+    page_append_html_footer(response);
 
     return response;
 }
