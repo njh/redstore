@@ -1,6 +1,9 @@
 AUTOMAKE_OPTIONS = foreign
+SUBDIRS = src .
 
-SUBDIRS = src . tests
+if HAVE_CHECK
+SUBDIRS += tests
+endif
 
 EXTRA_DIST = TODO
 

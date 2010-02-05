@@ -1,12 +1,8 @@
 AM_CFLAGS = @CHECK_CFLAGS@
 AM_LDFLAGS = @CHECK_LIBS@
-TESTS = 
-check_PROGRAMS = 
 
-if HAVE_CHECK
-check_PROGRAMS += check_headers check_request check_response check_server check_url
-TESTS += $(check_PROGRAMS)
-endif
+check_PROGRAMS = check_headers check_request check_response check_server check_url
+TESTS = $(check_PROGRAMS)
 
 %.c: %.tc
 	checkmk $< > $@
