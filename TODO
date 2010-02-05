@@ -49,6 +49,8 @@ Long-term:
 * Implement results 'timeout' or query effort
 * Add support for multiple stores
 * Configuration via RDF file
+* Move Text and HTML serialisers into Redland/Raptor
+* Make redhttp structure opaque
 
 
 Done
