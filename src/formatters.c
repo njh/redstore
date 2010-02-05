@@ -158,7 +158,7 @@ redhttp_response_t* format_graph_stream(redhttp_request_t *request, librdf_strea
 redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *request, librdf_query_results* results, const char* format_str)
 {
     FILE* socket = redhttp_request_get_socket(request);
-	redhttp_response_t *response;
+    redhttp_response_t *response = NULL;
     librdf_uri *format_uri = NULL;
     const char *mime_type = NULL;
     unsigned int i;
@@ -166,15 +166,13 @@ redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *reque
     for(i=0; 1; i++) {
         const char *name, *mime;
         const unsigned char *uri;
-        if(librdf_query_results_formats_enumerate(world, i, 
-                                                &name, NULL, 
-                                                &uri, &mime))
+        if (librdf_query_results_formats_enumerate(world, i, &name, NULL, &uri, &mime))
             break;
-        if (strcmp(format_str, name)==0 ||
-            strcmp(format_str, (char*)uri)==0 ||
-            strcmp(format_str, mime)==0)
+        if ((name && strcmp(format_str, name)==0) ||
+            (uri && strcmp(format_str, (char*)uri)==0) ||
+            (mime && strcmp(format_str, mime)==0))
         {
-            format_uri = librdf_new_uri(world,uri);
+            format_uri = librdf_new_uri(world, uri);
             mime_type = mime;
         }
     }
@@ -183,13 +181,13 @@ redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *reque
         return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to match file format.");
     }
 
-	// Send back the response headers
-	response = redhttp_response_new(REDHTTP_OK, NULL);
-	redhttp_response_add_header(response, "Content-Type", mime_type);
-	redhttp_response_send(response, request);
+    // Send back the response headers
+    response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_add_header(response, "Content-Type", mime_type);
+    redhttp_response_send(response, request);
     
     // Stream results back to client
-	if (librdf_query_results_to_file_handle(results, socket, format_uri, NULL)) {
+    if (librdf_query_results_to_file_handle(results, socket, format_uri, NULL)) {
         redstore_error("Failed to serialise query results");
         // FIXME: send something to the browser?
     }
@@ -201,13 +199,13 @@ redhttp_response_t* format_bindings_query_result_librdf(redhttp_request_t *reque
 
 redhttp_response_t* format_bindings_query_result_html(redhttp_request_t *request, librdf_query_results* results, const char* format_str)
 {
-	redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     FILE* socket = redhttp_request_get_socket(request);
     int i, count;
 
-	// Send back the response headers
-	redhttp_response_add_header(response, "Content-Type", "text/html");
-	redhttp_response_send(response, request);
+    // Send back the response headers
+    redhttp_response_add_header(response, "Content-Type", "text/html");
+    redhttp_response_send(response, request);
     fprintf(socket, "<html><head><title>RedStore</title></head><body>");
 
     count = librdf_query_results_get_bindings_count(results);
