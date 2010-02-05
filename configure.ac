@@ -14,24 +14,6 @@ AM_MAINTAINER_MODE
 AC_CANONICAL_HOST
 
 
-dnl ############# Compiler and tools Checks
-
-AC_PROG_CC
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PROG_RANLIB
-
-AC_C_BIGENDIAN
-AC_C_INLINE
-AC_C_CONST
-
-
-dnl ############# Store the build time (as RFC 1123)
-
-BUILD_TIME=`date -u "+%a, %d %b %Y %H:%M:%S GMT"`
-AC_DEFINE_UNQUOTED(BUILD_TIME, "$BUILD_TIME", [Time that ./configure was run])
-
-
 dnl ############# Configure Arguments
 
 AC_ARG_ENABLE(debug,
@@ -55,6 +37,24 @@ else
 	# Optimize flag. 3 is about as high as you can sanely go with GCC3.2.
 	CFLAGS="$CFLAGS -O3"
 fi
+
+
+dnl ############# Compiler and tools Checks
+
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_RANLIB
+
+AC_C_BIGENDIAN
+AC_C_INLINE
+AC_C_CONST
+
+
+dnl ############# Store the build time (as RFC 1123)
+
+BUILD_TIME=`date -u "+%a, %d %b %Y %H:%M:%S GMT"`
+AC_DEFINE_UNQUOTED(BUILD_TIME, "$BUILD_TIME", [Time that ./configure was run])
 
 
 dnl ############## Header and function checks
