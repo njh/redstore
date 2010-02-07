@@ -15,31 +15,31 @@
 #include "redhttp.h"
 
 
-static int redhttp_strcasecmp(const char* s1, const char* s2)
+static int redhttp_strcasecmp(const char *s1, const char *s2)
 {
-	int r = 0;
+    int r = 0;
 
-	while ( ((s1 == s2) ||
-			 !(r = ((int)( tolower(*((char *)s1))))
-			   - tolower(*((char *)s2))))
-			&& (++s2, *s1++));
+    while (((s1 == s2) || !(r = ((int) (tolower(*((char *) s1))))
+                            - tolower(*((char *) s2))))
+           && (++s2, *s1++));
 
-	return r;
+    return r;
 }
 
-void redhttp_headers_send(redhttp_header_t** first, FILE* socket)
+void redhttp_headers_send(redhttp_header_t ** first, FILE * socket)
 {
-    redhttp_header_t* it;
+    redhttp_header_t *it;
 
     assert(first != NULL);
     assert(socket != NULL);
-    
+
     for (it = *first; it; it = it->next) {
         fprintf(socket, "%s: %s\r\n", it->key, it->value);
     }
 }
 
-void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* value)
+void redhttp_headers_add(redhttp_header_t ** first, const char *key,
+                         const char *value)
 {
     redhttp_header_t *header;
     redhttp_header_t *it;
@@ -48,7 +48,7 @@ void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* 
     assert(key != NULL);
     assert(strlen(key) > 0);
     assert(value != NULL);
-    
+
     if (strlen(value) == 0)
         return;
 
@@ -56,12 +56,12 @@ void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* 
 
     // Create new header item
     header = calloc(1, sizeof(redhttp_header_t));
-    header->key = calloc(1, strlen(key)+1);
+    header->key = calloc(1, strlen(key) + 1);
     strcpy(header->key, key);
-    header->value = calloc(1, strlen(value)+1);
+    header->value = calloc(1, strlen(value) + 1);
     strcpy(header->value, value);
     header->next = NULL;
-    
+
     // append the new method to the list
     if (*first) {
         // get to the last member of the list
@@ -72,9 +72,9 @@ void redhttp_headers_add(redhttp_header_t** first, const char* key, const char* 
     }
 }
 
-int redhttp_headers_count(redhttp_header_t** first)
+int redhttp_headers_count(redhttp_header_t ** first)
 {
-    redhttp_header_t* it;
+    redhttp_header_t *it;
     int count = 0;
 
     assert(first != NULL);
@@ -86,15 +86,15 @@ int redhttp_headers_count(redhttp_header_t** first)
     return count;
 }
 
-const char* redhttp_headers_get(redhttp_header_t** first, const char* key)
+const char *redhttp_headers_get(redhttp_header_t ** first, const char *key)
 {
-    redhttp_header_t* it;
+    redhttp_header_t *it;
 
     assert(first != NULL);
     assert(key != NULL);
-    
+
     for (it = *first; it; it = it->next) {
-        if (redhttp_strcasecmp(key, it->key)==0)
+        if (redhttp_strcasecmp(key, it->key) == 0)
             return it->value;
     }
 
@@ -102,7 +102,7 @@ const char* redhttp_headers_get(redhttp_header_t** first, const char* key)
 }
 
 
-void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
+void redhttp_headers_parse_line(redhttp_header_t ** first, const char *input)
 {
     char *line, *ptr, *key, *value;
 
@@ -113,7 +113,7 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
 
     // FIXME: is there whitespace at the start?
 
-    line = calloc(1, strlen(input)+1);
+    line = calloc(1, strlen(input) + 1);
     strcpy(line, input);
     key = line;
     for (ptr = line; *ptr && *ptr != ':'; ptr++)
@@ -125,7 +125,7 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
     *ptr++ = '\0';
 
     // Skip whitespace
-    while(isspace(*ptr))
+    while (isspace(*ptr))
         ptr++;
 
     value = ptr;
@@ -133,11 +133,11 @@ void redhttp_headers_parse_line(redhttp_header_t** first, const char* input)
     if (*value != '\0') {
         redhttp_headers_add(first, key, value);
     }
-    
+
     free(line);
 }
 
-void redhttp_headers_free(redhttp_header_t** first)
+void redhttp_headers_free(redhttp_header_t ** first)
 {
     redhttp_header_t *it, *next;
 
