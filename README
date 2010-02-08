@@ -1,0 +1,54 @@
+RedStore
+========
+Nicholas J. Humfrey <njh@aelius.com>
+
+For the latest version of RedStore, please see:
+http://www.aelius.com/njh/redstore/
+
+
+What is RedStore ?
+-----------------
+
+RedStore is a lightweight RDF triplestore written in C using the Redland library.
+
+Features:
+- SPARQL over HTTP support
+- An HTTP interface that is compatible with 4store.
+- Only build dependancy is Redland.
+- Unit tests for most of the HTTP server code.
+
+
+Usage
+-----
+
+redstore [options] [<name>]
+   -p <port>       Port number to run HTTP server on (default 8080)
+   -b <address>    Bind to specific address (default all)
+   -s <type>       Set the graph storage type
+   -t <options>    Storage options
+   -n              Create a new store / replace old (default no)
+   -v              Enable verbose mode
+   -q              Enable quiet mode
+
+
+Installation
+------------
+
+RedStore uses a standard automake build process:
+
+  ./configure
+  make
+  make install
+
+
+Redland Storage Modules
+-----------------------
+- hashes
+- file
+- mysql
+- memory (Default)
+- postgresql
+- sqlite
+- tstore
+- uri
+- Virtuoso

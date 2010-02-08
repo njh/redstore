@@ -4,20 +4,16 @@ Before version 0.1
 * Return error messages to the client
   - internal error - eg memory allocation
   - parse/query errors
-* Clean up and insert GNU General Public License
 
 
 More stuff to do:
 -----------------
 
-* Standardise code style / indentation
 * Implement of adding data from browser
   - Upload file
   - Form submit
-* Add some SPARQL Update support
 * Return the information page as RDF
 * Documentation!
-* Allow binding to specific IP address and family
 * Implement 405 Method Not Allowed properly
 * Implement proper content negotiation
 * Implement request timeouts
@@ -27,25 +23,23 @@ More stuff to do:
 * Make RedStore multi-threaded
   - which objects are shared?
   - only enable writing to storage when needed?
-* Standardise code style
-* replace open_memstream() with raptor_iostream functions
-* Output Turtle/N-Triples style terms in HTML / Text outputs
-* Add RDF/a syntax to HTML pages
 * init.d script
 * daemontools run script
-* Store date graph was last modified
+* Store date graph were created/last updated
 * HTTP Request Logging
 * Query Logging
-* Add more information about the store to the homepage
+* Add more information to the info page:
   - Storage options
   - Uptime
   - Memory usage (mstats GNU extension?)
+* Move HTML/Text views into raptor/rasqal
 
 
 Long-term:
 ----------
 
 * rspec/cucumber tests
+* Add SPARQL Update support
 * Implement results 'timeout' or query effort
 * Add support for multiple stores
 * Configuration via RDF file
@@ -56,6 +50,7 @@ Long-term:
 Done
 ----
 
+* Allow binding to specific IP address
 * Stream results to client instead of storing in memory first
 * Implement POSTing of SPARQL queries
 * Implement adding/delete/updating of graphs using PUT/DELETE
