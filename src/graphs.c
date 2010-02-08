@@ -1,3 +1,21 @@
+/*
+    RedStore - a lightweight RDF triplestore powered by Redland
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -7,8 +25,7 @@
 #include "redstore.h"
 
 
-redhttp_response_t *handle_graph_index(redhttp_request_t * request,
-                                       void *user_data)
+redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_data)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     librdf_iterator *iterator = NULL;
@@ -18,8 +35,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request,
     iterator = librdf_storage_get_contexts(storage);
     if (!iterator) {
         return redstore_error_page(REDSTORE_ERROR,
-                                   REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "Failed to get list of graphs.");
+                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
     }
 
     redhttp_response_content_append(response, "<ul>\n");
@@ -66,8 +82,7 @@ static librdf_node *get_graph_context(redhttp_request_t * request)
         return NULL;
     }
     // Create node
-    context =
-        librdf_new_node_from_uri_string(world, (const unsigned char *) uri);
+    context = librdf_new_node_from_uri_string(world, (const unsigned char *) uri);
     if (!context) {
         redstore_debug("Failed to create node from: %s", uri);
         return NULL;
@@ -82,8 +97,7 @@ static librdf_node *get_graph_context(redhttp_request_t * request)
     return context;
 }
 
-redhttp_response_t *handle_graph_head(redhttp_request_t * request,
-                                      void *user_data)
+redhttp_response_t *handle_graph_head(redhttp_request_t * request, void *user_data)
 {
     librdf_node *context = get_graph_context(request);
     redhttp_response_t *response;
@@ -98,24 +112,21 @@ redhttp_response_t *handle_graph_head(redhttp_request_t * request,
     return response;
 }
 
-redhttp_response_t *handle_graph_get(redhttp_request_t * request,
-                                     void *user_data)
+redhttp_response_t *handle_graph_get(redhttp_request_t * request, void *user_data)
 {
     librdf_node *context = get_graph_context(request);
     librdf_stream *stream;
     redhttp_response_t *response;
 
     if (!context) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND,
-                                   "Graph not found.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");
     }
     // Stream the graph
     stream = librdf_model_context_as_stream(model, context);
     if (!stream) {
         librdf_free_node(context);
         return redstore_error_page(REDSTORE_ERROR,
-                                   REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "Failed to stream context.");
+                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream context.");
     }
 
     response = format_graph_stream(request, stream);
@@ -126,14 +137,11 @@ redhttp_response_t *handle_graph_get(redhttp_request_t * request,
     return response;
 }
 
-redhttp_response_t *handle_graph_put(redhttp_request_t * request,
-                                     void *user_data)
+redhttp_response_t *handle_graph_put(redhttp_request_t * request, void *user_data)
 {
     const char *uri = redhttp_request_get_path_glob(request);
-    const char *content_length =
-        redhttp_request_get_header(request, "Content-Length");
-    const char *content_type =
-        redhttp_request_get_header(request, "Content-Type");
+    const char *content_length = redhttp_request_get_header(request, "Content-Length");
+    const char *content_type = redhttp_request_get_header(request, "Content-Type");
     const char *parser_name = NULL;
     redhttp_response_t *response = NULL;
     librdf_stream *stream = NULL;
@@ -142,8 +150,7 @@ redhttp_response_t *handle_graph_put(redhttp_request_t * request,
     unsigned char *buffer = NULL;
 
     if (!uri || strlen(uri) < 1) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
-                                   "Invalid Graph URI.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Invalid Graph URI.");
     }
     // FIXME: stream the input data, instead of storing it in memory first
 
@@ -214,16 +221,14 @@ redhttp_response_t *handle_graph_put(redhttp_request_t * request,
     return response;
 }
 
-redhttp_response_t *handle_graph_delete(redhttp_request_t * request,
-                                        void *user_data)
+redhttp_response_t *handle_graph_delete(redhttp_request_t * request, void *user_data)
 {
     librdf_node *context = get_graph_context(request);
     redhttp_response_t *response;
 
     // Create node
     if (!context) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND,
-                                   "Graph not found.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");
     }
 
     redstore_info("Deleting graph: %s", redhttp_request_get_path_glob(request));
@@ -233,9 +238,7 @@ redhttp_response_t *handle_graph_delete(redhttp_request_t * request,
             redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
                                 "Error while trying to delete graph");
     } else {
-        response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_OK,
-                                "Successfully deleted Graph");
+        response = redstore_error_page(REDSTORE_INFO, REDHTTP_OK, "Successfully deleted Graph");
     }
 
     librdf_free_node(context);

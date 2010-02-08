@@ -1,3 +1,21 @@
+/*
+    RedStore - a lightweight RDF triplestore powered by Redland
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -28,8 +46,7 @@ librdf_storage *storage = NULL;
 // FIXME: this should be got from Redland
 serialiser_info_t serialiser_info[] = {
     {.name = "ntriples",.label = "N-Triples",.mime_type =
-     "application/x-ntriples",.uri =
-     "http://www.w3.org/TR/rdf-testcases/#ntriples"},
+     "application/x-ntriples",.uri = "http://www.w3.org/TR/rdf-testcases/#ntriples"},
     {.name = "turtle",.label = "Turtle",.mime_type =
      "application/x-turtle",.uri = "http://www.dajobe.org/2004/01/turtle"},
     {.name = "turtle",.label = NULL,.mime_type = "text/turtle",.uri =
@@ -41,8 +58,7 @@ serialiser_info_t serialiser_info[] = {
     {.name = "dot",.label = "GraphViz DOT format",.mime_type =
      "text/x-graphviz",.uri = "http://www.graphviz.org/doc/info/lang.html"},
     {.name = "json",.label = "RDF/JSON Resource-Centric",.mime_type =
-     "application/json",.uri =
-     "http://n2.talis.com/wiki/RDF_JSON_Specification"},
+     "application/json",.uri = "http://n2.talis.com/wiki/RDF_JSON_Specification"},
     {.name = "json-triples",.label = "RDF/JSON Triples",.mime_type =
      "application/json",.uri = NULL},
     {.name = NULL}
@@ -117,8 +133,7 @@ void redstore_log(RedstoreLogLevel level, const char *fmt, ...)
     }
 }
 
-static redhttp_response_t *request_counter(redhttp_request_t * request,
-                                           void *user_data)
+static redhttp_response_t *request_counter(redhttp_request_t * request, void *user_data)
 {
     request_count++;
     return NULL;
@@ -129,8 +144,7 @@ static int redland_log_handler(void *user, librdf_log_message * msg)
     int level = librdf_log_message_level(msg);
     int code = librdf_log_message_code(msg);
     const char *message = librdf_log_message_message(msg);
-    printf("redland_log_handler: code=%d level=%d message=%s\n", code, level,
-           message);
+    printf("redland_log_handler: code=%d level=%d message=%s\n", code, level, message);
     return 0;
 }
 
@@ -141,9 +155,7 @@ static void usage()
     int i;
     printf("%s version %s\n\n", PACKAGE_NAME, PACKAGE_VERSION);
     printf("Usage: %s [options] [<name>]\n", PACKAGE_TARNAME);
-    printf
-        ("   -p <port>       Port number to run HTTP server on (default %s)\n",
-         DEFAULT_PORT);
+    printf("   -p <port>       Port number to run HTTP server on (default %s)\n", DEFAULT_PORT);
     printf("   -s <type>       Set the graph storage type\n");
     for (i = 0; 1; i++) {
         const char *help_name;
@@ -156,10 +168,8 @@ static void usage()
         else
             printf("\n");
     }
-    printf("   -t <options>    Storage options (default %s)\n",
-           DEFAULT_STORAGE_OPTIONS);
-    printf
-        ("   -n              Create a new store / replace old (default no)\n");
+    printf("   -t <options>    Storage options (default %s)\n", DEFAULT_STORAGE_OPTIONS);
+    printf("   -n              Create a new store / replace old (default no)\n");
     printf("   -v              Enable verbose mode\n");
     printf("   -q              Enable quiet mode\n");
     exit(1);
@@ -239,33 +249,22 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     // Configure routing
-    redhttp_server_add_handler(server, NULL, NULL, request_counter,
-                               &request_count);
-    redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql_query,
-                               NULL);
-    redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql_query,
-                               NULL);
-    redhttp_server_add_handler(server, "HEAD", "/data/*", handle_graph_head,
-                               NULL);
-    redhttp_server_add_handler(server, "GET", "/data/*", handle_graph_get,
-                               NULL);
-    redhttp_server_add_handler(server, "PUT", "/data/*", handle_graph_put,
-                               NULL);
-    redhttp_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete,
-                               NULL);
-    redhttp_server_add_handler(server, "GET", "/data", handle_graph_index,
-                               NULL);
+    redhttp_server_add_handler(server, NULL, NULL, request_counter, &request_count);
+    redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
+    redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
+    redhttp_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
+    redhttp_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
+    redhttp_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
+    redhttp_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
+    redhttp_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
     redhttp_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
     redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
     redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
-    redhttp_server_add_handler(server, "GET", "/query", handle_page_query,
-                               NULL);
+    redhttp_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
     redhttp_server_add_handler(server, "GET", "/info", handle_page_info, NULL);
-    redhttp_server_add_handler(server, "GET", "/formats", handle_page_formats,
-                               NULL);
-    redhttp_server_add_handler(server, "GET", "/favicon.ico",
-                               handle_image_favicon, NULL);
-    //redhttp_server_add_handler(server, "GET", NULL, handle_remove_trailing_slash, NULL);
+    redhttp_server_add_handler(server, "GET", "/formats", handle_page_formats, NULL);
+    redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
+    // redhttp_server_add_handler(server, "GET", NULL, handle_remove_trailing_slash, NULL);
 
     // Set the server signature
     // FIXME: add Redland libraries to this?
@@ -275,29 +274,24 @@ int main(int argc, char *argv[])
     // Setup Redland storage
     redstore_info("Storage type: %s", storage_type);
     redstore_info("Storage name: %s", storage_name);
-    storage_options =
-        librdf_new_hash_from_string(world, NULL, storage_options_str);
+    storage_options = librdf_new_hash_from_string(world, NULL, storage_options_str);
     librdf_hash_put_strings(storage_options, "contexts", "yes");
     librdf_hash_put_strings(storage_options, "write", "yes");
     if (storage_new)
         librdf_hash_put_strings(storage_options, "new", "yes");
     // FIXME: display all storage options
     // This doesn't print properly: librdf_hash_print(storage_options, stdout);
-    storage =
-        librdf_new_storage_with_options(world, storage_type, storage_name,
-                                        storage_options);
+    storage = librdf_new_storage_with_options(world, storage_type, storage_name, storage_options);
     if (!storage) {
-        redstore_fatal("Failed to open %s storage '%s'", storage_type,
-                       storage_name);
+        redstore_fatal("Failed to open %s storage '%s'", storage_type, storage_name);
         return -1;
     }
-    // Create model object    
+    // Create model object 
     model = librdf_new_model(world, storage, NULL);
     if (!model) {
         redstore_fatal("Failed to create model for storage.");
         return -1;
     }
-
     // Start listening for connections
     redstore_info("Starting HTTP server on port %s", port);
     if (redhttp_server_listen(server, NULL, port, PF_UNSPEC)) {

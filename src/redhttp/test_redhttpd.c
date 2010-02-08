@@ -1,3 +1,21 @@
+/*
+    RedHTTP - a lightweight HTTP server library
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -23,8 +41,7 @@ static void print_help(char *pname)
 }
 
 
-static redhttp_response_t *handle_homepage(redhttp_request_t * request,
-                                           void *user_data)
+static redhttp_response_t *handle_homepage(redhttp_request_t * request, void *user_data)
 {
     const char *page =
         "<html><head><title>Homepage</title></head>"
@@ -42,8 +59,7 @@ static redhttp_response_t *handle_homepage(redhttp_request_t * request,
     return redhttp_response_new_with_content(page, strlen(page), "text/html");
 }
 
-static redhttp_response_t *handle_query(redhttp_request_t * request,
-                                        void *user_data)
+static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_data)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     FILE *socket = redhttp_request_get_socket(request);
@@ -93,14 +109,12 @@ static redhttp_response_t *handle_query(redhttp_request_t * request,
 }
 
 
-static redhttp_response_t *handle_redirect(redhttp_request_t * request,
-                                           void *user_data)
+static redhttp_response_t *handle_redirect(redhttp_request_t * request, void *user_data)
 {
     return redhttp_response_new_redirect("/query");
 }
 
-static redhttp_response_t *handle_logging(redhttp_request_t * request,
-                                          void *user_data)
+static redhttp_response_t *handle_logging(redhttp_request_t * request, void *user_data)
 {
     printf("[%s:%s] %s: %s\n", request->remote_addr, request->remote_port,
            request->method, request->path);
@@ -155,8 +169,7 @@ int main(int argc, char **argv)
     redhttp_server_add_handler(server, "GET", "/", handle_homepage, NULL);
     redhttp_server_add_handler(server, "GET", "/query*", handle_query, NULL);
     redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
-    redhttp_server_add_handler(server, "GET", "/redirect", handle_redirect,
-                               NULL);
+    redhttp_server_add_handler(server, "GET", "/redirect", handle_redirect, NULL);
     redhttp_server_set_signature(server, "test_redhttpd/0.1");
 
     if (redhttp_server_listen(server, sopt_host, sopt_service, sopt_family)) {

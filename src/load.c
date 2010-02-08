@@ -1,3 +1,21 @@
+/*
+    RedStore - a lightweight RDF triplestore powered by Redland
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -7,8 +25,7 @@
 #include "redstore.h"
 
 
-redhttp_response_t *handle_load_get(redhttp_request_t * request,
-                                    void *user_data)
+redhttp_response_t *handle_load_get(redhttp_request_t * request, void *user_data)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     page_append_html_header(response, "Load URI");
@@ -23,8 +40,7 @@ redhttp_response_t *handle_load_get(redhttp_request_t * request,
     return response;
 }
 
-redhttp_response_t *load_stream_into_graph(librdf_stream * stream,
-                                           librdf_uri * graph_uri)
+redhttp_response_t *load_stream_into_graph(librdf_stream * stream, librdf_uri * graph_uri)
 {
     redhttp_response_t *response = NULL;
     librdf_node *graph = NULL;
@@ -75,8 +91,7 @@ redhttp_response_t *load_stream_into_graph(librdf_stream * stream,
     return response;
 }
 
-redhttp_response_t *handle_load_post(redhttp_request_t * request,
-                                     void *user_data)
+redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_data)
 {
     const char *uri_arg = redhttp_request_get_argument(request, "uri");
     const char *base_arg = redhttp_request_get_argument(request, "base-uri");
@@ -87,9 +102,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request,
     librdf_stream *stream = NULL;
 
     if (!uri_arg) {
-        response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
-                                "Missing URI to load");
+        response = redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Missing URI to load");
         goto CLEANUP;
     }
 

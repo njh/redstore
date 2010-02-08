@@ -1,3 +1,21 @@
+/*
+    RedHTTP - a lightweight HTTP server library
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -92,8 +110,7 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
     return response;
 }
 
-redhttp_response_t *redhttp_response_new_error_page(int code,
-                                                    const char *explanation)
+redhttp_response_t *redhttp_response_new_error_page(int code, const char *explanation)
 {
     redhttp_response_t *response = redhttp_response_new(code, NULL);
 
@@ -121,8 +138,7 @@ redhttp_response_t *redhttp_response_new_error_page(int code,
 
 redhttp_response_t *redhttp_response_new_redirect(const char *url)
 {
-    static const char MESSAGE_FMT[] =
-        "The document has moved <a href=\"%s\">here</a>.";
+    static const char MESSAGE_FMT[] = "The document has moved <a href=\"%s\">here</a>.";
     redhttp_response_t *response;
     size_t message_length;
     char *message;
@@ -133,8 +149,7 @@ redhttp_response_t *redhttp_response_new_redirect(const char *url)
     snprintf(message, message_length + 1, MESSAGE_FMT, url);
 
     // Build the response
-    response =
-        redhttp_response_new_error_page(REDHTTP_MOVED_PERMANENTLY, message);
+    response = redhttp_response_new_error_page(REDHTTP_MOVED_PERMANENTLY, message);
     redhttp_response_add_header(response, "Location", url);
     free(message);
 
@@ -142,16 +157,14 @@ redhttp_response_t *redhttp_response_new_redirect(const char *url)
 }
 
 redhttp_response_t *redhttp_response_new_with_content(const char *data,
-                                                      size_t length,
-                                                      const char *type)
+                                                      size_t length, const char *type)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     redhttp_response_set_content(response, data, length, type);
     return response;
 }
 
-void redhttp_response_content_append(redhttp_response_t * response,
-                                     const char *fmt, ...)
+void redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...)
 {
     va_list args;
     size_t len;
@@ -176,33 +189,28 @@ void redhttp_response_content_append(redhttp_response_t * response,
     // Is the buffer big enough?
     if (response->content_buffer_size - response->content_length < len) {
         response->content_buffer_size += len + BUFSIZ;
-        response->content_buffer =
-            realloc(response->content_buffer, response->content_buffer_size);
+        response->content_buffer = realloc(response->content_buffer, response->content_buffer_size);
         // FIXME: check for memory allocation error
     }
     // Add formatted string the buffer
     va_start(args, fmt);
     response->content_length +=
         vsnprintf(&response->content_buffer[response->content_length],
-                  response->content_buffer_size - response->content_length, fmt,
-                  args);
+                  response->content_buffer_size - response->content_length, fmt, args);
     va_end(args);
 }
 
-const char *redhttp_response_get_header(redhttp_response_t * response,
-                                        const char *key)
+const char *redhttp_response_get_header(redhttp_response_t * response, const char *key)
 {
     return redhttp_headers_get(&response->headers, key);
 }
 
-void redhttp_response_add_header(redhttp_response_t * response, const char *key,
-                                 const char *value)
+void redhttp_response_add_header(redhttp_response_t * response, const char *key, const char *value)
 {
     redhttp_headers_add(&response->headers, key, value);
 }
 
-void redhttp_response_add_time_header(redhttp_response_t * response,
-                                      const char *key, time_t timer)
+void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer)
 {
     static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
     char *date_str = malloc(BUFSIZ);
@@ -217,8 +225,7 @@ void redhttp_response_add_time_header(redhttp_response_t * response,
 
 
 void redhttp_response_set_content(redhttp_response_t * response,
-                                  const char *data, size_t length,
-                                  const char *type)
+                                  const char *data, size_t length, const char *type)
 {
     assert(response != NULL);
     assert(data != NULL);
@@ -232,8 +239,7 @@ void redhttp_response_set_content(redhttp_response_t * response,
 }
 
 
-void redhttp_response_send(redhttp_response_t * response,
-                           redhttp_request_t * request)
+void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * request)
 {
     assert(request != NULL);
     assert(response != NULL);
@@ -267,8 +273,7 @@ void redhttp_response_send(redhttp_response_t * response,
 
     if (response->content_buffer) {
         assert(response->content_length > 0);
-        fwrite(response->content_buffer, 1, response->content_length,
-               request->socket);
+        fwrite(response->content_buffer, 1, response->content_length, request->socket);
         // FIXME: check for error?
     }
 }

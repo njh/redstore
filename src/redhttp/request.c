@@ -1,3 +1,21 @@
+/*
+    RedHTTP - a lightweight HTTP server library
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -26,8 +44,7 @@ redhttp_request_t *redhttp_request_new(void)
 }
 
 redhttp_request_t *redhttp_request_new_with_args(const char *method,
-                                                 const char *url,
-                                                 const char *version)
+                                                 const char *url, const char *version)
 {
     redhttp_request_t *request = redhttp_request_new();
     if (!request)
@@ -81,26 +98,22 @@ char *redhttp_request_read_line(redhttp_request_t * request)
     return buffer;
 }
 
-const char *redhttp_request_get_header(redhttp_request_t * request,
-                                       const char *key)
+const char *redhttp_request_get_header(redhttp_request_t * request, const char *key)
 {
     return redhttp_headers_get(&request->headers, key);
 }
 
-void redhttp_request_add_header(redhttp_request_t * request, const char *key,
-                                const char *value)
+void redhttp_request_add_header(redhttp_request_t * request, const char *key, const char *value)
 {
     redhttp_headers_add(&request->headers, key, value);
 }
 
-const char *redhttp_request_get_argument(redhttp_request_t * request,
-                                         const char *key)
+const char *redhttp_request_get_argument(redhttp_request_t * request, const char *key)
 {
     return redhttp_headers_get(&request->arguments, key);
 }
 
-void redhttp_request_set_path_glob(redhttp_request_t * request,
-                                   const char *path_glob)
+void redhttp_request_set_path_glob(redhttp_request_t * request, const char *path_glob)
 {
     // Free the old glob
     if (request->path_glob) {
@@ -120,8 +133,7 @@ const char *redhttp_request_get_path_glob(redhttp_request_t * request)
     return request->path_glob;
 }
 
-void redhttp_request_parse_arguments(redhttp_request_t * request,
-                                     const char *input)
+void redhttp_request_parse_arguments(redhttp_request_t * request, const char *input)
 {
     char *args, *ptr, *key, *value;
 
@@ -242,8 +254,7 @@ const char *redhttp_request_get_path(redhttp_request_t * request)
     return request->path;
 }
 
-void redhttp_request_set_version(redhttp_request_t * request,
-                                 const char *version)
+void redhttp_request_set_version(redhttp_request_t * request, const char *version)
 {
     assert(request != NULL);
 
@@ -264,8 +275,7 @@ const char *redhttp_request_get_version(redhttp_request_t * request)
     return request->version;
 }
 
-void redhttp_request_set_query_string(redhttp_request_t * request,
-                                      const char *query_string)
+void redhttp_request_set_query_string(redhttp_request_t * request, const char *query_string)
 {
     assert(request != NULL);
 
@@ -341,9 +351,7 @@ int redhttp_request_read_status_line(redhttp_request_t * request)
         ptr--;
 
     // Is there a version string at the end?
-    if (ptr > url
-        && (strncmp("HTTP/", &ptr[1], 5) == 0
-            || strncmp("http/", &ptr[1], 5) == 0)) {
+    if (ptr > url && (strncmp("HTTP/", &ptr[1], 5) == 0 || strncmp("http/", &ptr[1], 5) == 0)) {
         version = &ptr[6];
         while (isspace(*ptr) && ptr > url)
             ptr--;
@@ -384,37 +392,30 @@ int redhttp_request_read(redhttp_request_t * request)
 
         // Read in PUT/POST content
         if (strncmp(request->method, "POST", 4) == 0) {
-            const char *content_type =
-                redhttp_headers_get(&request->headers, "Content-Type");
-            const char *content_length =
-                redhttp_headers_get(&request->headers, "Content-Length");
+            const char *content_type = redhttp_headers_get(&request->headers, "Content-Type");
+            const char *content_length = redhttp_headers_get(&request->headers, "Content-Length");
             int bytes_read = 0;
 
             if (content_type == NULL || content_length == NULL) {
                 return REDHTTP_BAD_REQUEST;
-            } else
-                if (strncmp
-                    (content_type, "application/x-www-form-urlencoded",
-                     33) == 0) {
+            } else if (strncmp(content_type, "application/x-www-form-urlencoded", 33) == 0) {
                 request->content_length = atoi(content_length);
                 // FIXME: set maximum POST size
-                request->content_buffer =
-                    calloc(1, request->content_length + 1);
+                request->content_buffer = calloc(1, request->content_length + 1);
                 // FIXME: check memory allocation succeeded
 
                 bytes_read =
-                    fread(request->content_buffer, 1, request->content_length,
-                          request->socket);
+                    fread(request->content_buffer, 1, request->content_length, request->socket);
                 if (bytes_read != request->content_length) {
                     // FIXME: better response?
                     return REDHTTP_BAD_REQUEST;
                 } else {
-                    redhttp_request_parse_arguments(request,
-                                                    request->content_buffer);
+                    redhttp_request_parse_arguments(request, request->content_buffer);
                 }
             }
         }
     }
+
     // Success
     return 0;
 }

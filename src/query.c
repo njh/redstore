@@ -1,3 +1,21 @@
+/*
+    RedStore - a lightweight RDF triplestore powered by Redland
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -7,8 +25,7 @@
 #include "redstore.h"
 
 
-redhttp_response_t *handle_sparql_query(redhttp_request_t * request,
-                                        void *user_data)
+redhttp_response_t *handle_sparql_query(redhttp_request_t * request, void *user_data)
 {
     const char *query_string = NULL;
     librdf_query *query = NULL;
@@ -23,9 +40,7 @@ redhttp_response_t *handle_sparql_query(redhttp_request_t * request,
         goto CLEANUP;
     }
 
-    query =
-        librdf_new_query(world, "sparql", NULL, (unsigned char *) query_string,
-                         NULL);
+    query = librdf_new_query(world, "sparql", NULL, (unsigned char *) query_string, NULL);
     if (!query) {
         response =
             redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,

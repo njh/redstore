@@ -1,3 +1,21 @@
+/*
+    RedHTTP - a lightweight HTTP server library
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
@@ -55,8 +73,7 @@ int redhttp_server_listen(redhttp_server_t * server, const char *host,
         return -1;
     }
     // try and open socket for each of the getaddrinfo() results
-    for (res = res0; res && server->socket_count < FD_SETSIZE;
-         res = res->ai_next) {
+    for (res = res0; res && server->socket_count < FD_SETSIZE; res = res->ai_next) {
         char nameinfo_host[NI_MAXHOST];
         char nameinfo_serv[NI_MAXSERV];
         int true = 1;
@@ -64,8 +81,7 @@ int redhttp_server_listen(redhttp_server_t * server, const char *host,
 
         getnameinfo((struct sockaddr *) res->ai_addr, res->ai_addrlen,
                     nameinfo_host, sizeof(nameinfo_host),
-                    nameinfo_serv, sizeof(nameinfo_serv),
-                    NI_NUMERICHOST | NI_NUMERICSERV);
+                    nameinfo_serv, sizeof(nameinfo_serv), NI_NUMERICHOST | NI_NUMERICSERV);
 
         // Create a new socket
         sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -86,8 +102,7 @@ int redhttp_server_listen(redhttp_server_t * server, const char *host,
         }
         // Start listening for connections
         if (listen(sock, server->backlog_size) < 0) {
-            fprintf(stderr, "listen() failed: [%s]:%s\n", nameinfo_host,
-                    nameinfo_serv);
+            fprintf(stderr, "listen() failed: [%s]:%s\n", nameinfo_host, nameinfo_serv);
             close(sock);
             continue;
         }
@@ -109,8 +124,7 @@ int redhttp_server_listen(redhttp_server_t * server, const char *host,
 }
 
 void redhttp_server_add_handler(redhttp_server_t * server, const char *method,
-                                const char *path, redhttp_handler_func func,
-                                void *user_data)
+                                const char *path, redhttp_handler_func func, void *user_data)
 {
     redhttp_handler_t *handler = calloc(1, sizeof(redhttp_handler_t));
     redhttp_handler_t *it;
@@ -184,9 +198,7 @@ static int match_route(redhttp_handler_t * handler, redhttp_request_t * request)
     size_t path_len;
 
     // Does the method match?
-    if (!
-        (handler->method == NULL
-         || strcmp(handler->method, request->method) == 0)) {
+    if (!(handler->method == NULL || strcmp(handler->method, request->method) == 0)) {
         return 0;
     }
     // Match any path?
@@ -283,9 +295,7 @@ redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t * server,
         // Check if another method is allowed instead
         for (it = server->handlers; it; it = it->next) {
             if (it->path && strcmp(it->path, request->path) == 0) {
-                response =
-                    redhttp_response_new_error_page(REDHTTP_METHOD_NOT_ALLOWED,
-                                                    NULL);
+                response = redhttp_response_new_error_page(REDHTTP_METHOD_NOT_ALLOWED, NULL);
                 // FIXME: add list of allowed methods
                 break;
             }
@@ -299,8 +309,7 @@ redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t * server,
     return response;
 }
 
-void redhttp_server_set_signature(redhttp_server_t * server,
-                                  const char *signature)
+void redhttp_server_set_signature(redhttp_server_t * server, const char *signature)
 {
     assert(server != NULL);
 
@@ -322,8 +331,7 @@ const char *redhttp_server_get_signature(redhttp_server_t * server)
     return server->signature;
 }
 
-void redhttp_server_set_backlog_size(redhttp_server_t * server,
-                                     int backlog_size)
+void redhttp_server_set_backlog_size(redhttp_server_t * server, int backlog_size)
 {
     server->backlog_size = backlog_size;
 }
