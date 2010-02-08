@@ -156,6 +156,7 @@ static void usage()
     printf("%s version %s\n\n", PACKAGE_NAME, PACKAGE_VERSION);
     printf("Usage: %s [options] [<name>]\n", PACKAGE_TARNAME);
     printf("   -p <port>       Port number to run HTTP server on (default %s)\n", DEFAULT_PORT);
+    printf("   -b <address>    Bind to specific address (default all)\n");
     printf("   -s <type>       Set the graph storage type\n");
     for (i = 0; 1; i++) {
         const char *help_name;
@@ -168,7 +169,7 @@ static void usage()
         else
             printf("\n");
     }
-    printf("   -t <options>    Storage options (default %s)\n", DEFAULT_STORAGE_OPTIONS);
+    printf("   -t <options>    Storage options\n");
     printf("   -n              Create a new store / replace old (default no)\n");
     printf("   -v              Enable verbose mode\n");
     printf("   -q              Enable quiet mode\n");
@@ -180,6 +181,7 @@ int main(int argc, char *argv[])
 {
     redhttp_server_t *server = NULL;
     librdf_hash *storage_options = NULL;
+    char *address = DEFAULT_ADDRESS;
     char *port = DEFAULT_PORT;
     const char *storage_options_str = DEFAULT_STORAGE_OPTIONS;
     int storage_new = 0;
@@ -198,10 +200,13 @@ int main(int argc, char *argv[])
     librdf_world_set_logger(world, NULL, redland_log_handler);
 
     // Parse Switches
-    while ((opt = getopt(argc, argv, "p:s:t:nvqh")) != -1) {
+    while ((opt = getopt(argc, argv, "p:b:s:t:nvqh")) != -1) {
         switch (opt) {
         case 'p':
             port = optarg;
+            break;
+        case 'b':
+            address = optarg;
             break;
         case 's':
             storage_type = optarg;
@@ -294,7 +299,7 @@ int main(int argc, char *argv[])
     }
     // Start listening for connections
     redstore_info("Starting HTTP server on port %s", port);
-    if (redhttp_server_listen(server, NULL, port, PF_UNSPEC)) {
+    if (redhttp_server_listen(server, address, port, PF_UNSPEC)) {
         fprintf(stderr, "Failed to create HTTP socket.\n");
         exit(EXIT_FAILURE);
     }

@@ -415,7 +415,6 @@ int redhttp_request_read(redhttp_request_t * request)
             }
         }
     }
-
     // Success
     return 0;
 }

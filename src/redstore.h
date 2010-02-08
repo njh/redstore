@@ -37,6 +37,7 @@
 
 // ------- Constants -------
 #define DEFAULT_PORT            "8080"
+#define DEFAULT_ADDRESS         (NULL)
 #define DEFAULT_STORAGE_NAME    "redstore"
 #define DEFAULT_STORAGE_TYPE    "memory"
 #define DEFAULT_STORAGE_OPTIONS ""
