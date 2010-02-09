@@ -86,23 +86,29 @@ int redhttp_server_listen(redhttp_server_t * server, const char *host,
         // Create a new socket
         sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         if (sock < 0) {
-            fprintf(stderr, "socket() failed: %d\n", sock);
+            if (server->socket_count < 1)
+                fprintf(stderr, "bind() failed: %s: [%s]:%s\n",
+                        strerror(errno), nameinfo_host, nameinfo_serv);
             continue;
         }
 
         if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &true, sizeof(true)) < 0) {
-            perror("setsockopt(SO_REUSEADDR");
+            if (server->socket_count < 1)
+                fprintf(stderr, "setsockopt(SO_REUSEADDR) failed: %s\n", strerror(errno));
         }
         // Bind the socket
         if (bind(sock, (struct sockaddr *) res->ai_addr, res->ai_addrlen) < 0) {
-            fprintf(stderr, "bind() failed: %s: "
-                    "[%s]:%s\n", strerror(errno), nameinfo_host, nameinfo_serv);
+            if (server->socket_count < 1)
+                fprintf(stderr, "bind() failed: %s: [%s]:%s\n",
+                        strerror(errno), nameinfo_host, nameinfo_serv);
             close(sock);
             continue;
         }
         // Start listening for connections
         if (listen(sock, server->backlog_size) < 0) {
-            fprintf(stderr, "listen() failed: [%s]:%s\n", nameinfo_host, nameinfo_serv);
+            if (server->socket_count < 1)
+                fprintf(stderr, "listen() failed: %s: [%s]:%s\n",
+                        strerror(errno), nameinfo_host, nameinfo_serv);
             close(sock);
             continue;
         }
@@ -116,7 +122,6 @@ int redhttp_server_listen(redhttp_server_t * server, const char *host,
     freeaddrinfo(res0);
 
     if (server->socket_count == 0) {
-        fprintf(stderr, "no sockets opened\n");
         return -1;
     }
 

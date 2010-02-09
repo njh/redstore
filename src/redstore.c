@@ -326,8 +326,8 @@ int main(int argc, char *argv[])
     // Start listening for connections
     redstore_info("Starting HTTP server on port %s", port);
     if (redhttp_server_listen(server, address, port, PF_UNSPEC)) {
-        fprintf(stderr, "Failed to create HTTP socket.\n");
-        exit(EXIT_FAILURE);
+        redstore_fatal("Failed to create HTTP server socket.");
+        return -1;
     }
 
     while (running) {
