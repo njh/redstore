@@ -296,6 +296,16 @@ const char *redhttp_request_get_query_string(redhttp_request_t * request)
     return request->query_string;
 }
 
+const char *redhttp_request_get_remote_addr(redhttp_request_t * request)
+{
+    return request->remote_addr;
+}
+
+const char *redhttp_request_get_remote_port(redhttp_request_t * request)
+{
+    return request->remote_port;
+}
+
 void redhttp_request_set_socket(redhttp_request_t * request, FILE * socket)
 {
     request->socket = socket;
