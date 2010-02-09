@@ -7,7 +7,7 @@ http://www.aelius.com/njh/redstore/
 
 
 What is RedStore ?
------------------
+------------------
 
 RedStore is a lightweight RDF triplestore written in C using the Redland library.
 
