@@ -92,7 +92,6 @@ void redstore_log(RedstoreLogLevel level, const char *fmt, ...)
     char *time_str;
     va_list args;
 
-
     // Display the message level
     if (level == REDSTORE_DEBUG) {
         if (!verbose)
@@ -139,11 +138,37 @@ static redhttp_response_t *request_counter(redhttp_request_t * request, void *us
     return NULL;
 }
 
+static redhttp_response_t *request_log(redhttp_request_t * request, void *user_data)
+{
+    redstore_info("%s - %s %s",
+                  redhttp_request_get_remote_addr(request),
+                  redhttp_request_get_method(request), redhttp_request_get_path(request));
+    return NULL;
+}
+
+static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, void *user_data)
+{
+    const char *path = redhttp_request_get_path(request);
+    size_t path_len = strlen(path);
+    redhttp_response_t *response = NULL;
+
+    if (request->path[path_len - 1] == '/') {
+        char *tmp = calloc(1, path_len);
+        strcpy(tmp, path);
+        tmp[path_len - 1] = '\0';
+        response = redhttp_response_new_redirect(tmp);
+        free(tmp);
+    }
+
+    return response;
+}
+
 static int redland_log_handler(void *user, librdf_log_message * msg)
 {
     int level = librdf_log_message_level(msg);
     int code = librdf_log_message_code(msg);
     const char *message = librdf_log_message_message(msg);
+
     printf("redland_log_handler: code=%d level=%d message=%s\n", code, level, message);
     return 0;
 }
@@ -159,8 +184,7 @@ static void usage()
     printf("   -b <address>    Bind to specific address (default all)\n");
     printf("   -s <type>       Set the graph storage type\n");
     for (i = 0; 1; i++) {
-        const char *help_name;
-        const char *help_label;
+        const char *help_name, *help_label;
         if (librdf_storage_enumerate(world, i, &help_name, &help_label))
             break;
         printf("      %-10s     %s", help_name, help_label);
@@ -255,8 +279,11 @@ int main(int argc, char *argv[])
     }
     // Configure routing
     redhttp_server_add_handler(server, NULL, NULL, request_counter, &request_count);
+    redhttp_server_add_handler(server, NULL, NULL, request_log, NULL);
     redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
     redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
+    redhttp_server_add_handler(server, "POST", "/sparql", handle_sparql_query, NULL);
+    redhttp_server_add_handler(server, "POST", "/sparql/", handle_sparql_query, NULL);
     redhttp_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
     redhttp_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
     redhttp_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
@@ -269,12 +296,11 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "GET", "/info", handle_page_info, NULL);
     redhttp_server_add_handler(server, "GET", "/formats", handle_page_formats, NULL);
     redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
-    // redhttp_server_add_handler(server, "GET", NULL, handle_remove_trailing_slash, NULL);
+    redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);
 
     // Set the server signature
     // FIXME: add Redland libraries to this?
     redhttp_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);
-
 
     // Setup Redland storage
     redstore_info("Storage type: %s", storage_type);
