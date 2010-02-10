@@ -60,7 +60,7 @@ serialiser_info_t serialiser_info[] = {
     {.name = "json",.label = "RDF/JSON Resource-Centric",.mime_type =
      "application/json",.uri = "http://n2.talis.com/wiki/RDF_JSON_Specification"},
     {.name = "json-triples",.label = "RDF/JSON Triples",.mime_type =
-     "application/json",.uri = NULL},
+     "application/json",.uri = ""},
     {.name = NULL}
 };
 

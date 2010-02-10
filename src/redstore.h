@@ -41,6 +41,7 @@
 #define DEFAULT_STORAGE_NAME    "redstore"
 #define DEFAULT_STORAGE_TYPE    "memory"
 #define DEFAULT_STORAGE_OPTIONS ""
+#define DEFAULT_GRAPH_FORMAT    "application/rdf+xml"
 #define DEFAULT_RESULTS_FORMAT  "application/sparql-results+xml"
 
 
