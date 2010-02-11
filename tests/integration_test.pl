@@ -5,7 +5,9 @@ use File::Basename qw(dirname);
 use LWP::UserAgent;
 use HTTP::Response;
 use XML::Parser;
+use File::Slurp;
 use Errno;
+use URI::Escape;
 use warnings;
 use strict;
 
@@ -55,13 +57,17 @@ is($response->code, 200, "Getting favicon.ico is successful");
 is($response->content_type, 'image/x-icon', "Getting favicon.ico set the content type");
 is($response->content_length, 318, "Getting favicon.ico set the content length header");
 
-# Test loading a graph
-$response = $ua->post($base_url.'load', {'uri' => $TEST_CASE_URI});
-is($response->code, 200, "Loading a URI into a graph");
+# Test PUTing a graph
+$request = HTTP::Request->new( 'PUT', $base_url.'data/'.uri_escape($TEST_CASE_URI) );
+$request->content( scalar(read_file(dirname(__FILE__) . '/test001.rdf')) );
+$request->content_length( length($request->content) );
+$request->content_type( 'application/rdf+xml' );
+$response = $ua->request($request);
+is($response->code, 200, "Putting a data into a graph");
 like($response->content, qr/Added 1 triples to graph/, "Load response message contain triple count");
 
 # Test getting a graph
-$request = HTTP::Request->new( 'GET', $base_url."data/$TEST_CASE_URI" );
+$request = HTTP::Request->new( 'GET', $base_url.'data/'.uri_escape($TEST_CASE_URI) );
 $request->header('Accept', 'application/x-ntriples');
 $response = $ua->request($request);
 is($response->code, 200, "Getting a graph is successful");
