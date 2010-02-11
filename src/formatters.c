@@ -49,9 +49,11 @@ static char *parse_accept_header(redhttp_request_t * request)
 
     if (pos > 0) {
         char *result = malloc(pos + 1);
-        strncpy(result, accept_str, pos);
-        result[pos] = '\0';
-        return result;
+        if (result) {
+            strncpy(result, accept_str, pos);
+            result[pos] = '\0';
+            return result;
+        }
     }
 
     return NULL;

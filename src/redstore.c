@@ -59,8 +59,7 @@ serialiser_info_t serialiser_info[] = {
      "text/x-graphviz",.uri = "http://www.graphviz.org/doc/info/lang.html"},
     {.name = "json",.label = "RDF/JSON Resource-Centric",.mime_type =
      "application/json",.uri = "http://n2.talis.com/wiki/RDF_JSON_Specification"},
-    {.name = "json-triples",.label = "RDF/JSON Triples",.mime_type =
-     "application/json",.uri = ""},
+    {.name = "json-triples",.label = "RDF/JSON Triples",.mime_type = "application/json",.uri = ""},
     {.name = NULL}
 };
 
@@ -154,10 +153,12 @@ static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, vo
 
     if (request->path[path_len - 1] == '/') {
         char *tmp = calloc(1, path_len);
-        strcpy(tmp, path);
-        tmp[path_len - 1] = '\0';
-        response = redhttp_response_new_redirect(tmp);
-        free(tmp);
+        if (tmp) {
+            strcpy(tmp, path);
+            tmp[path_len - 1] = '\0';
+            response = redhttp_response_new_redirect(tmp);
+            free(tmp);
+        }
     }
 
     return response;
@@ -306,6 +307,11 @@ int main(int argc, char *argv[])
     redstore_info("Storage type: %s", storage_type);
     redstore_info("Storage name: %s", storage_name);
     storage_options = librdf_new_hash_from_string(world, NULL, storage_options_str);
+    if (!storage_options) {
+        redstore_fatal("Failed to create storage options hash");
+        return -1;
+    }
+
     librdf_hash_put_strings(storage_options, "contexts", "yes");
     librdf_hash_put_strings(storage_options, "write", "yes");
     if (storage_new)
