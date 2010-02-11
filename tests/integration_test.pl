@@ -5,7 +5,6 @@ use File::Basename qw(dirname);
 use LWP::UserAgent;
 use HTTP::Response;
 use XML::Parser;
-use File::Slurp;
 use Errno;
 use URI::Escape;
 use warnings;
@@ -64,7 +63,7 @@ is($response->content_length, 318, "Getting favicon.ico set the content length h
 
 # Test PUTing a graph
 $request = HTTP::Request->new( 'PUT', $base_url.'data/'.uri_escape($TEST_CASE_URI) );
-$request->content( scalar(read_file(dirname(__FILE__) . '/test001.rdf')) );
+$request->content( read_fixture('test001.rdf') );
 $request->content_length( length($request->content) );
 $request->content_type( 'application/rdf+xml' );
 $response = $ua->request($request);
@@ -154,4 +153,11 @@ sub is_running {
     ok(kill(0,$pid) > 0, "Process $pid running.");
 }
 
-
+sub read_fixture {
+    my ($filename) = @_;
+    my $data = '';
+    open(FILE, dirname(__FILE__).'/'.$_[0]) or die "Failed to open file: $!";
+    while(<FILE>) { $data .= $_; }
+    close(FILE);
+    return $data;
+}
