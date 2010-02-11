@@ -11,7 +11,7 @@ use URI::Escape;
 use warnings;
 use strict;
 
-use Test::More tests => 16;
+use Test::More tests => 20;
 
 my $REDSTORE = dirname(__FILE__) . '/../src/redstore';
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
@@ -51,6 +51,11 @@ $response = $ua->get($base_url.'formats');
 is($response->code, 200, "Getting formats page is successful");
 # FIXME: validate the XML
 
+# Test getting load page
+$response = $ua->get($base_url.'load');
+is($response->code, 200, "Getting load page is successful");
+# FIXME: validate the XML
+
 # Test getting the favicon
 $response = $ua->get($base_url.'favicon.ico');
 is($response->code, 200, "Getting favicon.ico is successful");
@@ -82,6 +87,13 @@ is($response->code, 404, "Getting a non-existant graph returns 404");
 $response = $ua->get($base_url."query/");
 is($response->code, 301, "Getting a URL with a trailing slash returns 301");
 is($response->header('Location'), "/query", "Getting a URL with a trailing slash returns location without trailing slash");
+
+# Test a SELECT query
+$response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
+is($response->code, 200, "SPARQL SELECT query is successful");
+is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT query Content Type data is correct");
+like($response->content, qr[<binding name="o"><literal>v</literal></binding>], "SPARQL SELECT Query contains right content");
+# FIXME: validate the XML
 
 END {
     stop_redstore($pid);
