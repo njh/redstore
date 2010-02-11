@@ -49,7 +49,6 @@ ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
 redhttp_response_content_append(response, "int=%d", 5);
 redhttp_response_content_append(response, " str=%s", "hello");
 redhttp_response_content_append(response, "");
-redhttp_response_content_append(response, NULL);
 ck_assert_str_eq(response->content_buffer, "int=5 str=hello");
 redhttp_response_free(response);
 

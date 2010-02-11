@@ -115,7 +115,7 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
     redhttp_response_t *response = redhttp_response_new(code, NULL);
 
     assert(code >= 100 && code < 1000);
-    if (response == NULL)
+    if (!response)
         return NULL;
 
     redhttp_headers_add(&response->headers, "Content-Type", "text/html");
@@ -145,12 +145,14 @@ redhttp_response_t *redhttp_response_new_redirect(const char *url)
 
     message_length = snprintf(NULL, 0, MESSAGE_FMT, url);
     message = malloc(message_length + 1);
-    // FIXME: check for memory allocation error
+    if (!message)
+        return NULL;
     snprintf(message, message_length + 1, MESSAGE_FMT, url);
 
     // Build the response
     response = redhttp_response_new_error_page(REDHTTP_MOVED_PERMANENTLY, message);
-    redhttp_response_add_header(response, "Location", url);
+    if (response)
+        redhttp_response_add_header(response, "Location", url);
     free(message);
 
     return response;
@@ -160,19 +162,21 @@ redhttp_response_t *redhttp_response_new_with_content(const char *data,
                                                       size_t length, const char *type)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
-    redhttp_response_set_content(response, data, length, type);
+    if (response)
+        redhttp_response_set_content(response, data, length, type);
     return response;
 }
 
-void redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...)
+int redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...)
 {
     va_list args;
-    size_t len;
+    int len;
 
     assert(response != NULL);
+    assert(fmt != NULL);
 
-    if (fmt == NULL || strlen(fmt) == 0)
-        return;
+    if (strlen(fmt) == 0)
+        return 0;
 
     // Get the length of the formatted string
     va_start(args, fmt);
@@ -181,16 +185,29 @@ void redhttp_response_content_append(redhttp_response_t * response, const char *
 
     // Does the buffer already exist?
     if (!response->content_buffer) {
-        response->content_buffer_size = BUFSIZ + len;
-        response->content_buffer = malloc(response->content_buffer_size);
-        response->content_length = 0;
-        // FIXME: check for memory allocation error
+        response->content_buffer = malloc(BUFSIZ + len);
+        if (response->content_buffer) {
+            response->content_buffer_size = BUFSIZ + len;
+            response->content_length = 0;
+        } else {
+            // Memory allocation error
+            response->content_length = 0;
+            response->content_buffer_size = 0;
+            return -1;
+        }
     }
     // Is the buffer big enough?
     if (response->content_buffer_size - response->content_length < len) {
-        response->content_buffer_size += len + BUFSIZ;
-        response->content_buffer = realloc(response->content_buffer, response->content_buffer_size);
-        // FIXME: check for memory allocation error
+        int new_size = response->content_buffer_size + len + BUFSIZ;
+        char *new_buf = realloc(response->content_buffer, new_size);
+        if (new_buf) {
+            // Memory allocation error
+            response->content_length = 0;
+            response->content_buffer_size = new_size;
+            response->content_buffer = new_buf;
+        } else {
+            return -1;
+        }
     }
     // Add formatted string the buffer
     va_start(args, fmt);
@@ -198,6 +215,9 @@ void redhttp_response_content_append(redhttp_response_t * response, const char *
         vsnprintf(&response->content_buffer[response->content_length],
                   response->content_buffer_size - response->content_length, fmt, args);
     va_end(args);
+
+    // Success
+    return 0;
 }
 
 const char *redhttp_response_get_header(redhttp_response_t * response, const char *key)
@@ -216,6 +236,9 @@ void redhttp_response_add_time_header(redhttp_response_t * response, const char 
     char *date_str = malloc(BUFSIZ);
     struct tm *time_tm = gmtime(&timer);
 
+    if (!date_str)
+        return;
+
     // FIXME: calculate the length of the date string instead of using BUFSIZ
     strftime(date_str, BUFSIZ, RFC1123FMT, time_tm);
     redhttp_headers_add(&response->headers, key, date_str);
@@ -227,15 +250,21 @@ void redhttp_response_add_time_header(redhttp_response_t * response, const char 
 void redhttp_response_set_content(redhttp_response_t * response,
                                   const char *data, size_t length, const char *type)
 {
+    char *new_buf;
+
     assert(response != NULL);
     assert(data != NULL);
     assert(length > 0);
     assert(type != NULL);
 
-    response->content_buffer = realloc(response->content_buffer, length);
-    memcpy(response->content_buffer, data, length);
-    response->content_length = length;
-    redhttp_headers_add(&response->headers, "Content-Type", type);
+    new_buf = realloc(response->content_buffer, length);
+    if (new_buf) {
+        memcpy(new_buf, data, length);
+        response->content_buffer = new_buf;
+        response->content_buffer_size = length;
+        response->content_length = length;
+        redhttp_headers_add(&response->headers, "Content-Type", type);
+    }
 }
 
 
@@ -256,9 +285,11 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
         if (response->content_length) {
             // FIXME: must be better way to do int to string
             char *length_str = malloc(BUFSIZ);
-            snprintf(length_str, BUFSIZ, "%d", (int) response->content_length);
-            redhttp_response_add_header(response, "Content-Length", length_str);
-            free(length_str);
+            if (length_str) {
+                snprintf(length_str, BUFSIZ, "%d", (int) response->content_length);
+                redhttp_response_add_header(response, "Content-Length", length_str);
+                free(length_str);
+            }
         }
 
         if (strncmp(request->version, "0.9", 3)) {
@@ -272,9 +303,12 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
     }
 
     if (response->content_buffer) {
+        int written = 0;
         assert(response->content_length > 0);
-        fwrite(response->content_buffer, 1, response->content_length, request->socket);
-        // FIXME: check for error?
+        written = fwrite(response->content_buffer, 1, response->content_length, request->socket);
+        if (written != response->content_length) {
+            perror("failed to write response to client");
+        }
     }
 }
 

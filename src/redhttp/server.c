@@ -134,6 +134,9 @@ void redhttp_server_add_handler(redhttp_server_t * server, const char *method,
     redhttp_handler_t *handler = calloc(1, sizeof(redhttp_handler_t));
     redhttp_handler_t *it;
 
+    if (!handler)
+        return;
+
     if (method) {
         handler->method = calloc(1, strlen(method) + 1);
         strcpy(handler->method, method);

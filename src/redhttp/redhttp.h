@@ -166,7 +166,7 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
 redhttp_response_t *redhttp_response_new_redirect(const char *url);
 redhttp_response_t *redhttp_response_new_with_content(const char *data,
                                                       size_t length, const char *type);
-void redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...);
+int redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...);
 const char *redhttp_response_get_header(redhttp_response_t * response, const char *key);
 void redhttp_response_add_header(redhttp_response_t * response, const char *key, const char *value);
 void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer);

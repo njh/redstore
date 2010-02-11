@@ -63,6 +63,8 @@ char *redhttp_request_read_line(redhttp_request_t * request)
     int buffer_count = 0;
 
     assert(request != NULL);
+    if (!buffer)
+        return NULL;
 
     // FIXME: check memory was allocated
 
@@ -89,9 +91,14 @@ char *redhttp_request_read_line(redhttp_request_t * request)
 
         // Expand buffer ?
         if (buffer_count > (buffer_size - 1)) {
-            buffer_size *= 2;
-            buffer = realloc(buffer, buffer_size);
-            // FIXME: check memory was allocated
+            char *new_buf = realloc(buffer, buffer_size * 2);
+            if (new_buf) {
+                buffer = new_buf;
+                buffer_size *= 2;
+            } else {
+                free(buffer);
+                return NULL;
+            }
         }
     }
 
@@ -122,7 +129,8 @@ void redhttp_request_set_path_glob(redhttp_request_t * request, const char *path
     // Store the new glob
     if (path_glob && strlen(path_glob)) {
         request->path_glob = calloc(1, strlen(path_glob) + 1);
-        strcpy(request->path_glob, path_glob);
+        if (request->path_glob)
+            strcpy(request->path_glob, path_glob);
     } else {
         request->path_glob = NULL;
     }
@@ -138,9 +146,11 @@ void redhttp_request_parse_arguments(redhttp_request_t * request, const char *in
     char *args, *ptr, *key, *value;
 
     assert(request != NULL);
-    if (input == NULL)
+    if (!input)
         return;
     args = calloc(1, strlen(input) + 1);
+    if (!args)
+        return;
     strcpy(args, input);
 
     for (ptr = args; ptr && *ptr;) {
@@ -176,10 +186,12 @@ void redhttp_request_set_method(redhttp_request_t * request, const char *method)
     if (method) {
         int i, len = strlen(method);
         request->method = calloc(1, len + 1);
-        for (i = 0; i < len; i++) {
-            request->method[i] = toupper(method[i]);
+        if (request->method) {
+            for (i = 0; i < len; i++) {
+                request->method[i] = toupper(method[i]);
+            }
+            request->method[i] = '\0';
         }
-        request->method[i] = '\0';
     } else {
         request->method = NULL;
     }
@@ -204,6 +216,8 @@ void redhttp_request_set_url(redhttp_request_t * request, const char *url)
 
         // Store a copy of the URL
         request->url = calloc(1, strlen(url) + 1);
+        if (!request->url)
+            return;
         strcpy(request->url, url);
 
         // Check for query string
@@ -218,11 +232,12 @@ void redhttp_request_set_url(redhttp_request_t * request, const char *url)
 
         // Unescape the path
         path = calloc(1, path_len + 1);
-        strncpy(path, url, path_len);
-        path[path_len] = '\0';
-        request->path = redhttp_url_unescape(path);
-        free(path);
-
+        if (path) {
+            strncpy(path, url, path_len);
+            path[path_len] = '\0';
+            request->path = redhttp_url_unescape(path);
+            free(path);
+        }
     } else {
         request->url = NULL;
     }
@@ -243,7 +258,8 @@ void redhttp_request_set_path(redhttp_request_t * request, const char *path)
 
     if (path) {
         request->path = calloc(1, strlen(path) + 1);
-        strcpy(request->path, path);
+        if (request->path)
+            strcpy(request->path, path);
     } else {
         request->path = NULL;
     }
@@ -264,7 +280,8 @@ void redhttp_request_set_version(redhttp_request_t * request, const char *versio
 
     if (version) {
         request->version = calloc(1, strlen(version) + 1);
-        strcpy(request->version, version);
+        if (request->version)
+            strcpy(request->version, version);
     } else {
         request->version = NULL;
     }
@@ -285,7 +302,8 @@ void redhttp_request_set_query_string(redhttp_request_t * request, const char *q
 
     if (query_string) {
         request->query_string = calloc(1, strlen(query_string) + 1);
-        strcpy(request->query_string, query_string);
+        if (request->query_string)
+            strcpy(request->query_string, query_string);
     } else {
         request->query_string = NULL;
     }
@@ -412,15 +430,16 @@ int redhttp_request_read(redhttp_request_t * request)
                 request->content_length = atoi(content_length);
                 // FIXME: set maximum POST size
                 request->content_buffer = calloc(1, request->content_length + 1);
-                // FIXME: check memory allocation succeeded
-
-                bytes_read =
-                    fread(request->content_buffer, 1, request->content_length, request->socket);
-                if (bytes_read != request->content_length) {
-                    // FIXME: better response?
-                    return REDHTTP_BAD_REQUEST;
-                } else {
-                    redhttp_request_parse_arguments(request, request->content_buffer);
+                if (request->content_buffer) {
+                    bytes_read =
+                        fread(request->content_buffer, 1, request->content_length, request->socket);
+                    if (bytes_read != request->content_length) {
+                        perror("failed to read request");
+                        // FIXME: better response?
+                        return REDHTTP_BAD_REQUEST;
+                    } else {
+                        redhttp_request_parse_arguments(request, request->content_buffer);
+                    }
                 }
             }
         }

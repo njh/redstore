@@ -131,6 +131,8 @@ void redhttp_headers_parse_line(redhttp_header_t ** first, const char *input)
     // FIXME: is there whitespace at the start?
 
     line = calloc(1, strlen(input) + 1);
+    if (!line)
+        return;
     strcpy(line, input);
     key = line;
     for (ptr = line; *ptr && *ptr != ':'; ptr++)
