@@ -52,10 +52,20 @@ redhttp_response_content_append(response, "");
 ck_assert_str_eq(response->content_buffer, "int=5 str=hello");
 redhttp_response_free(response);
 
+#test append_long_content
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+int i=0;
+ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
+for(i=0;i<1024;i++) {
+    redhttp_response_content_append(response, "0123456789ABCDEF");
+}
+ck_assert_int_eq(response->content_length,16384);
+redhttp_response_free(response);
+
 #test new_with_content
 redhttp_response_t *response = redhttp_response_new_with_content("Hello World", 11, "text/plain");
 ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
-ck_assert_msg(response->content_length == 11, "Content length should be 11 bytes long");
+ck_assert_int_eq(response->content_length,11);
 ck_assert_msg(strncmp(response->content_buffer, "Hello World", 11)==0, "Content buffer should contain \"Hello World\"");
 ck_assert_str_eq(redhttp_response_get_header(response, "Content-Type"), "text/plain");
 redhttp_response_free(response);
