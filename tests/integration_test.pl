@@ -112,7 +112,7 @@ sub start_redstore {
     }
     
     do {
-        $port = 10000 + ((rand(2**16) + time()) % 10000);
+        $port = 10000 + (int(rand(10000) + time()) % 10000);
         $count += 1;
 
         print "# Starting RedStore on port $port.\n";
