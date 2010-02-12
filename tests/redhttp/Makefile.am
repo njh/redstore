@@ -28,3 +28,13 @@ nodist_check_url_SOURCES = check_url.c
 check_url_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
 
 CLEANFILES = check_headers.c check_request.c check_response.c check_server.c check_url.c
+
+EXTRA_DIST = \
+    http_request_09.txt \
+    http_request_crlf.txt \
+    http_request_lf.txt \
+    http_request_no_url.txt \
+    http_request_post_invalid.txt \
+    http_request_post_truncated.txt \
+    http_request_post.txt \
+    http_request_with_spaces.txt
