@@ -1,14 +1,6 @@
-Before version 0.1
-------------------
-
-* Return error messages to the client
-  - internal error - eg memory allocation
-  - parse/query errors
-
-
 More stuff to do:
 -----------------
-
+* Perform HTML entity escaping
 * Implement of adding data from browser
   - Upload file
   - Form submit
@@ -33,11 +25,10 @@ More stuff to do:
   - Uptime
   - Memory usage (mstats GNU extension?)
 * Move HTML/Text views into raptor/rasqal
-
+* Return parse/query errors to the client
 
 Long-term:
 ----------
-
 * rspec/cucumber tests
 * Add SPARQL Update support
 * Implement results 'timeout' or query effort
