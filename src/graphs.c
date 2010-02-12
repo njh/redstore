@@ -58,7 +58,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
 
         escaped = redhttp_url_escape((char *) librdf_uri_as_string(uri));
         redhttp_response_content_append(response,
-                                        "<li><a href=\"/data/%s\">%s<a/></li>\n",
+                                        "<li><a href=\"/data/%s\">%s</a></li>\n",
                                         escaped, librdf_uri_as_string(uri));
         free(escaped);
 

@@ -102,7 +102,7 @@ redhttp_response_t *handle_page_formats(redhttp_request_t * request, void *user_
                                         serialiser_info[i].label, serialiser_info[i].mime_type);
         if (serialiser_info[i].uri) {
             redhttp_response_content_append(response,
-                                            "<td><a href=\"%s\">More Info</a></td>\n",
+                                            "<td><a href=\"%s\">More Info</a></td>",
                                             serialiser_info[i].uri);
         }
         redhttp_response_content_append(response, "</tr>\n");
@@ -190,22 +190,22 @@ redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_da
 
     redhttp_response_content_append(response,
                                     "<form action=\"../sparql\" method=\"get\">\n"
-                                    "<textarea name=\"query\" cols=\"80\" rows=\"18\">\n"
-                                    "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
-                                    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
+                                    "<textarea name=\"query\" cols=\"80\" rows=\"18\">"
+                                    "PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;\n"
+                                    "PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;\n"
                                     "\n"
                                     "SELECT * WHERE {\n"
                                     " ?s ?p ?o\n"
                                     "} LIMIT 10\n"
-                                    "</textarea><br>\n"
+                                    "</textarea><br />\n"
                                     "Output Format: <select name=\"format\">\n"
                                     "  <option value=\"html\">HTML</option>\n"
                                     "  <option value=\"text\">Plain Text</option>\n"
                                     "  <option value=\"xml\">XML</option>\n"
                                     "  <option value=\"json\">JSON</option>\n"
                                     "</select>\n"
-                                    "<input type=\"reset\"> "
-                                    "<input type=\"submit\" value=\"Execute\">\n" "</form>\n");
+                                    "<input type=\"reset\" /> "
+                                    "<input type=\"submit\" value=\"Execute\" />\n</form>\n");
 
     // FIXME: list output formats based on enumeration of formats that Redland supports
 
