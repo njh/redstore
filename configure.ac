@@ -41,6 +41,7 @@ dnl ############# Compiler and tools Checks
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_PROG_LIBTOOL
 
 AC_C_BIGENDIAN
 AC_C_INLINE
