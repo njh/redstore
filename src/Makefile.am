@@ -2,7 +2,7 @@ AM_CFLAGS = @REDLAND_CFLAGS@
 AM_LDFLAGS = @REDLAND_LIBS@
 
 bin_PROGRAMS = redstore
-redstore_LDADD = redhttp/libredhttp.a
+redstore_LDADD = redhttp/libredhttp.la
 redstore_SOURCES = \
   redstore.c \
   redstore.h \

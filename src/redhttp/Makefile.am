@@ -1,6 +1,6 @@
 
-noinst_LIBRARIES = libredhttp.a
-libredhttp_a_SOURCES = \
+noinst_LTLIBRARIES = libredhttp.la
+libredhttp_la_SOURCES = \
   headers.c \
   redhttp.h \
   request.c \
@@ -10,4 +10,4 @@ libredhttp_a_SOURCES = \
 
 noinst_PROGRAMS = test_redhttpd
 test_redhttpd_SOURCES = test_redhttpd.c
-test_redhttpd_LDADD = libredhttp.a
+test_redhttpd_LDADD = libredhttp.la

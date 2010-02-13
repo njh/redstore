@@ -9,10 +9,7 @@ AC_CONFIG_SRCDIR(src/redstore.c)
 AC_CONFIG_AUX_DIR(build)
 AC_CONFIG_MACRO_DIR(build)
 AM_INIT_AUTOMAKE
-AM_MAINTAINER_MODE
-
-AC_CANONICAL_HOST
-
+LT_INIT
 
 dnl ############# Configure Arguments
 
@@ -44,7 +41,6 @@ dnl ############# Compiler and tools Checks
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PROG_RANLIB
 
 AC_C_BIGENDIAN
 AC_C_INLINE

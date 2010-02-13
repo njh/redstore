@@ -191,8 +191,8 @@ int redhttp_response_content_append(redhttp_response_t * response, const char *f
             response->content_length = 0;
         } else {
             // Memory allocation error
-            response->content_length = 0;
             response->content_buffer_size = 0;
+            response->content_length = 0;
             return -1;
         }
     }
@@ -201,10 +201,10 @@ int redhttp_response_content_append(redhttp_response_t * response, const char *f
         int new_size = response->content_buffer_size + len + BUFSIZ;
         char *new_buf = realloc(response->content_buffer, new_size);
         if (new_buf) {
-            // Memory allocation error
             response->content_buffer_size = new_size;
             response->content_buffer = new_buf;
         } else {
+            // Memory allocation error
             return -1;
         }
     }
