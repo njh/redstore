@@ -9,19 +9,19 @@ TESTS = $(check_PROGRAMS)
 
 check_headers_SOURCES = check_headers.tc
 nodist_check_headers_SOURCES = check_headers.c
-check_headers_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
+check_headers_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
 check_request_SOURCES = check_request.tc
 nodist_check_request_SOURCES = check_request.c
-check_request_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
+check_request_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
 check_response_SOURCES = check_response.tc
 nodist_check_response_SOURCES = check_response.c
-check_response_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
+check_response_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
 check_server_SOURCES = check_server.tc
 nodist_check_server_SOURCES = check_server.c
-check_server_LDADD = $(top_builddir)/src/redhttp/libredhttp.a
+check_server_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
 check_url_SOURCES = check_url.tc
 nodist_check_url_SOURCES = check_url.c
