@@ -120,7 +120,10 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
 
     redhttp_headers_add(&response->headers, "Content-Type", "text/html");
     redhttp_response_content_append(response,
-                                    "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
+                                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+    redhttp_response_content_append(response,
+                                    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""
+                                    " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n");
     redhttp_response_content_append(response, "<html>\n");
     redhttp_response_content_append(response,
                                     "<head><title>%d %s</title></head>\n", code,
