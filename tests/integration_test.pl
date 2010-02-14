@@ -10,9 +10,10 @@ use strict;
 
 use Test::More tests => 35;
 
-my $REDSTORE = dirname(__FILE__) . '/../src/redstore';
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
+
+die "Error: REDSTORE environment variable is not set" unless ($ENV{REDSTORE});
 
 # Create a libwww-perl user agent
 my ($request, $response);
@@ -24,7 +25,7 @@ $ua->agent('RedStoreTester/1 ');
 
 
 # Start RedStore
-my ($pid, $port) = start_redstore($REDSTORE);
+my ($pid, $port) = start_redstore($ENV{REDSTORE});
 my $base_url = "http://localhost:$port/";
 
 # Check that the server is running

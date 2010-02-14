@@ -1,32 +1,28 @@
-AM_CFLAGS = @CHECK_CFLAGS@
+AM_CFLAGS = @CHECK_CFLAGS@ -DFIXTURE_DIR=\"$(top_srcdir)/tests/redhttp/\" -I$(top_srcdir)/src
 AM_LDFLAGS = @CHECK_LIBS@
 
 check_PROGRAMS = check_headers check_request check_response check_server check_url
 TESTS = $(check_PROGRAMS)
 
-%.c: %.tc
-	checkmk $< > $@
+.tc.c:
+	checkmk $< > $@ || rm -f $@
 
-check_headers_SOURCES = check_headers.tc
-nodist_check_headers_SOURCES = check_headers.c
+check_headers_SOURCES = check_headers.tc $(top_srcdir)/src/redhttp/redhttp.h
 check_headers_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
-check_request_SOURCES = check_request.tc
-nodist_check_request_SOURCES = check_request.c
+check_request_SOURCES = check_request.tc $(top_srcdir)/src/redhttp/redhttp.h
 check_request_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
-check_response_SOURCES = check_response.tc
-nodist_check_response_SOURCES = check_response.c
+check_response_SOURCES = check_response.tc $(top_srcdir)/src/redhttp/redhttp.h
 check_response_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
-check_server_SOURCES = check_server.tc
-nodist_check_server_SOURCES = check_server.c
+check_server_SOURCES = check_server.tc $(top_srcdir)/src/redhttp/redhttp.h
 check_server_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
-check_url_SOURCES = check_url.tc
-nodist_check_url_SOURCES = check_url.c
+check_url_SOURCES = check_url.tc $(top_srcdir)/src/redhttp/redhttp.h
 check_url_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
+# FIXME: could this list be made automatically?
 CLEANFILES = check_headers.c check_request.c check_response.c check_server.c check_url.c
 
 EXTRA_DIST = \

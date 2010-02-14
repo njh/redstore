@@ -41,7 +41,7 @@ redhttp_request_free(request);
 
 #test set_and_get_socket
 redhttp_request_t *request = redhttp_request_new();
-FILE* socket = fopen("http_request_crlf.txt", "rb");
+FILE* socket = fopen(FIXTURE_DIR "http_request_crlf.txt", "rb");
 redhttp_request_set_socket(request, socket);
 ck_assert_msg(redhttp_request_get_socket(request) == socket, "redhttp_request_get_socket() failed");
 redhttp_request_free(request);
@@ -159,7 +159,7 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 char *line = NULL;
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_crlf.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_crlf.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 line = redhttp_request_read_line(request);
 ck_assert_str_eq(line, "GET /foaf.rdf?format=xml HTTP/1.0");
@@ -170,7 +170,7 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 char *line = NULL;
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_lf.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_lf.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 line = redhttp_request_read_line(request);
 ck_assert_str_eq(line, "GET /foaf.rdf HTTP/1.0");
@@ -190,7 +190,7 @@ redhttp_request_free(request);
 #test read_status_line
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_crlf.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_crlf.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
@@ -212,7 +212,7 @@ redhttp_request_free(request);
 #test read_status_line_09
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_09.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_09.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
@@ -223,7 +223,7 @@ redhttp_request_free(request);
 #test read_status_line_no_url
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_no_url.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_no_url.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 400, "Parse error not noticed");
 redhttp_request_free(request);
@@ -231,7 +231,7 @@ redhttp_request_free(request);
 #test read_status_line_with_space
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_with_spaces.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_with_spaces.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
@@ -244,7 +244,7 @@ redhttp_request_free(request);
 #test read_request
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_crlf.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_crlf.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
@@ -257,7 +257,7 @@ redhttp_request_free(request);
 #test read_request_09
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_09.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_09.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to read request");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
@@ -268,7 +268,7 @@ redhttp_request_free(request);
 #test read_request_post
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_post.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_post.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
 ck_assert_str_eq(redhttp_request_get_method(request), "POST");
@@ -281,7 +281,7 @@ redhttp_request_free(request);
 #test read_request_post_invalid
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_post_invalid.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_post_invalid.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == REDHTTP_BAD_REQUEST, "Invalid request deemed valid.");
 redhttp_request_free(request);
@@ -289,7 +289,7 @@ redhttp_request_free(request);
 #test read_request_post_truncated
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-redhttp_request_set_socket(request, fopen("http_request_post_truncated.txt", "rb"));
+redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_post_truncated.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == REDHTTP_BAD_REQUEST, "Invalid request deemed valid.");
 redhttp_request_free(request);

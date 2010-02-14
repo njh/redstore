@@ -9,8 +9,12 @@ test: check
 
 INDENT = indent -npro -kr -nsob -fca -blf -ip1 -hnl -l100 -lc100 -nut -ts4 -v
 indent:
-	find $(top_builddir)/src -type f -name "*.[ch]" -print -exec $(INDENT) {} ';'
+	find $(top_srcdir)/src -type f -name "*.[ch]" -print -exec $(INDENT) {} ';'
+
+dist_noinst_SCRIPTS = todo.pl
 
 dist-hook:
-	perl todo.pl > $(distdir)/TODO
-	svn log --stop-on-copy > $(distdir)/ChangeLog
+	perl $(top_srcdir)/todo.pl > $(distdir)/TODO
+	if test -e $(top_srcdir)/.svn; then \
+		svn log --stop-on-copy $(top_srcdir) > $(distdir)/ChangeLog; \
+	fi
