@@ -123,6 +123,13 @@ redhttp_request_add_header(request, "key", "value");
 ck_assert_str_eq(redhttp_request_get_header(request, "key"), "value");
 redhttp_request_free(request);
 
+#test header_count
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_add_header(request, "key1", "value1");
+redhttp_request_add_header(request, "key2", "value2");
+ck_assert_int_eq(redhttp_request_count_headers(request), 2);
+redhttp_request_free(request);
+
 #test set_path_glob
 redhttp_request_t *request = redhttp_request_new();
 redhttp_request_set_path_glob(request, "myglob1");
@@ -148,12 +155,11 @@ redhttp_request_parse_arguments(request, "key1=value1");
 ck_assert_str_eq(redhttp_request_get_argument(request, "key1"), "value1");
 redhttp_request_free(request);
 
-#test parse_invalid
+#test parse_invalid_argument
 redhttp_request_t *request = redhttp_request_new();
 redhttp_request_parse_arguments(request, "invalid&");
 ck_assert_int_eq(redhttp_request_count_arguments(request), 0);
 redhttp_request_free(request);
-
 
 #test read_line_crlf
 redhttp_request_t *request = redhttp_request_new();
@@ -271,6 +277,8 @@ ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_post.txt", "rb"));
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
+ck_assert_int_eq(redhttp_request_get_content_length(request), 23);
+ck_assert_msg(strncmp(redhttp_request_get_content_buffer(request), "animal=rat&colour=white", 23)==0, "Content buffer should contain post data");
 ck_assert_str_eq(redhttp_request_get_method(request), "POST");
 ck_assert_str_eq(redhttp_request_get_url(request), "/buy");
 ck_assert_str_eq(redhttp_request_get_version(request), "1.0");

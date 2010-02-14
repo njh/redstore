@@ -37,6 +37,13 @@ redhttp_response_add_header(response, "key", "value");
 ck_assert_str_eq(redhttp_response_get_header(response, "key"), "value");
 redhttp_response_free(response);
 
+#test header_count
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+redhttp_response_add_header(response, "key1", "value1");
+redhttp_response_add_header(response, "key2", "value2");
+ck_assert_int_eq(redhttp_response_count_headers(response), 2);
+redhttp_response_free(response);
+
 #test header_date_add_and_get
 redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
 redhttp_response_add_time_header(response, "Date", 0);
@@ -66,7 +73,7 @@ redhttp_response_free(response);
 redhttp_response_t *response = redhttp_response_new_with_content("Hello World", 11, "text/plain");
 ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
 ck_assert_int_eq(redhttp_response_get_content_length(response),11);
-ck_assert_msg(strncmp(redhttp_response_get_content_buffer(response), "Hello World", 11)==0, "Content buffer should contain \"Hello World\"");
+ck_assert_msg(strncmp(redhttp_response_get_content_buffer(response), "Hello World", 11)==0, "Content buffer should contain reponse body");
 ck_assert_str_eq(redhttp_response_get_header(response, "Content-Type"), "text/plain");
 redhttp_response_free(response);
 
