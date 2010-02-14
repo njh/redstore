@@ -1,0 +1,20 @@
+News about RedStore releases
+============================
+
+
+Release 0.2 - 2010-02-14
+------------------------
+
+- Fixed invalid XHTML
+- Fixed bug in content buffering
+- Changed error pages to XHTML
+- Changes to fix 'make distcheck'
+- Added check for checkmk command
+- More tests
+- Now using libtool to generate convenience library
+
+
+Release 0.1 - 2010-02-12
+------------------------
+
+- Initial Release.
