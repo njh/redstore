@@ -70,36 +70,38 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
     fprintf(socket, "<html><body><h1>Query Page</h1>");
 
     fprintf(socket, "<pre>\n");
-    fprintf(socket, "Method: %s\n", request->method);
-    fprintf(socket, "URL: %s\n", request->url);
-    fprintf(socket, "Path: %s\n", request->path);
-    fprintf(socket, "Path Glob: %s\n", request->path_glob);
-    fprintf(socket, "Query: %s\n", request->query_string);
-    fprintf(socket, "Remote Address: %s\n", request->remote_addr);
-    fprintf(socket, "Remote Port: %s\n", request->remote_port);
+    fprintf(socket, "Method: %s\n", redhttp_request_get_method(request));
+    fprintf(socket, "URL: %s\n", redhttp_request_get_url(request));
+    fprintf(socket, "Path: %s\n", redhttp_request_get_path(request));
+    fprintf(socket, "Path Glob: %s\n", redhttp_request_get_path_glob(request));
+    fprintf(socket, "Query: %s\n", redhttp_request_get_query_string(request));
+    fprintf(socket, "Remote Address: %s\n", redhttp_request_get_remote_addr(request));
+    fprintf(socket, "Remote Port: %s\n", redhttp_request_get_remote_port(request));
     fprintf(socket, "</pre>\n");
 
-    if (request->headers) {
+    if (redhttp_request_count_headers(request)) {
         fprintf(socket, "<pre><b>Request Headers</b>\n");
-        redhttp_headers_send(&request->headers, socket);
+        redhttp_request_print_headers(request, socket);
         fprintf(socket, "</pre>\n");
     }
 
-    if (response->headers) {
+    if (redhttp_response_count_headers(response)) {
         fprintf(socket, "<pre><b>Response Headers</b>\n");
-        redhttp_headers_send(&response->headers, socket);
+        redhttp_response_print_headers(response, socket);
         fprintf(socket, "</pre>\n");
     }
 
-    if (request->arguments) {
+    if (redhttp_request_count_arguments(request)) {
         fprintf(socket, "<pre><b>Arguments</b>\n");
-        redhttp_headers_send(&request->arguments, socket);
+        redhttp_request_print_arguments(request, socket);
         fprintf(socket, "</pre>\n");
     }
 
-    if (request->content_buffer) {
+    if (redhttp_request_get_content_buffer(request)) {
+        char *buf = redhttp_request_get_content_buffer(request);
+        size_t len = redhttp_request_get_content_length(request);
         fprintf(socket, "<pre><b>Content</b>\n");
-        fwrite(request->content_buffer, 1, request->content_length, socket);
+        fwrite(buf, 1, len, socket);
         fprintf(socket, "</pre>\n");
     }
 
@@ -116,8 +118,11 @@ static redhttp_response_t *handle_redirect(redhttp_request_t * request, void *us
 
 static redhttp_response_t *handle_logging(redhttp_request_t * request, void *user_data)
 {
-    printf("[%s:%s] %s: %s\n", request->remote_addr, request->remote_port,
-           request->method, request->path);
+    printf("[%s:%s] %s: %s\n",
+           redhttp_request_get_remote_addr(request),
+           redhttp_request_get_remote_port(request),
+           redhttp_request_get_method(request), redhttp_request_get_path(request)
+        );
     return NULL;
 }
 

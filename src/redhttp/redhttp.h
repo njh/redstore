@@ -17,7 +17,6 @@
 */
 
 #include <sys/types.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sys/time.h>
@@ -54,79 +53,17 @@ enum redhttp_status_code {
 };
 
 
-#ifndef NI_MAXHOST
-#define NI_MAXHOST (1025)
-#endif
 
-#ifndef NI_MAXSERV
-#define NI_MAXSERV (32)
-#endif
-
-
-typedef struct redhttp_header {
-    char *key;
-    char *value;
-    struct redhttp_header *next;
-} redhttp_header_t;
-
-typedef struct redhttp_request {
-    redhttp_header_t *headers;
-    redhttp_header_t *arguments;
-    struct redhttp_server *server;
-
-    FILE *socket;
-    char remote_addr[NI_MAXHOST];
-    char remote_port[NI_MAXSERV];
-
-    char *url;
-    char *method;
-    char *version;
-    void *user_data;
-
-    char *path;
-    char *path_glob;
-    char *query_string;
-
-    char *content_buffer;
-    size_t content_length;
-} redhttp_request_t;
-
-typedef struct redhttp_response {
-    redhttp_header_t *headers;
-
-    unsigned int status_code;
-    char *status_message;
-    char *content_buffer;
-    size_t content_buffer_size;
-    size_t content_length;
-
-    int headers_sent;
-} redhttp_response_t;
+typedef struct redhttp_header_s redhttp_header_t;
+typedef struct redhttp_request_s redhttp_request_t;
+typedef struct redhttp_response_s redhttp_response_t;
+typedef struct redhttp_handler_s redhttp_handler_t;
+typedef struct redhttp_server_s redhttp_server_t;
 
 typedef redhttp_response_t *(*redhttp_handler_func) (redhttp_request_t * request, void *user_data);
 
-typedef struct redhttp_handler {
-    char *method;
-    char *path;
-    redhttp_handler_func func;
-    void *user_data;
-    struct redhttp_handler *next;
-} redhttp_handler_t;
 
-typedef struct redhttp_server {
-    int sockets[FD_SETSIZE];
-    int socket_count;
-    int socket_max;
-
-    int backlog_size;
-    char *signature;
-
-    redhttp_handler_t *handlers;
-} redhttp_server_t;
-
-
-
-void redhttp_headers_send(redhttp_header_t ** first, FILE * socket);
+void redhttp_headers_print(redhttp_header_t ** first, FILE * socket);
 void redhttp_headers_add(redhttp_header_t ** first, const char *key, const char *value);
 int redhttp_headers_count(redhttp_header_t ** first);
 const char *redhttp_headers_get(redhttp_header_t ** first, const char *key);
@@ -138,7 +75,11 @@ redhttp_request_t *redhttp_request_new_with_args(const char *method,
                                                  const char *url, const char *version);
 char *redhttp_request_read_line(redhttp_request_t * request);
 const char *redhttp_request_get_header(redhttp_request_t * request, const char *key);
+int redhttp_request_count_headers(redhttp_request_t * request);
+void redhttp_request_print_headers(redhttp_request_t * request, FILE * socket);
 void redhttp_request_add_header(redhttp_request_t * request, const char *key, const char *value);
+int redhttp_request_count_arguments(redhttp_request_t * request);
+void redhttp_request_print_arguments(redhttp_request_t * request, FILE * socket);
 const char *redhttp_request_get_argument(redhttp_request_t * request, const char *key);
 void redhttp_request_set_path_glob(redhttp_request_t * request, const char *path_glob);
 const char *redhttp_request_get_path_glob(redhttp_request_t * request);
@@ -157,6 +98,9 @@ const char *redhttp_request_get_remote_addr(redhttp_request_t * request);
 const char *redhttp_request_get_remote_port(redhttp_request_t * request);
 void redhttp_request_set_socket(redhttp_request_t * request, FILE * socket);
 FILE *redhttp_request_get_socket(redhttp_request_t * request);
+void redhttp_request_set_socket(redhttp_request_t * request, FILE * socket);
+char *redhttp_request_get_content_buffer(redhttp_request_t * request);
+size_t redhttp_request_get_content_length(redhttp_request_t * request);
 int redhttp_request_read_status_line(redhttp_request_t * request);
 int redhttp_request_read(redhttp_request_t * request);
 void redhttp_request_free(redhttp_request_t * request);
@@ -167,6 +111,8 @@ redhttp_response_t *redhttp_response_new_redirect(const char *url);
 redhttp_response_t *redhttp_response_new_with_content(const char *data,
                                                       size_t length, const char *type);
 int redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...);
+int redhttp_response_count_headers(redhttp_response_t * response);
+void redhttp_response_print_headers(redhttp_response_t * response, FILE * socket);
 const char *redhttp_response_get_header(redhttp_response_t * response, const char *key);
 void redhttp_response_add_header(redhttp_response_t * response, const char *key, const char *value);
 void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer);
@@ -175,6 +121,8 @@ void redhttp_response_set_content(redhttp_response_t * response,
 void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * request);
 int redhttp_response_get_status_code(redhttp_response_t * response);
 const char *redhttp_response_get_status_message(redhttp_response_t * response);
+char *redhttp_response_get_content_buffer(redhttp_response_t * response);
+size_t redhttp_response_get_content_length(redhttp_response_t * response);
 void redhttp_response_free(redhttp_response_t * response);
 
 redhttp_server_t *redhttp_server_new(void);

@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
+#include "redhttp_private.h"
 #include "redhttp.h"
 
 
@@ -105,6 +106,16 @@ char *redhttp_request_read_line(redhttp_request_t * request)
     return buffer;
 }
 
+int redhttp_request_count_headers(redhttp_request_t * request)
+{
+    return redhttp_headers_count(&request->headers);
+}
+
+void redhttp_request_print_headers(redhttp_request_t * request, FILE * socket)
+{
+    redhttp_headers_print(&request->headers, socket);
+}
+
 const char *redhttp_request_get_header(redhttp_request_t * request, const char *key)
 {
     return redhttp_headers_get(&request->headers, key);
@@ -113,6 +124,16 @@ const char *redhttp_request_get_header(redhttp_request_t * request, const char *
 void redhttp_request_add_header(redhttp_request_t * request, const char *key, const char *value)
 {
     redhttp_headers_add(&request->headers, key, value);
+}
+
+int redhttp_request_count_arguments(redhttp_request_t * request)
+{
+    return redhttp_headers_count(&request->arguments);
+}
+
+void redhttp_request_print_arguments(redhttp_request_t * request, FILE * socket)
+{
+    redhttp_headers_print(&request->arguments, socket);
 }
 
 const char *redhttp_request_get_argument(redhttp_request_t * request, const char *key)
@@ -334,6 +355,15 @@ FILE *redhttp_request_get_socket(redhttp_request_t * request)
     return request->socket;
 }
 
+char *redhttp_request_get_content_buffer(redhttp_request_t * request)
+{
+    return request->content_buffer;
+}
+
+size_t redhttp_request_get_content_length(redhttp_request_t * request)
+{
+    return request->content_length;
+}
 
 int redhttp_request_read_status_line(redhttp_request_t * request)
 {

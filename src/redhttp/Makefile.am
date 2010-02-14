@@ -3,6 +3,7 @@ noinst_LTLIBRARIES = libredhttp.la
 libredhttp_la_SOURCES = \
   headers.c \
   redhttp.h \
+  redhttp_private.h \
   request.c \
   response.c \
   server.c \

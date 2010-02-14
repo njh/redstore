@@ -151,7 +151,7 @@ redhttp_request_free(request);
 #test parse_invalid
 redhttp_request_t *request = redhttp_request_new();
 redhttp_request_parse_arguments(request, "invalid&");
-ck_assert_int_eq(redhttp_headers_count(&request->arguments), 0);
+ck_assert_int_eq(redhttp_request_count_arguments(request), 0);
 redhttp_request_free(request);
 
 
@@ -160,7 +160,7 @@ redhttp_request_t *request = redhttp_request_new();
 char *line = NULL;
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_crlf.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 line = redhttp_request_read_line(request);
 ck_assert_str_eq(line, "GET /foaf.rdf?format=xml HTTP/1.0");
 free(line);
@@ -171,7 +171,7 @@ redhttp_request_t *request = redhttp_request_new();
 char *line = NULL;
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_lf.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 line = redhttp_request_read_line(request);
 ck_assert_str_eq(line, "GET /foaf.rdf HTTP/1.0");
 free(line);
@@ -181,8 +181,8 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 char *line = NULL;
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-request->socket = fopen("/dev/zero", "rb");
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+redhttp_request_set_socket(request, fopen("/dev/zero", "rb"));
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 line = redhttp_request_read_line(request);
 ck_assert_msg(line == NULL, "redhttp_request_read_line() should have returned null");
 redhttp_request_free(request);
@@ -191,21 +191,21 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_crlf.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
-ck_assert_str_eq(request->method, "GET");
-ck_assert_str_eq(request->url, "/foaf.rdf?format=xml");
-ck_assert_str_eq(request->version, "1.0");
-ck_assert_str_eq(request->query_string, "format=xml");
-ck_assert_str_eq(request->path, "/foaf.rdf");
+ck_assert_str_eq(redhttp_request_get_method(request), "GET");
+ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf?format=xml");
+ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
+ck_assert_str_eq(redhttp_request_get_query_string(request), "format=xml");
+ck_assert_str_eq(redhttp_request_get_path(request), "/foaf.rdf");
 ck_assert_str_eq(redhttp_request_get_argument(request, "format"), "xml");
 redhttp_request_free(request);
 
 #test read_status_line_empty
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
-request->socket = fopen("/dev/zero", "rb");
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+redhttp_request_set_socket(request, fopen("/dev/zero", "rb"));
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 400, "Parse error not noticed");
 redhttp_request_free(request);
 
@@ -213,18 +213,18 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_09.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
-ck_assert_str_eq(request->method, "GET");
-ck_assert_str_eq(request->url, "/foaf.rdf");
-ck_assert_str_eq(request->version, "0.9");
+ck_assert_str_eq(redhttp_request_get_method(request), "GET");
+ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf");
+ck_assert_str_eq(redhttp_request_get_version(request), "0.9");
 redhttp_request_free(request);
 
 #test read_status_line_no_url
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_no_url.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 400, "Parse error not noticed");
 redhttp_request_free(request);
 
@@ -232,48 +232,48 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_with_spaces.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
-ck_assert_str_eq(request->method, "GET");
-ck_assert_str_eq(request->url, "/hello world%20.txt");
-ck_assert_str_eq(request->version, "1.0");
-ck_assert_msg(request->query_string == NULL, "query_string should be NULL");
-ck_assert_str_eq(request->path, "/hello world .txt");
+ck_assert_str_eq(redhttp_request_get_method(request), "GET");
+ck_assert_str_eq(redhttp_request_get_url(request), "/hello world%20.txt");
+ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
+ck_assert_msg(redhttp_request_get_query_string(request) == NULL, "query_string should be NULL");
+ck_assert_str_eq(redhttp_request_get_path(request), "/hello world .txt");
 redhttp_request_free(request);
 
 #test read_request
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_crlf.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
-ck_assert_str_eq(request->method, "GET");
-ck_assert_str_eq(request->url, "/foaf.rdf?format=xml");
-ck_assert_str_eq(request->version, "1.0");
-ck_assert_str_eq(request->query_string, "format=xml");
-ck_assert_str_eq(request->path, "/foaf.rdf");
+ck_assert_str_eq(redhttp_request_get_method(request), "GET");
+ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf?format=xml");
+ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
+ck_assert_str_eq(redhttp_request_get_query_string(request), "format=xml");
+ck_assert_str_eq(redhttp_request_get_path(request), "/foaf.rdf");
 redhttp_request_free(request);
 
 #test read_request_09
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_09.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to read request");
-ck_assert_str_eq(request->method, "GET");
-ck_assert_str_eq(request->url, "/foaf.rdf");
-ck_assert_str_eq(request->version, "0.9");
+ck_assert_str_eq(redhttp_request_get_method(request), "GET");
+ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf");
+ck_assert_str_eq(redhttp_request_get_version(request), "0.9");
 redhttp_request_free(request);
 
 #test read_request_post
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_post.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
-ck_assert_str_eq(request->method, "POST");
-ck_assert_str_eq(request->url, "/buy");
-ck_assert_str_eq(request->version, "1.0");
+ck_assert_str_eq(redhttp_request_get_method(request), "POST");
+ck_assert_str_eq(redhttp_request_get_url(request), "/buy");
+ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
 ck_assert_str_eq(redhttp_request_get_argument(request, "animal"), "rat");
 ck_assert_str_eq(redhttp_request_get_argument(request, "colour"), "white");
 redhttp_request_free(request);
@@ -282,7 +282,7 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_post_invalid.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == REDHTTP_BAD_REQUEST, "Invalid request deemed valid.");
 redhttp_request_free(request);
 
@@ -290,7 +290,7 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new();
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 redhttp_request_set_socket(request, fopen("http_request_post_truncated.txt", "rb"));
-ck_assert_msg(request->socket != NULL, "fopen() returned null");
+ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == REDHTTP_BAD_REQUEST, "Invalid request deemed valid.");
 redhttp_request_free(request);
 

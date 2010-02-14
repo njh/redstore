@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
+#include "redhttp_private.h"
 #include "redhttp.h"
 
 
@@ -44,7 +45,7 @@ static int redhttp_strcasecmp(const char *s1, const char *s2)
     return r;
 }
 
-void redhttp_headers_send(redhttp_header_t ** first, FILE * socket)
+void redhttp_headers_print(redhttp_header_t ** first, FILE * socket)
 {
     redhttp_header_t *it;
 

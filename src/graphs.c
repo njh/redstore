@@ -170,7 +170,7 @@ redhttp_response_t *handle_graph_put(redhttp_request_t * request, void *user_dat
         goto CLEANUP;
     }
     // FIXME: do this better and check for errors
-    fread(buffer, 1, atoi(content_length), request->socket);
+    fread(buffer, 1, atoi(content_length), redhttp_request_get_socket(request));
 
     graph_uri = librdf_new_uri(world, (const unsigned char *) uri);
     if (!graph_uri) {

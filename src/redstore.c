@@ -151,7 +151,7 @@ static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, vo
     size_t path_len = strlen(path);
     redhttp_response_t *response = NULL;
 
-    if (request->path[path_len - 1] == '/') {
+    if (path[path_len - 1] == '/') {
         char *tmp = calloc(1, path_len);
         if (tmp) {
             strcpy(tmp, path);

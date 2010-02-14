@@ -26,6 +26,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "redhttp_private.h"
 #include "redhttp.h"
 
 

@@ -79,7 +79,7 @@ FILE* file = tmpfile();
 char *buffer = malloc(BUFSIZ);
 redhttp_headers_parse_line(&first, "key1: value1");
 redhttp_headers_parse_line(&first, "key2: value2");
-redhttp_headers_send(&first,file);
+redhttp_headers_print(&first,file);
 rewind(file);
 
 // Now read it back in

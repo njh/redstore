@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
+#include "redhttp_private.h"
 #include "redhttp.h"
 
 

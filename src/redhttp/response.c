@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
+#include "redhttp_private.h"
 #include "redhttp.h"
 
 
@@ -119,8 +120,7 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
         return NULL;
 
     redhttp_headers_add(&response->headers, "Content-Type", "text/html");
-    redhttp_response_content_append(response,
-                                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+    redhttp_response_content_append(response, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
     redhttp_response_content_append(response,
                                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""
                                     " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n");
@@ -222,6 +222,16 @@ int redhttp_response_content_append(redhttp_response_t * response, const char *f
     return 0;
 }
 
+int redhttp_response_count_headers(redhttp_response_t * response)
+{
+    return redhttp_headers_count(&response->headers);
+}
+
+void redhttp_response_print_headers(redhttp_response_t * response, FILE * socket)
+{
+    redhttp_headers_print(&response->headers, socket);
+}
+
 const char *redhttp_response_get_header(redhttp_response_t * response, const char *key)
 {
     return redhttp_headers_get(&response->headers, key);
@@ -276,13 +286,14 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
     assert(response != NULL);
 
     if (!response->headers_sent) {
-        const char *signature = redhttp_server_get_signature(request->server);
-
         redhttp_response_add_time_header(response, "Date", time(NULL));
         redhttp_response_add_header(response, "Connection", "Close");
 
-        if (signature)
-            redhttp_response_add_header(response, "Server", signature);
+        if (request->server) {
+            const char *signature = redhttp_server_get_signature(request->server);
+            if (signature)
+                redhttp_response_add_header(response, "Server", signature);
+        }
 
         if (response->content_length) {
             // FIXME: must be better way to do int to string
@@ -297,7 +308,7 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
         if (strncmp(request->version, "0.9", 3)) {
             fprintf(request->socket, "HTTP/1.0 %d %s\r\n",
                     response->status_code, response->status_message);
-            redhttp_headers_send(&response->headers, request->socket);
+            redhttp_response_print_headers(response, request->socket);
             fputs("\r\n", request->socket);
         }
 
@@ -322,6 +333,16 @@ int redhttp_response_get_status_code(redhttp_response_t * response)
 const char *redhttp_response_get_status_message(redhttp_response_t * response)
 {
     return response->status_message;
+}
+
+char *redhttp_response_get_content_buffer(redhttp_response_t * response)
+{
+    return response->content_buffer;
+}
+
+size_t redhttp_response_get_content_length(redhttp_response_t * response)
+{
+    return response->content_length;
 }
 
 void redhttp_response_free(redhttp_response_t * response)
