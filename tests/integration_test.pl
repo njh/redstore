@@ -18,7 +18,7 @@ die "Error: REDSTORE environment variable is not set" unless ($ENV{REDSTORE});
 # Create a libwww-perl user agent
 my ($request, $response);
 my $ua = LWP::UserAgent->new;
-$ua->timeout(10);
+$ua->timeout(30);
 $ua->max_redirect(0);
 $ua->default_header('Accept' => "*/*");
 $ua->agent('RedStoreTester/1 ');
