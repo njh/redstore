@@ -119,7 +119,7 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
     if (!response)
         return NULL;
 
-    redhttp_headers_add(&response->headers, "Content-Type", "text/html");
+    redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_content_append(response, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
     redhttp_response_content_append(response,
                                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""

@@ -8,7 +8,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 35;
+use Test::More tests => 49;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -34,26 +34,36 @@ is_running($pid);
 # Test getting the homepage
 $response = $ua->get($base_url);
 is($response->code, 200, "Getting homepage is successful");
+is($response->content_type, 'text/html', "Homepage is of type text/html");
+ok($response->content_length > 100, "Homepage is more than 100 bytes long");
 is_wellformed($response->content, "Homepage is valid XML");
 
 # Test getting the query page
 $response = $ua->get($base_url.'query');
 is($response->code, 200, "Getting query page is successful");
+is($response->content_type, 'text/html', "Query page is of type text/html");
+ok($response->content_length > 100, "Query page is more than 100 bytes long");
 is_wellformed($response->content, "Query page is valid XML");
 
 # Test getting information page
 $response = $ua->get($base_url.'info');
 is($response->code, 200, "Getting info page is successful");
+is($response->content_type, 'text/html', "Info page is of type text/html");
+ok($response->content_length > 100, "Info page is more than 100 bytes long");
 is_wellformed($response->content, "Info page is valid XML");
 
 # Test getting formats page
 $response = $ua->get($base_url.'formats');
 is($response->code, 200, "Getting formats page is successful");
+is($response->content_type, 'text/html', "Formats page is of type text/html");
+ok($response->content_length > 100, "Formats page is more than 100 bytes long");
 is_wellformed($response->content, "Formats page is valid XML");
 
 # Test getting load page
 $response = $ua->get($base_url.'load');
 is($response->code, 200, "Getting load page is successful");
+is($response->content_type, 'text/html', "Load page is of type text/html");
+ok($response->content_length > 100, "Load page is more than 100 bytes long");
 is_wellformed($response->content, "Load page is valid XML");
 
 # Test getting the favicon
@@ -65,6 +75,7 @@ is($response->content_length, 318, "Getting favicon.ico set the content length h
 # Test getting empty list of graphs
 $response = $ua->get($base_url.'data');
 is($response->code, 200, "Getting empty list of graphs is successful");
+is($response->content_type, 'text/html', "List of graphs page is of type text/html");
 like($response->content, qr[<ul>\n</ul>], "List of graphs page contains empty unordered list");
 is_wellformed($response->content, "Empty list of graphs is valid XML");
 
@@ -89,12 +100,15 @@ is($response->content, "<http://example.org/dir/file#frag> <http://example.org/v
 # Test getting list of graphs
 $response = $ua->get($base_url.'data');
 is($response->code, 200, "Getting list of graphs is successful");
+is($response->content_type, 'text/html', "Graph list is of type text/html");
 like($response->content, qr[<li><a href="/data/$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");
 is_wellformed($response->content, "Graph list is valid XML");
 
 # Test getting a non-existant graph
 $response = $ua->get($base_url."data/http%3A%2F%2Fwww.example.com%2Finvalid");
 is($response->code, 404, "Getting a non-existant graph returns 404");
+is($response->content_type, 'text/html', "Graph not found page is of type text/html");
+ok($response->content_length > 100, "Graph not found page is more than 100 bytes long");
 is_wellformed($response->content, "Graph not found page is valid XML");
 
 # Test removing trailing slash

@@ -34,6 +34,7 @@ redhttp_response_t *redstore_error_page(int level, int code, const char *message
 
 void page_append_html_header(redhttp_response_t * response, const char *title)
 {
+	redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_content_append(response,
                                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -190,22 +191,22 @@ redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_da
 
     redhttp_response_content_append(response,
                                     "<form action=\"../sparql\" method=\"get\">\n"
-                                    "<textarea name=\"query\" cols=\"80\" rows=\"18\">"
+                                    "<div><textarea name=\"query\" cols=\"80\" rows=\"18\">"
                                     "PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;\n"
                                     "PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;\n"
                                     "\n"
                                     "SELECT * WHERE {\n"
                                     " ?s ?p ?o\n"
                                     "} LIMIT 10\n"
-                                    "</textarea><br />\n"
-                                    "Output Format: <select name=\"format\">\n"
+                                    "</textarea></div>\n"
+                                    "<div class=\"buttons\">Output Format: <select name=\"format\">\n"
                                     "  <option value=\"html\">HTML</option>\n"
                                     "  <option value=\"text\">Plain Text</option>\n"
                                     "  <option value=\"xml\">XML</option>\n"
                                     "  <option value=\"json\">JSON</option>\n"
                                     "</select>\n"
                                     "<input type=\"reset\" /> "
-                                    "<input type=\"submit\" value=\"Execute\" />\n</form>\n");
+                                    "<input type=\"submit\" value=\"Execute\" /></div>\n</form>\n");
 
     // FIXME: list output formats based on enumeration of formats that Redland supports
 
