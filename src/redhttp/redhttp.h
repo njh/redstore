@@ -16,12 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include <stdio.h>
+#include <unistd.h>
 
 
 #ifndef _REDHTTP_H_
