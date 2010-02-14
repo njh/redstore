@@ -1,4 +1,9 @@
 #!/usr/bin/env perl
+#
+# Script to pretty format issues from Google Code into a TODO list.
+#
+# Nicholas J Humfrey <njh@aelius.com>
+# 
 
 use LWP::Simple;
 use strict;
