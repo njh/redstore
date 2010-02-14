@@ -34,6 +34,11 @@ if ! ./configure --enable-debug CFLAGS='-fprofile-arcs -ftest-coverage'; then
     exit -1
 fi
 
+if ! make ; then
+    echo "Failed to compile project; aborting."
+    exit -1
+fi
+
 if ! make check; then
     echo "Some tests failed; aborting."
     exit -1
