@@ -67,10 +67,17 @@ dnl ############## Check for packages we depend upon
 PKG_CHECK_MODULES(REDLAND, redland >= 1.0.9)
 
 PKG_CHECK_MODULES(CHECK, check >= 0.9.4, have_check="yes", have_check="no")
-AM_CONDITIONAL(HAVE_CHECK, test x"$have_check" = "xyes")
 if test x"$have_check" = "xyes"; then
-   AC_DEFINE([HAVE_CHECK], 1, [Define to 1 if check library is available])
+	AC_CHECK_PROG(have_checkmk, [checkmk], [yes], [no])
+	if test x"$have_checkmk" = "xyes"; then
+		AC_DEFINE([HAVE_CHECK], 1, [Define to 1 if check library is available])
+	else
+		AC_MSG_WARN([Command 'checkmk' not found.])
+		AC_MSG_WARN([Download it here: http://micah.cowan.name/projects/checkmk/])
+	fi
 fi
+AM_CONDITIONAL(HAVE_CHECK, test x"$have_check" = "xyes" &&
+                           test x"$have_checkmk" = "xyes")
 
 
 dnl ############## Output files
