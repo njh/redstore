@@ -54,13 +54,12 @@ RedStore uses a standard automake build process:
 
 Redland Storage Modules
 -----------------------
+
+You can use any Redland Storage Module that supports contexts:
+
 - hashes
-- file
 - mysql
 - memory (Default)
 - postgresql
 - sqlite
-- tstore
-- uri
 - Virtuoso
-
