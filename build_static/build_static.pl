@@ -41,10 +41,28 @@ my $packages = [
         'url' => 'http://www.sqlite.org/sqlite-amalgamation-3.6.22.tar.gz',
         'checkfor' => 'lib/pkgconfig/sqlite3.pc',
     },
+    {
+        'url' => 'http://www.iodbc.org/downloads/iODBC/libiodbc-3.52.7.tar.gz',
+        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
+                    "--disable-gui --disable-gtktest",
+        'checkfor' => 'lib/pkgconfig/libiodbc.pc',
+    },
+    {
+        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
+        'config' => "cd build_unix && ../dist/configure --disable-java ".
+                    " --enable-static --disable-shared --prefix=$ROOT_DIR",
+        'make' => 'cd build_unix && make',
+        'install' => 'cd build_unix && make install',
+        'checkfor' => 'lib/libdb.a',
+    },
+    {
+        'url' => 'http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.43.tar.gz',
+        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
+                    "--without-server --without-docs --without-man",
+        'checkfor' => 'lib/mysql/libmysqlclient.la',
+    },
 #    {
-#        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
-#        'configure' => 'cd build_unix && ../dist/configure --disable-java --enable-static --disable-shared',
-#        'make' => 'cd build_unix && make',
+#        'url' => 'http://www.mirrorservice.org/sites/ftp.postgresql.org/source/v8.4.2/postgresql-8.4.2.tar.gz',
 #    },
     {
         'url' => 'http://download.librdf.org/source/raptor-1.4.21.tar.gz',
@@ -56,7 +74,8 @@ my $packages = [
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.10.tar.gz',
-        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR --disable-modular",
+        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
+                    "--disable-modular --with-bdb=$ROOT_DIR",
         'install' => 'make install-exec install-pkgconfigDATA',
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
@@ -80,7 +99,8 @@ $ENV{'CLASSPATH'} = '';
 if (`uname` =~ /^Darwin/) {
     # Build Universal Binrary for both PPC and i386
     # FIXME: doesn't work for some packages
-    #$ENV{'CFLAGS'} .= " -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc";
+    #$ENV{'CFLAGS'} .= " -arch i386 -arch ppc";
+    #$ENV{'CFLAGS'} .= " -isysroot /Developer/SDKs/MacOSX10.4u.sdk";
     $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
 }
 
@@ -104,7 +124,11 @@ foreach my $pkg (@$packages) {
         $pkg->{'dirname'} =~ s/_/\-/g;
     }
     
-    unless (defined $pkg->{'checkfor'} && -e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
+    unless (defined $pkg->{'checkfor'}) {
+        die "Don't know how to check if ".$pkg->{'dirname'}." is installed.";
+    }
+    
+    unless (-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
         download_package($pkg);
         extract_package($pkg);
         config_package($pkg);
@@ -185,7 +209,7 @@ sub install_package {
     if ($pkg->{'install'}) {
         safe_system($pkg->{'install'});
     } else {
-        safe_system('make install');
+        safe_system('make','install');
     }
 }
 
