@@ -9,36 +9,49 @@ my $ROOT_DIR = File::Spec->rel2abs(File::Spec->curdir()).'/root';
 
 my $packages = [
     {
-        'url' => 'http://ftp.de.debian.org/debian/pool/main/p/pkg-config/pkg-config_0.22.orig.tar.gz',
-        'md5sum' => 'fd5c547e9d66ba49bc735ccb8c791f2a',
+        'url' => 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.23.tar.gz',
         'checkfor' => 'bin/pkg-config',
+    },
+    {
+        'url' => 'http://curl.haxx.se/download/curl-7.20.0.tar.gz',
+        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
+                    "--disable-ssh --disable-ldap  --disable-ldaps --disable-rtsp --disable-dict ".
+                    "--disable-telnet --disable-pop3 --disable-imap --disable-smtp ".
+                    "--disable-manual --without-libssh2",
+        'checkfor' => 'lib/pkgconfig/libcurl.pc',
     },
     {
         'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.01/pcre-8.01.tar.gz',
         'checkfor' => 'lib/pkgconfig/libpcre.pc',
     },
     {
+        'url' => 'ftp://ftp.gmplib.org/pub/gmp-4.3.2/gmp-4.3.2.tar.bz2',
+        'checkfor' => 'lib/libgmp.la',
+    },
+    {
+        'url' => 'http://xmlsoft.org/sources/libxml2-2.7.6.tar.gz',
+        'checkfor' => 'lib/pkgconfig/libxml-2.0.pc',
+    },
+    {
+        'url' => 'http://xmlsoft.org/sources/libxslt-1.1.26.tar.gz',
+        'checkfor' => 'lib/pkgconfig/libxslt.pc',
+    },
+    {
         'dirname' => 'sqlite-3.6.22',
         'url' => 'http://www.sqlite.org/sqlite-amalgamation-3.6.22.tar.gz',
         'checkfor' => 'lib/pkgconfig/sqlite3.pc',
     },
-#     {
-#         'name' => 'bdb',
-#         'url' => 'http://ftp.de.debian.org/debian/pool/main/d/db/db_4.8.26.orig.tar.gz',
-#         'configure' => 'cd build_unix && ../dist/configure --disable-java --enable-static --disable-shared',
-#         'make' => 'cd build_unix && make',
-#     },
-    # curl
-    # mpfr
-    # gmp
-    # xslt
-    # libxml2
+#    {
+#        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
+#        'configure' => 'cd build_unix && ../dist/configure --disable-java --enable-static --disable-shared',
+#        'make' => 'cd build_unix && make',
+#    },
     {
         'url' => 'http://download.librdf.org/source/raptor-1.4.21.tar.gz',
         'checkfor' => 'lib/pkgconfig/raptor.pc',
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.18.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.19.tar.gz',
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
     },
     {
@@ -55,11 +68,24 @@ my $packages = [
 
 # Reset environment variables
 $ENV{'CFLAGS'} = "-I${ROOT_DIR}/include";
+$ENV{'CPPFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'LDFLAGS'} = "-L${ROOT_DIR}/lib";
 $ENV{'INFOPATH'} = "${ROOT_DIR}/share/info";
 $ENV{'MANPATH'} = "${ROOT_DIR}/share/man";
 $ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin:/usr/sbin:/sbin";
 $ENV{'PKG_CONFIG_PATH'} = "${ROOT_DIR}/lib/pkgconfig";
+$ENV{'CLASSPATH'} = '';
+
+# Add extra CFLAGS if this is Mac OS X
+if (`uname` =~ /^Darwin/) {
+    # Build Universal Binrary for both PPC and i386
+    # FIXME: doesn't work for some packages
+    #$ENV{'CFLAGS'} .= " -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc";
+    $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
+}
+
+$ENV{'CXXFLAGS'} = $ENV{'CFLAGS'};
+
 
 print "Root directory: $ROOT_DIR\n";
 mkdir($ROOT_DIR);
@@ -67,6 +93,7 @@ mkdir($ROOT_DIR.'/bin');
 mkdir($ROOT_DIR.'/include');
 mkdir($ROOT_DIR.'/lib');
 mkdir($ROOT_DIR.'/share');
+
 
 foreach my $pkg (@$packages) {
     unless (defined $pkg->{'tarname'}) {
@@ -80,7 +107,6 @@ foreach my $pkg (@$packages) {
     unless (defined $pkg->{'checkfor'} && -e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
         download_package($pkg);
         extract_package($pkg);
-        #FIXME: clean_package($pkg);
         config_package($pkg);
         make_package($pkg);
         install_package($pkg);
@@ -91,8 +117,10 @@ foreach my $pkg (@$packages) {
     }
 }
 
-print "Everything is now compiled.\n";
-
+print "Finished compiling:\n";
+foreach my $pkg (sort {$a->{'dirname'} cmp $b->{'dirname'}} @$packages) {
+    print " * ".$pkg->{'dirname'}."\n";
+}
 
 
 sub extract_package {
@@ -101,26 +129,35 @@ sub extract_package {
         print "Deleting old: $pkg->{'dirname'}\n";
         safe_system('rm', '-Rf', $pkg->{'dirname'});
     }
-    
+
+    safe_chdir();
     print "Extracting: $pkg->{'tarname'} into $pkg->{'dirname'}\n";
-    safe_system('tar', '-zxvf', $TOP_DIR.'/'.$pkg->{'tarname'});
+    if ($pkg->{'tarname'} =~ /bz2$/) {
+        safe_system('tar', '-jxvf', $TOP_DIR.'/'.$pkg->{'tarname'});
+    } elsif ($pkg->{'tarname'} =~ /gz$/) {
+        safe_system('tar', '-zxvf', $TOP_DIR.'/'.$pkg->{'tarname'});
+    } else {
+        die "Don't know how to decomress archive.";
+    }
 }
 
 sub download_package {
     my ($pkg) = @_;
+    
     unless (-e $TOP_DIR.'/'.$pkg->{'tarname'}) {
+        safe_chdir();
         print "Downloading: ".$pkg->{'tarname'}."\n";
         safe_system('curl', '-o', $TOP_DIR.'/'.$pkg->{'tarname'}, $pkg->{'url'});
     }
 
-    # FIXME: check md5sum
+    # FIXME: check md5sum?
 }
 
 sub config_package {
     my ($pkg) = @_;
 
+    safe_chdir($pkg->{'dirname'});
     print "Configuring: ".$pkg->{'dirname'}."\n";
-    chdir($TOP_DIR.'/'.$pkg->{'dirname'}) || die "Failed to change directory: $!";
     if ($pkg->{'config'}) {
         safe_system($pkg->{'config'});
     } else {
@@ -131,8 +168,8 @@ sub config_package {
 sub make_package {
     my ($pkg) = @_;
 
+    safe_chdir($pkg->{'dirname'});
     print "Making: ".$pkg->{'dirname'}."\n";
-    chdir($TOP_DIR.'/'.$pkg->{'dirname'}) || die "Failed to change directory: $!";
     if ($pkg->{'make'}) {
         safe_system($pkg->{'make'});
     } else {
@@ -143,15 +180,20 @@ sub make_package {
 sub install_package {
     my ($pkg) = @_;
 
+    safe_chdir($pkg->{'dirname'});
     print "Installing: ".$pkg->{'dirname'}."\n";
-    chdir($TOP_DIR.'/'.$pkg->{'dirname'}) || die "Failed to change directory: $!";
-    if ($pkg->{'make'}) {
+    if ($pkg->{'install'}) {
         safe_system($pkg->{'install'});
     } else {
         safe_system('make install');
     }
 }
 
+sub safe_chdir {
+    my $dir = File::Spec->catfile($TOP_DIR,@_);
+    print "Changing to: $dir\n";
+    chdir($dir) or die "Failed to change directory: $!";
+}
 
 sub safe_system {
     my (@cmd) = @_;
