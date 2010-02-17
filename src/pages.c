@@ -101,7 +101,7 @@ redhttp_response_t *handle_page_formats(redhttp_request_t * request, void *user_
                                         "<tr><td>%s</td><td>%s</td><td>%s</td>",
                                         serialiser_info[i].name,
                                         serialiser_info[i].label, serialiser_info[i].mime_type);
-        if (serialiser_info[i].uri) {
+        if (serialiser_info[i].uri && strlen(serialiser_info[i].uri)) {
             redhttp_response_content_append(response,
                                             "<td><a href=\"%s\">More Info</a></td>",
                                             serialiser_info[i].uri);
