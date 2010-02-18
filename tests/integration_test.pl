@@ -8,12 +8,15 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 49;
+use Test::More tests => 57;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
 
-die "Error: REDSTORE environment variable is not set" unless ($ENV{REDSTORE});
+my $REDSTORE = $ENV{REDSTORE};
+$REDSTORE = $ARGV[0] if ($ARGV[0]);
+die "Error: REDSTORE environment variable is not set and no argument given." unless ($REDSTORE);
+die "Error: redstore command not found: $REDSTORE" unless (-e $REDSTORE);
 
 # Create a libwww-perl user agent
 my ($request, $response);
@@ -25,7 +28,7 @@ $ua->agent('RedStoreTester/1 ');
 
 
 # Start RedStore
-my ($pid, $port) = start_redstore($ENV{REDSTORE});
+my ($pid, $port) = start_redstore($REDSTORE);
 my $base_url = "http://localhost:$port/";
 
 # Check that the server is running
@@ -117,12 +120,26 @@ is($response->code, 301, "Getting a URL with a trailing slash returns 301");
 is($response->header('Location'), "/query", "Getting a URL with a trailing slash returns location without trailing slash");
 is_wellformed($response->content, "Redirect page is valid XML");
 
-# Test a SELECT query
+# Test a SELECT query with an HTML response
+$response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=html");
+is($response->code, 200, "SPARQL SELECT query is successful");
+is($response->content_type, "text/html", "SPARQL SELECT query Content Type data is correct");
+like($response->content, qr[<td>v</td>], "SPARQL SELECT Query returned correct value");
+is_wellformed($response->content, "SPARQL response is valid XML");
+
+# Test a SELECT query with an XML response
 $response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
 is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[<binding name="o"><literal>v</literal></binding>], "SPARQL SELECT Query contains right content");
 is_wellformed($response->content, "SPARQL response is valid XML");
+
+# Test a SELECT query with a JSON response
+$response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=json");
+is($response->code, 200, "SPARQL SELECT query is successful");
+is($response->content_type, "text/json", "SPARQL SELECT query Content Type data is correct");
+like($response->content_type, qr[^(application|text)/json$], "SPARQL SELECT query Content Type data is correct");
+like($response->content, qr["o" : { "type": "literal", "value": "v" }], "SPARQL SELECT Query contains right content");
 
 END {
     stop_redstore($pid);
