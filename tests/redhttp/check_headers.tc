@@ -65,12 +65,14 @@ redhttp_headers_free(&first);
 #test parse_line
 redhttp_header_t *first = NULL;
 redhttp_headers_parse_line(&first, "Foo:  bar");
+redhttp_headers_parse_line(&first, "Foo-One:bar-Two");
 redhttp_headers_parse_line(&first, "");
 redhttp_headers_parse_line(&first, "invalid");
 redhttp_headers_parse_line(&first, "empty:  ");
 redhttp_headers_parse_line(&first, "emptier:");
-ck_assert_int_eq(redhttp_headers_count(&first), 1);
+ck_assert_int_eq(redhttp_headers_count(&first), 2);
 ck_assert_str_eq(redhttp_headers_get(&first, "foo"), "bar");
+ck_assert_str_eq(redhttp_headers_get(&first, "foo-one"), "bar-Two");
 redhttp_headers_free(&first);
 
 #test send_headers
