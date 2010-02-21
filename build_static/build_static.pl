@@ -12,12 +12,13 @@ my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DI
 my $packages = [
     {
         'url' => 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.23.tar.gz',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-pc-path=${ROOT_DIR}/lib/pkgconfig",
         'checkfor' => 'bin/pkg-config',
     },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.20.0.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
-                    "--disable-ssh --disable-ldap  --disable-ldaps --disable-rtsp --disable-dict ".
+                    "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp --disable-dict ".
                     "--disable-telnet --disable-pop3 --disable-imap --disable-smtp ".
                     "--disable-manual --without-libssh2",
         'checkfor' => 'lib/pkgconfig/libcurl.pc',
