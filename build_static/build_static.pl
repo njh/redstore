@@ -6,6 +6,7 @@ use warnings;
 
 my $TOP_DIR = File::Spec->rel2abs(File::Spec->curdir());
 my $ROOT_DIR = File::Spec->rel2abs(File::Spec->curdir()).'/root';
+my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DIR --disable-dependency-tracking";
 
 my $packages = [
     {
@@ -14,7 +15,7 @@ my $packages = [
     },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.20.0.tar.gz',
-        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--disable-ssh --disable-ldap  --disable-ldaps --disable-rtsp --disable-dict ".
                     "--disable-telnet --disable-pop3 --disable-imap --disable-smtp ".
                     "--disable-manual --without-libssh2",
@@ -24,10 +25,11 @@ my $packages = [
         'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.01/pcre-8.01.tar.gz',
         'checkfor' => 'lib/pkgconfig/libpcre.pc',
     },
-    {
-        'url' => 'ftp://ftp.gmplib.org/pub/gmp-4.3.2/gmp-4.3.2.tar.bz2',
-        'checkfor' => 'lib/libgmp.la',
-    },
+   {
+       'url' => 'ftp://ftp.gmplib.org/pub/gmp-4.3.2/gmp-4.3.2.tar.bz2',
+       'config' => "./configure $DEFAULT_CONFIGURE_ARGS ABI=32",
+       'checkfor' => 'lib/libgmp.la',
+   },
     {
         'url' => 'http://xmlsoft.org/sources/libxml2-2.7.6.tar.gz',
         'checkfor' => 'lib/pkgconfig/libxml-2.0.pc',
@@ -43,22 +45,19 @@ my $packages = [
     },
     {
         'url' => 'http://www.iodbc.org/downloads/iODBC/libiodbc-3.52.7.tar.gz',
-        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
-                    "--disable-gui --disable-gtktest",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --disable-gui --disable-gtktest",
         'checkfor' => 'lib/pkgconfig/libiodbc.pc',
     },
     {
         'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
-        'config' => "cd build_unix && ../dist/configure --disable-java ".
-                    " --enable-static --disable-shared --prefix=$ROOT_DIR",
+        'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
         'checkfor' => 'lib/libdb.a',
     },
     {
         'url' => 'http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.43.tar.gz',
-        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
-                    "--without-server --without-docs --without-man",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
         'checkfor' => 'lib/mysql/libmysqlclient.la',
     },
 #    {
@@ -74,8 +73,7 @@ my $packages = [
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.10.tar.gz',
-        'config' => "./configure --enable-static --disable-shared --prefix=$ROOT_DIR ".
-                    "--disable-modular --with-bdb=$ROOT_DIR",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --disable-modular --with-bdb=$ROOT_DIR",
         'install' => 'make install-exec install-pkgconfigDATA',
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
@@ -86,8 +84,9 @@ my $packages = [
 ];
 
 # Reset environment variables
-$ENV{'CFLAGS'} = "-I${ROOT_DIR}/include";
+$ENV{'CFLAGS'} = "-O2 -I${ROOT_DIR}/include";
 $ENV{'CPPFLAGS'} = "-I${ROOT_DIR}/include";
+$ENV{'ASFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'LDFLAGS'} = "-L${ROOT_DIR}/lib";
 $ENV{'INFOPATH'} = "${ROOT_DIR}/share/info";
 $ENV{'MANPATH'} = "${ROOT_DIR}/share/man";
@@ -98,10 +97,14 @@ $ENV{'CLASSPATH'} = '';
 # Add extra CFLAGS if this is Mac OS X
 if (`uname` =~ /^Darwin/) {
     # Build Universal Binrary for both PPC and i386
-    # FIXME: doesn't work for some packages
-    #$ENV{'CFLAGS'} .= " -arch i386 -arch ppc";
-    #$ENV{'CFLAGS'} .= " -isysroot /Developer/SDKs/MacOSX10.4u.sdk";
+    my $SDK = '/Developer/SDKs/MacOSX10.4u.sdk';
+    my $ARCHES = '-arch i386 -arch ppc';
+    my $MINVER = '-mmacosx-version-min=10.4';
+    $ENV{'CFLAGS'} .= " -isysroot $SDK $ARCHES $MINVER";
+    $ENV{'LDFLAGS'} .= " -Wl,-syslibroot,$SDK $ARCHES $MINVER";
     $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
+    $ENV{'LDFLAGS'} .= " -Wl,-headerpad_max_install_names";
+    $ENV{'MACOSX_DEPLOYMENT_TARGET'} = '10.4';
 }
 
 $ENV{'CXXFLAGS'} = $ENV{'CFLAGS'};
@@ -185,7 +188,7 @@ sub config_package {
     if ($pkg->{'config'}) {
         safe_system($pkg->{'config'});
     } else {
-        safe_system("./configure --enable-static --disable-shared --prefix=$ROOT_DIR");
+        safe_system("./configure $DEFAULT_CONFIGURE_ARGS");
     }
 }
 
