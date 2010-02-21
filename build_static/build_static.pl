@@ -6,7 +6,8 @@ use warnings;
 
 my $TOP_DIR = File::Spec->rel2abs(File::Spec->curdir());
 my $ROOT_DIR = File::Spec->rel2abs(File::Spec->curdir()).'/root';
-my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DIR --disable-dependency-tracking";
+my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DIR ".
+                             "--disable-gtk-doc --disable-dependency-tracking";
 
 my $packages = [
     {
@@ -25,11 +26,12 @@ my $packages = [
         'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.01/pcre-8.01.tar.gz',
         'checkfor' => 'lib/pkgconfig/libpcre.pc',
     },
-   {
-       'url' => 'ftp://ftp.gmplib.org/pub/gmp-4.3.2/gmp-4.3.2.tar.bz2',
-       'config' => "./configure $DEFAULT_CONFIGURE_ARGS ABI=32",
-       'checkfor' => 'lib/libgmp.la',
-   },
+# FIXME: can't build a universal binary of GMP
+#     {
+#         'url' => 'ftp://ftp.gmplib.org/pub/gmp-4.3.2/gmp-4.3.2.tar.bz2',
+#         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ABI=32",
+#         'checkfor' => 'lib/libgmp.la',
+#     },
     {
         'url' => 'http://xmlsoft.org/sources/libxml2-2.7.6.tar.gz',
         'checkfor' => 'lib/pkgconfig/libxml-2.0.pc',
@@ -68,13 +70,12 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/raptor.pc',
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.19.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.16.tar.gz',
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.10.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --disable-modular --with-bdb=$ROOT_DIR",
-        'install' => 'make install-exec install-pkgconfigDATA',
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
     {
@@ -100,6 +101,7 @@ if (`uname` =~ /^Darwin/) {
     my $SDK = '/Developer/SDKs/MacOSX10.4u.sdk';
     my $ARCHES = '-arch i386 -arch ppc';
     my $MINVER = '-mmacosx-version-min=10.4';
+    die "Mac OS X SDK is not available." unless (-e $SDK);
     $ENV{'CFLAGS'} .= " -isysroot $SDK $ARCHES $MINVER";
     $ENV{'LDFLAGS'} .= " -Wl,-syslibroot,$SDK $ARCHES $MINVER";
     $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
@@ -116,6 +118,8 @@ mkdir($ROOT_DIR.'/bin');
 mkdir($ROOT_DIR.'/include');
 mkdir($ROOT_DIR.'/lib');
 mkdir($ROOT_DIR.'/share');
+
+gtkdoc_hack($ROOT_DIR);
 
 
 foreach my $pkg (@$packages) {
@@ -228,4 +232,17 @@ sub safe_system {
     if (system(@cmd)) {
         die "Command failed";
     }
+}
+
+
+# HACK to fix bad gtkdoc detection
+sub gtkdoc_hack {
+    my ($dir) = @_;
+    my $script = "$dir/bin/gtkdoc-rebase";
+    
+    open(SCRIPT, ">$script") or die "Failed to open $script: $!";
+    print SCRIPT "#/bin/sh\n";
+    close(SCRIPT);
+    
+    chmod(0755, $script) or die "Failed to chmod 0755 $script: $!";
 }
