@@ -8,10 +8,11 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 57;
+use Test::More tests => 62;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
+my $ESCAPED_FOAF_URI = 'http%3A%2F%2Fwww.example.com%2Fjoe%2Ffoaf.rdf';
 
 my $REDSTORE = $ENV{REDSTORE};
 $REDSTORE = $ARGV[0] if ($ARGV[0]);
@@ -39,35 +40,35 @@ $response = $ua->get($base_url);
 is($response->code, 200, "Getting homepage is successful");
 is($response->content_type, 'text/html', "Homepage is of type text/html");
 ok($response->content_length > 100, "Homepage is more than 100 bytes long");
-is_wellformed($response->content, "Homepage is valid XML");
+is_wellformed_xml($response->content, "Homepage is valid XML");
 
 # Test getting the query page
 $response = $ua->get($base_url.'query');
 is($response->code, 200, "Getting query page is successful");
 is($response->content_type, 'text/html', "Query page is of type text/html");
 ok($response->content_length > 100, "Query page is more than 100 bytes long");
-is_wellformed($response->content, "Query page is valid XML");
+is_wellformed_xml($response->content, "Query page is valid XML");
 
 # Test getting information page
 $response = $ua->get($base_url.'info');
 is($response->code, 200, "Getting info page is successful");
 is($response->content_type, 'text/html', "Info page is of type text/html");
 ok($response->content_length > 100, "Info page is more than 100 bytes long");
-is_wellformed($response->content, "Info page is valid XML");
+is_wellformed_xml($response->content, "Info page is valid XML");
 
 # Test getting formats page
 $response = $ua->get($base_url.'formats');
 is($response->code, 200, "Getting formats page is successful");
 is($response->content_type, 'text/html', "Formats page is of type text/html");
 ok($response->content_length > 100, "Formats page is more than 100 bytes long");
-is_wellformed($response->content, "Formats page is valid XML");
+is_wellformed_xml($response->content, "Formats page is valid XML");
 
 # Test getting load page
 $response = $ua->get($base_url.'load');
 is($response->code, 200, "Getting load page is successful");
 is($response->content_type, 'text/html', "Load page is of type text/html");
 ok($response->content_length > 100, "Load page is more than 100 bytes long");
-is_wellformed($response->content, "Load page is valid XML");
+is_wellformed_xml($response->content, "Load page is valid XML");
 
 # Test getting the favicon
 $response = $ua->get($base_url.'favicon.ico');
@@ -80,7 +81,7 @@ $response = $ua->get($base_url.'data');
 is($response->code, 200, "Getting empty list of graphs is successful");
 is($response->content_type, 'text/html', "List of graphs page is of type text/html");
 like($response->content, qr[<ul>\n</ul>], "List of graphs page contains empty unordered list");
-is_wellformed($response->content, "Empty list of graphs is valid XML");
+is_wellformed_xml($response->content, "Empty list of graphs is valid XML");
 
 # Test PUTing a graph
 $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
@@ -90,7 +91,7 @@ $request->content_type( 'application/rdf+xml' );
 $response = $ua->request($request);
 is($response->code, 200, "Putting a data into a graph");
 like($response->content, qr/Added 1 triples to graph/, "Load response message contain triple count");
-is_wellformed($response->content, "Response to putting a graph is valid XML");
+is_wellformed_xml($response->content, "Response to PUTing a graph is valid XML");
 
 # Test getting a graph
 $request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
@@ -105,41 +106,67 @@ $response = $ua->get($base_url.'data');
 is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/html', "Graph list is of type text/html");
 like($response->content, qr[<li><a href="/data/$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");
-is_wellformed($response->content, "Graph list is valid XML");
+is_wellformed_xml($response->content, "Graph list is valid XML");
 
 # Test getting a non-existant graph
 $response = $ua->get($base_url."data/http%3A%2F%2Fwww.example.com%2Finvalid");
 is($response->code, 404, "Getting a non-existant graph returns 404");
 is($response->content_type, 'text/html', "Graph not found page is of type text/html");
 ok($response->content_length > 100, "Graph not found page is more than 100 bytes long");
-is_wellformed($response->content, "Graph not found page is valid XML");
+is_wellformed_xml($response->content, "Graph not found page is valid XML");
 
 # Test removing trailing slash
 $response = $ua->get($base_url."query/");
 is($response->code, 301, "Getting a URL with a trailing slash returns 301");
 is($response->header('Location'), "/query", "Getting a URL with a trailing slash returns location without trailing slash");
-is_wellformed($response->content, "Redirect page is valid XML");
+is_wellformed_xml($response->content, "Redirect page is valid XML");
 
 # Test a SELECT query with an HTML response
 $response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=html");
 is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "text/html", "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[<td>v</td>], "SPARQL SELECT Query returned correct value");
-is_wellformed($response->content, "SPARQL response is valid XML");
+is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # Test a SELECT query with an XML response
 $response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
 is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[<binding name="o"><literal>v</literal></binding>], "SPARQL SELECT Query contains right content");
-is_wellformed($response->content, "SPARQL response is valid XML");
+is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # Test a SELECT query with a JSON response
 $response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=json");
 is($response->code, 200, "SPARQL SELECT query is successful");
-is($response->content_type, "text/json", "SPARQL SELECT query Content Type data is correct");
 like($response->content_type, qr[^(application|text)/json$], "SPARQL SELECT query Content Type data is correct");
-like($response->content, qr["o" : { "type": "literal", "value": "v" }], "SPARQL SELECT Query contains right content");
+like($response->content, qr[{ "type": "literal", "value": "v" }], "SPARQL SELECT Query contains right content");
+#is_wellformed_json($response->content);
+
+
+# Test PUTing some Turtle
+$request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+$request->content( read_fixture('foaf.ttl') );
+$request->content_length( length($request->content) );
+$request->content_type( 'application/x-turtle' );
+$response = $ua->request($request);
+is($response->code, 200, "Putting Tutle formatted data into a graph");
+like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
+is_wellformed_xml($response->content, "Response to PUTing turtle is valid XML");
+
+# Test a head request
+$response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
+is($response->code, 200, "HEAD response for graph we just created is 200");
+
+# Test DELETEing a graph
+$request = HTTP::Request->new( 'DELETE', $base_url.'data/'.$ESCAPED_FOAF_URI );
+$response = $ua->request($request);
+is($response->code, 200, "DELETEing a graph is successful");
+
+# Test a head request on deleted graph
+$response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
+is($response->code, 404, "HEAD response for deleted graph is 404");
+
+
 
 END {
     stop_redstore($pid);
@@ -209,7 +236,7 @@ sub read_fixture {
     return $data;
 }
 
-sub is_wellformed {
+sub is_wellformed_xml {
     my ($xml, $name) = @_;
 
 	SKIP: {
@@ -218,6 +245,24 @@ sub is_wellformed {
 
 		my $parser = new XML::Parser(ErrorContext => 2);
     	eval { $parser->parse($xml); };
+    	if ($@) {
+        	$@ =~ s/at \/.*?$//s;
+        	print STDERR "$@\n";
+        	fail($name);
+    	} else {
+        	pass($name);
+    	}
+    }
+}
+
+sub is_wellformed_json {
+    my ($json, $name) = @_;
+
+	SKIP: {
+		eval { require JSON; };
+		skip("JSON module not installed", 1) if $@;
+
+    	eval { JSON::jsonToObj($json); };
     	if ($@) {
         	$@ =~ s/at \/.*?$//s;
         	print STDERR "$@\n";

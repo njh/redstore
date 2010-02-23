@@ -1,7 +1,7 @@
 SUBDIRS = redhttp .
 
 dist_check_SCRIPTS = integration_test.pl
-dist_check_DATA = test001.rdf
+dist_check_DATA = test001.rdf foaf.ttl
 TESTS = $(dist_check_SCRIPTS)
 TESTS_ENVIRONMENT = \
 	REDSTORE="$(top_builddir)/src/redstore" \
