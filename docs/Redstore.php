@@ -65,7 +65,7 @@ class RedStore {
         return $this->is_success();
     }
     
-    public function put($data, $uri=null, $format='rdfxml') {
+    public function put($data, $uri=null, $format='application/rdf+xml') {
         if (!$uri and is_object($data) and method_exists($data, 'getUri')) {
             $uri = $data->getUri();
         }
