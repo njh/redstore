@@ -47,20 +47,57 @@ class RedStore {
         curl_setopt($this->_curl, CURLOPT_URL, $this->_endpoint."load");
         curl_setopt($this->_curl, CURLOPT_POST, 1);
         curl_setopt($this->_curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($this->_curl, CURLOPT_HTTPHEADER, array());
         curl_setopt($this->_curl, CURLOPT_POSTFIELDS, $postfields);
         curl_exec($this->_curl);
         
-        return (curl_getinfo($this->_curl, CURLINFO_HTTP_CODE) == 200);
+        return $this->is_success();
     }
     
     public function delete($uri) {
         curl_setopt($this->_curl, CURLOPT_URL, $this->graph_uri($uri));
         curl_setopt($this->_curl, CURLOPT_POST, 1);
         curl_setopt($this->_curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($this->_curl, CURLOPT_HTTPHEADER, array());
+        curl_setopt($this->_curl, CURLOPT_POSTFIELDS, null);
         curl_exec($this->_curl);
         
-        return (curl_getinfo($this->_curl, CURLINFO_HTTP_CODE) == 200);
+        return $this->is_success();
+    }
     
+    public function put($data, $uri=null, $format='rdfxml') {
+        if (!$uri and is_object($data) and method_exists($data, 'getUri')) {
+            $uri = $data->getUri();
+        }
+
+        if (is_object($data) and method_exists($data, 'serialise')) {
+            $data = $data->serialise($format);
+        }
+    
+        curl_setopt($this->_curl, CURLOPT_URL, $this->graph_uri($uri));
+        curl_setopt($this->_curl, CURLOPT_POST, 1);
+        curl_setopt($this->_curl, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_setopt($this->_curl, CURLOPT_HTTPHEADER, array(
+            "Content-Type: ".$format,
+            "Content-Length: ".strlen($data)
+        ));
+        curl_setopt($this->_curl, CURLOPT_POSTFIELDS, $data);
+        curl_exec($this->_curl);
+        
+        return $this->is_success();
+    }
+    
+    public function get($uri, $format='application/rdf+xml') {
+        curl_setopt($this->_curl, CURLOPT_URL, $this->graph_uri($uri));
+        curl_setopt($this->_curl, CURLOPT_POST, 0);
+        curl_setopt($this->_curl, CURLOPT_CUSTOMREQUEST, "GET");
+        curl_setopt($this->_curl, CURLOPT_HTTPHEADER, array("Accept: ".$format));
+        curl_setopt($this->_curl, CURLOPT_POSTFIELDS, null);
+        return curl_exec($this->_curl);
+    }
+    
+    public function is_success() {
+        return (curl_getinfo($this->_curl, CURLINFO_HTTP_CODE) == 200);
     }
     
     public function graph_uri($uri) {
