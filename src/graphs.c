@@ -27,10 +27,8 @@
 
 redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_data)
 {
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_t *response = NULL;
     librdf_iterator *iterator = NULL;
-
-    page_append_html_header(response, "Named Graphs");
 
     iterator = librdf_storage_get_contexts(storage);
     if (!iterator) {
@@ -38,7 +36,12 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
                                    REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
     }
 
+    response = redhttp_response_new(REDHTTP_OK, NULL);
+    if (!response)
+        return NULL;
+    page_append_html_header(response, "Named Graphs");
     redhttp_response_content_append(response, "<ul>\n");
+
     while (!librdf_iterator_end(iterator)) {
         librdf_uri *uri;
         librdf_node *node;

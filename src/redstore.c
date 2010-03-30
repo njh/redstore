@@ -288,10 +288,12 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
     redhttp_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
     redhttp_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
+    // redhttp_server_add_handler(server, "POST", "/data/*", handle_graph_post, NULL);
     redhttp_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
     redhttp_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
     redhttp_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
     redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
+    redhttp_server_add_handler(server, "GET", "/dump", handle_dump_get, NULL);
     redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
     redhttp_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
     redhttp_server_add_handler(server, "GET", "/info", handle_page_info, NULL);

@@ -187,7 +187,7 @@ redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
     const char *mime_type = NULL;
     unsigned int i;
 #ifdef RAPTOR_V2_AVAILABLE
-    raptor_world* raptor = librdf_world_get_raptor(world);
+    raptor_world *raptor = librdf_world_get_raptor(world);
 #endif
 
     for (i = 0; 1; i++) {
@@ -208,7 +208,6 @@ redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
         return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
                                    "Failed to match file format.");
     }
-
 #ifdef RAPTOR_V2_AVAILABLE
     iostream = raptor_new_iostream_to_file_handle(raptor, socket);
 #else

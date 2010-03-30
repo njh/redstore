@@ -112,6 +112,8 @@ redhttp_response_t *load_stream_into_graph(librdf_stream * stream, librdf_uri * 
 redhttp_response_t *handle_load_get(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_data);
 
+redhttp_response_t *handle_dump_get(redhttp_request_t * request, void *user_data);
+
 redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
                                                         request,
                                                         librdf_query_results *

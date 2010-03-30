@@ -34,7 +34,7 @@ redhttp_response_t *redstore_error_page(int level, int code, const char *message
 
 void page_append_html_header(redhttp_response_t * response, const char *title)
 {
-	redhttp_response_add_header(response, "Content-Type", "text/html");
+    redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_content_append(response,
                                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
@@ -66,6 +66,7 @@ redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_dat
                                     "  <li><a href=\"/info\">Information</a></li>\n"
                                     "  <li><a href=\"/data\">Named Graphs</a></li>\n"
                                     "  <li><a href=\"/formats\">Supported Formats</a></li>\n"
+                                    "  <li><a href=\"/dump\">Download N-Quads Full Dump</a></li>\n"
                                     "</ul>\n");
     page_append_html_footer(response);
     return response;
