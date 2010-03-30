@@ -125,8 +125,8 @@ is_wellformed_xml($response->content, "Redirect page is valid XML");
 $response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=html");
 is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "text/html", "SPARQL SELECT query Content Type data is correct");
-like($response->content, qr[<td>v</td>], "SPARQL SELECT Query returned correct value");
-is_wellformed_xml($response->content, "SPARQL response is valid XML");
+like($response->content, qr[<td>"?v"?</td>], "SPARQL SELECT Query returned correct value");
+is_wellformed_xml($response->content, "HTML SPARQL response is valid XML");
 
 # Test a SELECT query with an XML response
 $response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
