@@ -8,7 +8,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 62;
+use Test::More tests => 69;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -135,6 +135,13 @@ is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT que
 like($response->content, qr[<binding name="o"><literal>v</literal></binding>], "SPARQL SELECT Query contains right content");
 is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
+# Test a ASK query with an XML response
+$response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
+is($response->code, 200, "SPARQL ASK query is successful");
+is($response->content_type, "application/sparql-results+xml", "SPARQL ASK query Content Type data is correct");
+like($response->content, qr[<boolean>true</boolean>], "SPARQL ASK Query contains right content");
+is_wellformed_xml($response->content, "SPARQL ASK response is valid XML");
+
 # Test a SELECT query with a JSON response
 $response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=json");
 is($response->code, 200, "SPARQL SELECT query is successful");
@@ -142,6 +149,12 @@ like($response->content_type, qr[^(application|text)/json$], "SPARQL SELECT quer
 like($response->content, qr[{ "type": "literal", "value": "v" }], "SPARQL SELECT Query contains right content");
 #is_wellformed_json($response->content);
 
+# Test a ASK query with a JSON response
+$response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
+is($response->code, 200, "SPARQL ASK query is successful");
+like($response->content_type, qr[^(application|text)/json$], "SPARQL ASK query Content Type data is correct");
+like($response->content, qr["boolean" : true], "SPARQL ASK Query contains right content");
+#is_wellformed_json($response->content);
 
 # Test PUTing some Turtle
 $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );

@@ -66,7 +66,7 @@ redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_dat
                                     "  <li><a href=\"/info\">Information</a></li>\n"
                                     "  <li><a href=\"/data\">Named Graphs</a></li>\n"
                                     "  <li><a href=\"/formats\">Supported Formats</a></li>\n"
-                                    "  <li><a href=\"/dump\">Download N-Quads Full Dump</a></li>\n"
+                                    "  <li><a href=\"/dump\">Download Full Dump</a></li>\n"
                                     "</ul>\n");
     page_append_html_footer(response);
     return response;

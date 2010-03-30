@@ -65,9 +65,7 @@ redhttp_response_t *handle_sparql_query(redhttp_request_t * request, void *user_
         response = format_graph_stream(request, stream);
         librdf_free_stream(stream);
     } else if (librdf_query_results_is_boolean(results)) {
-        response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_IMPLEMENTED,
-                                "Boolean result format is not supported.");
+        response = format_bindings_query_result(request, results);
     } else if (librdf_query_results_is_syntax(results)) {
         response =
             redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_IMPLEMENTED,
