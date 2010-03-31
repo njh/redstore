@@ -60,7 +60,8 @@ static int node_write_ntriple(librdf_node * node, raptor_iostream * iostr)
     case LIBRDF_NODE_TYPE_BLANK:
         raptor_iostream_counted_string_write("_:", 2, iostr);
         str = librdf_node_get_blank_identifier(node);
-        raptor_iostream_counted_string_write(str, strlen(str), iostr);
+        len = strlen((char*)str);
+        raptor_iostream_counted_string_write(str, len, iostr);
         break;
 
     case LIBRDF_NODE_TYPE_RESOURCE:
@@ -84,22 +85,28 @@ redhttp_response_t *handle_dump_get(redhttp_request_t * request, void *user_data
 {
     librdf_stream *stream = librdf_model_as_stream(model);
     FILE *socket = redhttp_request_get_socket(request);
-    raptor_world *raptor = librdf_world_get_raptor(world);
     redhttp_response_t *response = NULL;
-    raptor_iostream *iostr = NULL;
+    raptor_iostream *iostream = NULL;
+#ifdef RAPTOR_V2_AVAILABLE
+    raptor_world *raptor = librdf_world_get_raptor(world);
+#endif
 
     // Create an iostream
-    iostr = raptor_new_iostream_to_file_handle(raptor, socket);
-    if (!iostr)
+#ifdef RAPTOR_V2_AVAILABLE
+    iostream = raptor_new_iostream_to_file_handle(raptor, socket);
+#else
+    iostream = raptor_new_iostream_to_file_handle(socket);
+#endif
+    if (!iostream)
         return NULL;
 
     // Send back the response headers
     response = redhttp_response_new(REDHTTP_OK, NULL);
     redhttp_response_add_header(response, "Content-Type", "text/x-nquads");
     redhttp_response_send(response, request);
-    raptor_iostream_string_write("# This is an N-Quads dump from RedStore\n", iostr);
-    raptor_iostream_string_write("# http://sw.deri.org/2008/07/n-quads/\n", iostr);
-    raptor_iostream_string_write("#\n", iostr);
+    raptor_iostream_string_write("# This is an N-Quads dump from RedStore\n", iostream);
+    raptor_iostream_string_write("# http://sw.deri.org/2008/07/n-quads/\n", iostream);
+    raptor_iostream_string_write("#\n", iostream);
 
     while (!librdf_stream_end(stream)) {
         librdf_statement *statement = librdf_stream_get_object(stream);
@@ -107,19 +114,19 @@ redhttp_response_t *handle_dump_get(redhttp_request_t * request, void *user_data
         if (!statement)
             break;
 
-        node_write_ntriple(librdf_statement_get_subject(statement), iostr);
-        raptor_iostream_write_byte(' ', iostr);
-        node_write_ntriple(librdf_statement_get_predicate(statement), iostr);
-        raptor_iostream_write_byte(' ', iostr);
-        node_write_ntriple(librdf_statement_get_object(statement), iostr);
-        raptor_iostream_write_byte(' ', iostr);
-        node_write_ntriple(context, iostr);
-        raptor_iostream_counted_string_write(" .\n", 3, iostr);
+        node_write_ntriple(librdf_statement_get_subject(statement), iostream);
+        raptor_iostream_write_byte(' ', iostream);
+        node_write_ntriple(librdf_statement_get_predicate(statement), iostream);
+        raptor_iostream_write_byte(' ', iostream);
+        node_write_ntriple(librdf_statement_get_object(statement), iostream);
+        raptor_iostream_write_byte(' ', iostream);
+        node_write_ntriple(context, iostream);
+        raptor_iostream_counted_string_write(" .\n", 3, iostream);
 
         librdf_stream_next(stream);
     }
 
-    raptor_free_iostream(iostr);
+    raptor_free_iostream(iostream);
 
     return response;
 }

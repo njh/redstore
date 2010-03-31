@@ -208,12 +208,12 @@ redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
         return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
                                    "Failed to match file format.");
     }
+
 #ifdef RAPTOR_V2_AVAILABLE
     iostream = raptor_new_iostream_to_file_handle(raptor, socket);
 #else
     iostream = raptor_new_iostream_to_file_handle(socket);
 #endif
-
     if (!iostream) {
         librdf_free_query_results_formatter(formatter);
         return redstore_error_page(REDSTORE_ERROR,
