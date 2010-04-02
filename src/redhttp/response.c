@@ -200,7 +200,7 @@ int redhttp_response_content_append(redhttp_response_t * response, const char *f
         }
     }
     // Is the buffer big enough?
-    if (response->content_buffer_size - response->content_length < len) {
+    if (response->content_buffer_size - response->content_length <= len) {
         int new_size = response->content_buffer_size + len + BUFSIZ;
         char *new_buf = realloc(response->content_buffer, new_size);
         if (new_buf) {
