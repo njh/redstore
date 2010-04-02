@@ -82,7 +82,7 @@ AM_CONDITIONAL(HAVE_CHECK, test x"$have_check" = "xyes" &&
 
 dnl ############## Output files
 
-AC_CONFIG_HEADERS([src/config.h])
+AC_CONFIG_HEADERS([src/redstore_config.h])
 
 AC_CONFIG_FILES([
 	Makefile

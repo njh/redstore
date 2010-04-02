@@ -51,7 +51,7 @@ static int description_add_query_languages()
         bnode = librdf_new_node_from_blank_identifier(world, NULL);
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(service_node),
-                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "queryLanguage"),
+                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"queryLanguage"),
                          librdf_new_node_from_node(bnode)
             );
 
@@ -59,7 +59,7 @@ static int description_add_query_languages()
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
                              LIBRDF_S_label(world),
-                             librdf_new_node_from_literal(world, name, NULL, 0)
+                             librdf_new_node_from_literal(world, (unsigned char*)name, NULL, 0)
                 );
         }
 
@@ -67,14 +67,14 @@ static int description_add_query_languages()
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
                              LIBRDF_S_comment(world),
-                             librdf_new_node_from_literal(world, label, NULL, 0)
+                             librdf_new_node_from_literal(world, (unsigned char*)label, NULL, 0)
                 );
         }
 
         if (uri) {
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "spec"),
+                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"spec"),
                              librdf_new_node_from_uri_string(world, uri)
                 );
         }
@@ -103,7 +103,7 @@ static int description_add_query_result_formats()
         bnode = librdf_new_node_from_blank_identifier(world, NULL);
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(service_node),
-                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "resultFormat"),
+                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"resultFormat"),
                          librdf_new_node_from_node(bnode)
             );
 
@@ -111,7 +111,7 @@ static int description_add_query_result_formats()
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
                              LIBRDF_S_label(world),
-                             librdf_new_node_from_literal(world, name, NULL, 0)
+                             librdf_new_node_from_literal(world, (unsigned char*)name, NULL, 0)
                 );
         }
 
@@ -119,22 +119,22 @@ static int description_add_query_result_formats()
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
                              LIBRDF_S_comment(world),
-                             librdf_new_node_from_literal(world, label, NULL, 0)
+                             librdf_new_node_from_literal(world, (unsigned char*)label, NULL, 0)
                 );
         }
 
         if (mime_type) {
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "mediaType"),
-                             librdf_new_node_from_literal(world, mime_type, NULL, 0)
+                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"mediaType"),
+                             librdf_new_node_from_literal(world, (unsigned char*)mime_type, NULL, 0)
                 );
         }
 
         if (uri) {
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "spec"),
+                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"spec"),
                              librdf_new_node_from_uri_string(world, uri)
                 );
         }
@@ -161,7 +161,7 @@ static int description_add_serialisers()
         bnode = librdf_new_node_from_blank_identifier(world, NULL);
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(service_node),
-                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "resultFormat"),
+                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"resultFormat"),
                          librdf_new_node_from_node(bnode)
             );
 
@@ -169,7 +169,7 @@ static int description_add_serialisers()
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
                              LIBRDF_S_label(world),
-                             librdf_new_node_from_literal(world, name, NULL, 0)
+                             librdf_new_node_from_literal(world, (unsigned char*)name, NULL, 0)
                 );
         }
 
@@ -177,38 +177,40 @@ static int description_add_serialisers()
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
                              LIBRDF_S_comment(world),
-                             librdf_new_node_from_literal(world, label, NULL, 0)
+                             librdf_new_node_from_literal(world, (unsigned char*)label, NULL, 0)
                 );
         }
 
         if (mime_type) {
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "mediaType"),
-                             librdf_new_node_from_literal(world, mime_type, NULL, 0)
+                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"mediaType"),
+                             librdf_new_node_from_literal(world, (unsigned char*)mime_type, NULL, 0)
                 );
         }
 
         if (uri) {
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "spec"),
+                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"spec"),
                              librdf_new_node_from_uri_string(world, uri)
                 );
         }
 
         librdf_free_node(bnode);
     }
+    
+    return 0;
 }
 
 
-int description_init()
+int description_init(void)
 {
     char *description;
 
     // Create namespace URIs
-    saddle_ns_uri = librdf_new_uri(world, "http://www.w3.org/2005/03/saddle/#");
-    sd_ns_uri = librdf_new_uri(world, "http://www.w3.org/ns/sparql-service-description#");
+    saddle_ns_uri = librdf_new_uri(world, (unsigned char*)"http://www.w3.org/2005/03/saddle/#");
+    sd_ns_uri = librdf_new_uri(world, (unsigned char*)"http://www.w3.org/ns/sparql-service-description#");
 
     sd_storage = librdf_new_storage(world, "memory", "service_description", "");
     if (!sd_storage) {
@@ -226,7 +228,7 @@ int description_init()
     librdf_model_add(sd_model,
                      librdf_new_node_from_node(service_node),
                      LIBRDF_MS_type(world),
-                     librdf_new_node_from_uri_local_name(world, sd_ns_uri, "Service")
+                     librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char*)"Service")
         );
 
     description_add_query_languages();
@@ -236,7 +238,7 @@ int description_init()
     librdf_model_add(sd_model,
                      librdf_new_node_from_node(service_node),
                      LIBRDF_S_label(world),
-                     librdf_new_node_from_literal(world, storage_name, NULL, 0)
+                     librdf_new_node_from_literal(world, (unsigned char*)storage_name, NULL, 0)
         );
 
     description = malloc(128);
@@ -245,7 +247,7 @@ int description_init()
     librdf_model_add(sd_model,
                      librdf_new_node_from_node(service_node),
                      LIBRDF_S_comment(world),
-                     librdf_new_node_from_literal(world, description, NULL, 0)
+                     librdf_new_node_from_literal(world, (unsigned char*)description, NULL, 0)
         );
     free(description);
 
@@ -253,7 +255,7 @@ int description_init()
 }
 
 
-librdf_node *new_node_from_integer(librdf_world * world, int i)
+static librdf_node *new_node_from_integer(librdf_world * world, int i)
 {
     librdf_uri *xsd_integer_uri = NULL;
     unsigned char *string = NULL;
@@ -266,31 +268,34 @@ librdf_node *new_node_from_integer(librdf_world * world, int i)
     /* snprintf() takes as length the buffer size including NUL */
     snprintf((char *) string, INTEGER_BUFFER_SIZE + 1, "%d", i);
 
-    xsd_integer_uri = librdf_new_uri(world, "http://www.w3.org/2001/XMLSchema#integer");
+    xsd_integer_uri = librdf_new_uri(world, (unsigned char*)"http://www.w3.org/2001/XMLSchema#integer");
     return librdf_new_node_from_typed_literal(world, string, NULL, xsd_integer_uri);
 }
 
-int model_remove_statements(librdf_model * model, librdf_statement * statement)
+static int model_remove_statements(librdf_model * model, librdf_statement * statement)
 {
     librdf_stream *stream = librdf_model_find_statements(model, statement);
+    int count = 0;
 
     while (stream && !librdf_stream_end(stream)) {
         librdf_statement *match = librdf_stream_get_object(stream);
         librdf_model_remove_statement(model, match);
         librdf_stream_next(stream);
+        count++;
     }
 
     librdf_free_stream(stream);
+    return count;
 }
 
-int description_update()
+int description_update(void)
 {
     librdf_statement *statement = librdf_new_statement_from_nodes(world,
                                                                   librdf_new_node_from_node
                                                                   (service_node),
                                                                   librdf_new_node_from_uri_local_name
                                                                   (world, sd_ns_uri,
-                                                                   "totalTriples"),
+                                                                  (unsigned char*)"totalTriples"),
                                                                   NULL);
 
     model_remove_statements(sd_model, statement);
@@ -299,6 +304,8 @@ int description_update()
                                 new_node_from_integer(world, librdf_storage_size(storage)));
 
     librdf_model_add_statement(sd_model, statement);
+    
+    return 0;
 }
 
 
@@ -345,18 +352,20 @@ static int model_write_target_cell(librdf_node * source, librdf_node * arc,
     } else {
         redhttp_response_content_append(response, "<td>&nbsp;</td>");
     }
+    
+    return 0;
 }
 
 static redhttp_response_t *handle_html_description(redhttp_request_t * request, void *user_data)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     librdf_node *rf_node =
-        librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "resultFormat");
+        librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"resultFormat");
     librdf_node *ql_node =
-        librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "queryLanguage");
-    librdf_node *mt_node = librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "mediaType");
-    librdf_node *spec_node = librdf_new_node_from_uri_local_name(world, saddle_ns_uri, "spec");
-    librdf_node *total_node = librdf_new_node_from_uri_local_name(world, sd_ns_uri, "totalTriples");
+        librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"queryLanguage");
+    librdf_node *mt_node = librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"mediaType");
+    librdf_node *spec_node = librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char*)"spec");
+    librdf_node *total_node = librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char*)"totalTriples");
     librdf_iterator *iterator;
 
     page_append_html_header(response, "Service Description");
@@ -453,7 +462,7 @@ redhttp_response_t *handle_description_get(redhttp_request_t * request, void *us
     }
 }
 
-void description_free()
+void description_free(void)
 {
     librdf_free_storage(sd_storage);
 

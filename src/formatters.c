@@ -69,7 +69,6 @@ const char *get_format(redhttp_request_t * request)
         format_str = parse_accept_header(request);
         redstore_debug("accept: %s", format_str);
         if (format_str && strcmp("*/*", format_str) == 0) {
-            free(format_str);
             format_str = NULL;
         }
     }

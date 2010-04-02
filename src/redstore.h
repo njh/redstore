@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "config.h"
+#include "redstore_config.h"
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -80,9 +80,10 @@ extern librdf_model *model;
 
 // ------- Prototypes -------
 
-int description_init();
+int description_init(void);
 redhttp_response_t *handle_description_get(redhttp_request_t * request, void *user_data);
-void description_free();
+int description_update(void);
+void description_free(void);
 
 redhttp_response_t *handle_sparql_query(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data);
