@@ -72,7 +72,9 @@ my $packages = [
     },
     {
         'url' => 'http://download.librdf.org/source/rasqal-0.9.16.tar.gz',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS '--enable-query-languages=sparql rdql laqrs'",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
+        
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.10.tar.gz',
