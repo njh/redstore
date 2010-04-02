@@ -60,7 +60,7 @@ static int node_write_ntriple(librdf_node * node, raptor_iostream * iostr)
     case LIBRDF_NODE_TYPE_BLANK:
         raptor_iostream_counted_string_write("_:", 2, iostr);
         str = librdf_node_get_blank_identifier(node);
-        len = strlen((char*)str);
+        len = strlen((char *) str);
         raptor_iostream_counted_string_write(str, len, iostr);
         break;
 

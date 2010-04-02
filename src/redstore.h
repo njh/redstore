@@ -64,17 +64,6 @@ typedef enum {
 
 
 
-// ------- Structures -------
-
-// FIXME: this should be got from Redland
-typedef struct serialiser_info {
-    const char *name;
-    const char *label;
-    const char *mime_type;
-    const char *uri;
-} serialiser_info_t;
-
-
 // ------- Globals ---------
 extern int quiet;
 extern int verbose;
@@ -87,16 +76,17 @@ extern const char *storage_type;
 extern librdf_world *world;
 extern librdf_storage *storage;
 extern librdf_model *model;
-extern serialiser_info_t serialiser_info[];
 
 
 // ------- Prototypes -------
 
+int description_init();
+redhttp_response_t *handle_description_get(redhttp_request_t * request, void *user_data);
+void description_free();
+
 redhttp_response_t *handle_sparql_query(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_page_info(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_page_formats(redhttp_request_t * request, void *user_data);
 
 redhttp_response_t *redstore_error_page(int level, int code, const char *message);
 void page_append_html_header(redhttp_response_t * response, const char *title);
@@ -114,6 +104,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
 
 redhttp_response_t *handle_dump_get(redhttp_request_t * request, void *user_data);
 
+const char *get_format(redhttp_request_t * request);
 redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
                                                         request,
                                                         librdf_query_results *
@@ -153,7 +144,7 @@ void redstore_log(RedstoreLogLevel level, const char *fmt, ...);
 
 #define raptor_string_ntriples_write(str, len, delim, iostr) raptor_iostream_write_string_ntriples(iostr, str, len, delim)
 
-#endif /* !RAPTOR_V2_AVAILABLE */
+#endif                          /* !RAPTOR_V2_AVAILABLE */
 
 
 #endif

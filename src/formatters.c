@@ -59,7 +59,7 @@ static char *parse_accept_header(redhttp_request_t * request)
     return NULL;
 }
 
-static const char *get_format(redhttp_request_t * request)
+const char *get_format(redhttp_request_t * request)
 {
     const char *format_str;
 
@@ -68,6 +68,10 @@ static const char *get_format(redhttp_request_t * request)
     if (!format_str) {
         format_str = parse_accept_header(request);
         redstore_debug("accept: %s", format_str);
+        if (format_str && strcmp("*/*", format_str) == 0) {
+            free(format_str);
+            format_str = NULL;
+        }
     }
 
     return format_str;
@@ -84,12 +88,18 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
     const char *mime_type = NULL;
     int i;
 
-    for (i = 0; serialiser_info[i].name; i++) {
-        if (strcmp(format_str, serialiser_info[i].name) == 0 ||
-            strcmp(format_str, serialiser_info[i].uri) == 0 ||
-            strcmp(format_str, serialiser_info[i].mime_type) == 0) {
-            format_name = serialiser_info[i].name;
-            mime_type = serialiser_info[i].mime_type;
+    for (i = 0; 1; i++) {
+        const char *name, *label, *mime;
+        const unsigned char *uri;
+
+        if (raptor_serializers_enumerate(i, &name, &label, &mime, &uri))
+            break;
+
+        if ((name && strcmp(format_str, name) == 0) ||
+            (uri && strcmp(format_str, (char *) uri) == 0) ||
+            (mime && strcmp(format_str, mime) == 0)) {
+            format_name = name;
+            mime_type = mime;
             break;
         }
     }
@@ -165,7 +175,8 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
     format_str = get_format(request);
     if (format_str == NULL ||
         strcmp(format_str, "html") == 0 ||
-        strcmp(format_str, "application/xml") == 0 || strcmp(format_str, "text/html") == 0) {
+        strcmp(format_str, "application/xml") == 0 ||
+        strcmp(format_str, "application/xhtml+xml") == 0 || strcmp(format_str, "text/html") == 0) {
         response = format_graph_stream_html(request, stream, format_str);
     } else {
         response = format_graph_stream_librdf(request, stream, format_str);
@@ -208,7 +219,6 @@ redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
         return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
                                    "Failed to match file format.");
     }
-
 #ifdef RAPTOR_V2_AVAILABLE
     iostream = raptor_new_iostream_to_file_handle(raptor, socket);
 #else

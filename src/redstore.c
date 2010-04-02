@@ -43,26 +43,6 @@ librdf_world *world = NULL;
 librdf_model *model = NULL;
 librdf_storage *storage = NULL;
 
-// FIXME: this should be got from Redland
-serialiser_info_t serialiser_info[] = {
-    {.name = "ntriples",.label = "N-Triples",.mime_type =
-     "application/x-ntriples",.uri = "http://www.w3.org/TR/rdf-testcases/#ntriples"},
-    {.name = "turtle",.label = "Turtle",.mime_type =
-     "application/x-turtle",.uri = "http://www.dajobe.org/2004/01/turtle"},
-    {.name = "turtle",.label = NULL,.mime_type = "text/turtle",.uri =
-     "http://www.dajobe.org/2004/01/turtle"},
-    {.name = "rdfxml-abbrev",.label = "RDF/XML (Abbreviated)",.mime_type =
-     "application/rdf+xml",.uri = "http://www.w3.org/TR/rdf-syntax-grammar"},
-    {.name = "rdfxml",.label = "RDF/XML",.mime_type =
-     "application/rdf+xml",.uri = "http://www.w3.org/TR/rdf-syntax-grammar"},
-    {.name = "dot",.label = "GraphViz DOT format",.mime_type =
-     "text/x-graphviz",.uri = "http://www.graphviz.org/doc/info/lang.html"},
-    {.name = "json",.label = "RDF/JSON Resource-Centric",.mime_type =
-     "application/json",.uri = "http://n2.talis.com/wiki/RDF_JSON_Specification"},
-    {.name = "json-triples",.label = "RDF/JSON Triples",.mime_type = "application/json",.uri = ""},
-    {.name = NULL}
-};
-
 
 static void termination_handler(int signum)
 {
@@ -293,11 +273,10 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
     redhttp_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
     redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
-    redhttp_server_add_handler(server, "GET", "/dump", handle_dump_get, NULL);
     redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
+    redhttp_server_add_handler(server, "GET", "/dump", handle_dump_get, NULL);
+    redhttp_server_add_handler(server, "GET", "/description", handle_description_get, NULL);
     redhttp_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
-    redhttp_server_add_handler(server, "GET", "/info", handle_page_info, NULL);
-    redhttp_server_add_handler(server, "GET", "/formats", handle_page_formats, NULL);
     redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
     redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);
 
@@ -331,6 +310,11 @@ int main(int argc, char *argv[])
         redstore_fatal("Failed to create model for storage.");
         return -1;
     }
+    // Create service description
+    if (description_init()) {
+        redstore_fatal("Failed to initialise Service Description.");
+        return -1;
+    }
     // Start listening for connections
     redstore_info("Starting HTTP server on port %s", port);
     if (redhttp_server_listen(server, address, port, PF_UNSPEC)) {
@@ -341,6 +325,8 @@ int main(int argc, char *argv[])
     while (running) {
         redhttp_server_run(server);
     }
+
+    description_free();
 
     librdf_free_storage(storage);
     librdf_free_hash(storage_options);

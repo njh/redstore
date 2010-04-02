@@ -8,7 +8,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 69;
+use Test::More tests => 68;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -49,19 +49,18 @@ is($response->content_type, 'text/html', "Query page is of type text/html");
 ok($response->content_length > 100, "Query page is more than 100 bytes long");
 is_wellformed_xml($response->content, "Query page is valid XML");
 
-# Test getting information page
-$response = $ua->get($base_url.'info');
-is($response->code, 200, "Getting info page is successful");
-is($response->content_type, 'text/html', "Info page is of type text/html");
-ok($response->content_length > 100, "Info page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Info page is valid XML");
+# Test getting Service Description page
+$response = $ua->get($base_url.'description');
+is($response->code, 200, "Getting Service Description page is successful");
+is($response->content_type, 'text/html', "Service Description page is of type text/html");
+ok($response->content_length > 100, "Service Description page is more than 100 bytes long");
+is_wellformed_xml($response->content, "Service Description page is valid XML");
 
-# Test getting formats page
-$response = $ua->get($base_url.'formats');
-is($response->code, 200, "Getting formats page is successful");
-is($response->content_type, 'text/html', "Formats page is of type text/html");
-ok($response->content_length > 100, "Formats page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Formats page is valid XML");
+# Test getting Service Description as RDF
+$response = $ua->get($base_url.'description?format=rdfxml-abbrev');
+is($response->code, 200, "Gettting RDF Service Description is successful");
+is($response->content_type, 'application/rdf+xml', "RDF Service Description is of type application/rdf+xml");
+is_wellformed_xml($response->content, "RDF Service Description is valid XML");
 
 # Test getting load page
 $response = $ua->get($base_url.'load');
@@ -95,11 +94,11 @@ is_wellformed_xml($response->content, "Response to PUTing a graph is valid XML")
 
 # Test getting a graph
 $request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
-$request->header('Accept', 'application/x-ntriples');
+$request->header('Accept', 'application/x-turtle');
 $response = $ua->request($request);
 is($response->code, 200, "Getting a graph is successful");
-is($response->content_type, "application/x-ntriples", "Content Type data is correct");
-is($response->content, "<http://example.org/dir/file#frag> <http://example.org/value> \"v\" .\n", "Graph data is correct");
+is($response->content_type, "application/x-turtle", "Content Type data is correct");
+like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+\"v\"\s*.\n], "Graph data is correct");
 
 # Test getting list of graphs
 $response = $ua->get($base_url.'data');
