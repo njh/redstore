@@ -278,6 +278,7 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "GET", "/description", handle_description_get, NULL);
     redhttp_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
     redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
+    redhttp_server_add_handler(server, "GET", "/robots.txt", handle_page_robots_txt, NULL);
     redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);
 
     // Set the server signature

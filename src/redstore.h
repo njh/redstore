@@ -88,6 +88,7 @@ void description_free(void);
 redhttp_response_t *handle_sparql_query(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data);
 
 redhttp_response_t *redstore_error_page(int level, int code, const char *message);
 void page_append_html_header(redhttp_response_t * response, const char *title);

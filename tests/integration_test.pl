@@ -8,7 +8,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 68;
+use Test::More tests => 71;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -73,7 +73,13 @@ is_wellformed_xml($response->content, "Load page is valid XML");
 $response = $ua->get($base_url.'favicon.ico');
 is($response->code, 200, "Getting favicon.ico is successful");
 is($response->content_type, 'image/x-icon', "Getting favicon.ico set the content type");
-is($response->content_length, 318, "Getting favicon.ico set the content length header");
+ok($response->content_length > 100, "favicon.ico is more than 100 bytes long");
+
+# Test getting robots.txt
+$response = $ua->get($base_url.'robots.txt');
+is($response->code, 200, "Getting robots.txt is successful");
+is($response->content_type, 'text/plain', "Getting favicon.ico set the content type");
+ok($response->content_length > 20, "robots.txt is more than 20 bytes long");
 
 # Test getting empty list of graphs
 $response = $ua->get($base_url.'data');

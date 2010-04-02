@@ -102,3 +102,17 @@ redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_da
 
     return response;
 }
+
+
+redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data)
+{
+    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_add_header(response, "Content-Type", "text/plain");
+    redhttp_response_content_append(response, "User-agent: *\n");
+    redhttp_response_content_append(response, "Disallow: /\n");
+    return response;
+
+}
+
+
+
