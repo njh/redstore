@@ -53,12 +53,12 @@ enum redhttp_status_code {
 };
 
 
-
 typedef struct redhttp_header_s redhttp_header_t;
 typedef struct redhttp_request_s redhttp_request_t;
 typedef struct redhttp_response_s redhttp_response_t;
 typedef struct redhttp_handler_s redhttp_handler_t;
 typedef struct redhttp_server_s redhttp_server_t;
+typedef struct redhttp_type_q_s redhttp_type_q_t;
 
 typedef redhttp_response_t *(*redhttp_handler_func) (redhttp_request_t * request, void *user_data);
 
@@ -84,6 +84,13 @@ const char *redhttp_request_get_argument(redhttp_request_t * request, const char
 void redhttp_request_set_path_glob(redhttp_request_t * request, const char *path_glob);
 const char *redhttp_request_get_path_glob(redhttp_request_t * request);
 void redhttp_request_parse_arguments(redhttp_request_t * request, const char *input);
+void redhttp_request_parse_accept_header(redhttp_request_t * request, const char *input);
+int redhttp_request_get_accept_header(redhttp_request_t * request, int i, const char **type,
+                                      int *q);
+int redhttp_request_count_accept_headers(redhttp_request_t * request);
+void redhttp_request_free_accept_headers(redhttp_request_t * request);
+void redhttp_request_add_accept_header(redhttp_request_t * request, const char *type,
+                                       size_t type_len, int q);
 void redhttp_request_set_method(redhttp_request_t * request, const char *method);
 const char *redhttp_request_get_method(redhttp_request_t * request);
 void redhttp_request_set_url(redhttp_request_t * request, const char *url);

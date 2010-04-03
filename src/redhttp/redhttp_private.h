@@ -63,6 +63,8 @@ struct redhttp_request_s {
 
     char *content_buffer;
     size_t content_length;
+
+    struct redhttp_type_q_s *accept;
 };
 
 struct redhttp_response_s {
@@ -83,6 +85,12 @@ struct redhttp_handler_s {
     struct redhttp_response_s *(*func) (struct redhttp_request_s * request, void *user_data);
     void *user_data;
     struct redhttp_handler_s *next;
+};
+
+struct redhttp_type_q_s {
+    char *type;
+    unsigned char q;
+    struct redhttp_type_q_s *next;
 };
 
 struct redhttp_server_s {

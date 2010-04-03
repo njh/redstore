@@ -85,6 +85,18 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
         fprintf(socket, "</pre>\n");
     }
 
+    if (redhttp_request_count_accept_headers(request)) {
+        const char *type;
+        int i, q;
+        fprintf(socket, "<pre><b>Accept Headers</b>\n");
+        for (i = 0; 1; i++) {
+            if (redhttp_request_get_accept_header(request, i, &type, &q))
+                break;
+            fprintf(socket, "%1.1f  %s\n", (float) q / 10, type);
+        }
+        fprintf(socket, "</pre>\n");
+    }
+
     if (redhttp_response_count_headers(response)) {
         fprintf(socket, "<pre><b>Response Headers</b>\n");
         redhttp_response_print_headers(response, socket);

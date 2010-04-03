@@ -197,6 +197,168 @@ void redhttp_request_parse_arguments(redhttp_request_t * request, const char *in
     free(args);
 }
 
+int redhttp_request_get_accept_header(redhttp_request_t * request, int i, const char **type, int *q)
+{
+    redhttp_type_q_t *it;
+    int count = 0;
+
+    if (i < 0)
+        return -1;
+
+    for (it = request->accept; it; it = it->next) {
+        if (count == i) {
+            if (type)
+                *type = it->type;
+
+            if (q)
+                *q = it->q;
+
+            return 0;
+        }
+        count++;
+    }
+
+    return -1;
+}
+
+int redhttp_request_count_accept_headers(redhttp_request_t * request)
+{
+    redhttp_type_q_t *it;
+    int count = 0;
+
+    assert(request != NULL);
+
+    for (it = request->accept; it; it = it->next) {
+        count++;
+    }
+
+    return count;
+}
+
+static void redhttp_request_sort_accept_headers(redhttp_request_t * request)
+{
+    redhttp_type_q_t *a = NULL;
+    redhttp_type_q_t *b = NULL;
+    redhttp_type_q_t *c = NULL;
+    redhttp_type_q_t *e = NULL;
+    redhttp_type_q_t *tmp = NULL;
+
+    if (request->accept == NULL)
+        return;
+        
+    while (e != request->accept->next) {
+        c = a = request->accept;
+        b = a->next;
+        while (a != e) {
+            if (a->q < b->q) {
+                if (a == request->accept) {
+                    tmp = b->next;
+                    b->next = a;
+                    a->next = tmp;
+                    request->accept = b;
+                    c = b;
+                } else {
+                    tmp = b->next;
+                    b->next = a;
+                    a->next = tmp;
+                    c->next = b;
+                    c = b;
+                }
+            } else {
+                c = a;
+                a = a->next;
+            }
+            b = a->next;
+            if (b == e)
+                e = a;
+        }
+    }
+}
+
+void redhttp_request_add_accept_header(redhttp_request_t * request, const char *type,
+                                       size_t type_len, int q)
+{
+    redhttp_type_q_t *new;
+
+    assert(request != NULL);
+    assert(type != NULL);
+    assert(type_len > 0);
+    assert(q <= 10 && q >= 0);
+
+    // FIXME: remove whitespace from the MIME Type
+
+    // Create new MIME Type stucture
+    new = calloc(1, sizeof(redhttp_type_q_t));
+    new->type = calloc(1, type_len + 1);
+    strncpy(new->type, type, type_len);
+    new->q = q;
+    new->next = NULL;
+
+    // append it to the list
+    if (request->accept) {
+        redhttp_type_q_t *it;
+        for (it = request->accept; it->next; it = it->next);
+        it->next = new;
+    } else {
+        request->accept = new;
+    }
+
+    // sort the list
+    redhttp_request_sort_accept_headers(request);
+}
+
+void redhttp_request_parse_accept_header(redhttp_request_t * request, const char *str)
+{
+    const char *start = str;
+    const char *ptr;
+    int q = 10;
+
+    if (str == NULL || *str == '\0')
+        return;
+
+    for (ptr = str; 1; ptr++) {
+        if (*ptr == ',' || *ptr == '\0') {
+            const char *params = start;
+
+            // Re-scan for start of parameters
+            for (params = start; params < ptr; params++) {
+                if (*params == ';') {
+                    const char *p;
+                    // Scan for q= parameter
+                    // FIXME: this could be improved
+                    for (p = params; p < (ptr - 3); p++) {
+                        if (p[0] == 'q' && p[1] == '=') {
+                            float f;
+                            if (sscanf(&p[2], "%f", &f) > 0)
+                                q = f * 10;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            redhttp_request_add_accept_header(request, start, (params - start), q);
+            start = ptr + 1;
+        }
+
+        if (*ptr == '\0')
+            break;
+    }
+}
+
+void redhttp_request_free_accept_headers(redhttp_request_t * request)
+{
+    redhttp_type_q_t *it, *next;
+
+    assert(request != NULL);
+
+    for (it = request->accept; it; it = next) {
+        next = it->next;
+        free(it->type);
+        free(it);
+    }
+}
+
 void redhttp_request_set_method(redhttp_request_t * request, const char *method)
 {
     assert(request != NULL);
@@ -474,6 +636,10 @@ int redhttp_request_read(redhttp_request_t * request)
             }
         }
     }
+    // Process the Accept header
+    redhttp_request_parse_accept_header(request, redhttp_headers_get(&request->headers, "Accept")
+        );
+
     // Success
     return 0;
 }
@@ -502,6 +668,7 @@ void redhttp_request_free(redhttp_request_t * request)
 
     redhttp_headers_free(&request->headers);
     redhttp_headers_free(&request->arguments);
+    redhttp_request_free_accept_headers(request);
 
     free(request);
 }

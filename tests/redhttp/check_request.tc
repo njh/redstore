@@ -123,11 +123,44 @@ redhttp_request_add_header(request, "key", "value");
 ck_assert_str_eq(redhttp_request_get_header(request, "key"), "value");
 redhttp_request_free(request);
 
+#test header_count_empty
+redhttp_request_t *request = redhttp_request_new();
+ck_assert_int_eq(redhttp_request_count_headers(request), 0);
+redhttp_request_free(request);
+
 #test header_count
 redhttp_request_t *request = redhttp_request_new();
 redhttp_request_add_header(request, "key1", "value1");
 redhttp_request_add_header(request, "key2", "value2");
 ck_assert_int_eq(redhttp_request_count_headers(request), 2);
+redhttp_request_free(request);
+
+#test accept_header_add_and_get
+redhttp_request_t *request = redhttp_request_new();
+const char* type;
+int q;
+redhttp_request_add_accept_header(request, "text/plain", 10, 5);
+redhttp_request_add_accept_header(request, "text/html", 9, 10);
+ck_assert_int_eq(redhttp_request_get_accept_header(request, -1, NULL, NULL), -1);
+ck_assert_int_eq(redhttp_request_get_accept_header(request, 0, NULL, NULL), 0);
+ck_assert_int_eq(redhttp_request_get_accept_header(request, 0, &type, &q), 0);
+ck_assert_str_eq(type, "text/html");
+ck_assert_int_eq(q, 10);
+ck_assert_int_eq(redhttp_request_get_accept_header(request, 1, &type, &q), 0);
+ck_assert_str_eq(type, "text/plain");
+ck_assert_int_eq(q, 5);
+redhttp_request_free(request);
+
+#test accept_header_count_empty
+redhttp_request_t *request = redhttp_request_new();
+ck_assert_int_eq(redhttp_request_count_accept_headers(request), 0);
+redhttp_request_free(request);
+
+#test accept_header_count
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_add_accept_header(request, "text/html", 9, 10);
+redhttp_request_add_accept_header(request, "text/plain", 10, 5);
+ck_assert_int_eq(redhttp_request_count_accept_headers(request), 2);
 redhttp_request_free(request);
 
 #test set_path_glob
