@@ -113,6 +113,3 @@ redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *us
     return response;
 
 }
-
-
-

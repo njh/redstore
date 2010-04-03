@@ -474,9 +474,8 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char *) "resultFormat");
     librdf_node *pf_node =
         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char *) "parseFormat");
-    librdf_node *ql_node =
-        librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                            (unsigned char *) "queryLanguage");
+    librdf_node *ql_node = librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
+                                                               (unsigned char *) "queryLanguage");
 
     page_append_html_header(response, "Service Description");
 
