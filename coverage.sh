@@ -29,7 +29,7 @@ find . -name '*.gcno' -delete
 find . -name '*.gcov' -delete
 lcov --directory src --zerocounters
 
-if ! ./configure --enable-debug CFLAGS='-fprofile-arcs -ftest-coverage'; then
+if ! ./configure --enable-debug CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"; then
     echo "Failed to configure project; aborting."
     exit -1
 fi
