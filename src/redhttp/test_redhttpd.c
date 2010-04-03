@@ -63,6 +63,7 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     FILE *socket = redhttp_request_get_socket(request);
+    const char* accept_header;
 
     redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_send(response, request);
@@ -85,16 +86,19 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
         fprintf(socket, "</pre>\n");
     }
 
-    if (redhttp_request_count_accept_headers(request)) {
+    accept_header = redhttp_request_get_header(request, "Accept");
+    if (accept_header) {
+        redhttp_negotiate_t *first = redhttp_negotiate_parse(accept_header);
         const char *type;
         int i, q;
         fprintf(socket, "<pre><b>Accept Headers</b>\n");
         for (i = 0; 1; i++) {
-            if (redhttp_request_get_accept_header(request, i, &type, &q))
+            if (redhttp_negotiate_get(&first, i, &type, &q))
                 break;
             fprintf(socket, "%1.1f  %s\n", (float) q / 10, type);
         }
         fprintf(socket, "</pre>\n");
+        redhttp_negotiate_free(&first);
     }
 
     if (redhttp_response_count_headers(response)) {

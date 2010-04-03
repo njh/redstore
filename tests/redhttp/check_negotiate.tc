@@ -1,0 +1,77 @@
+/*
+    RedHTTP - a lightweight HTTP server library
+    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "redhttp/redhttp.h"
+
+#suite redhttp_negotiate
+
+#test negotiate_add_and_get
+redhttp_negotiate_t *neg = NULL;
+const char* type;
+int q;
+redhttp_negotiate_add(&neg, "text/plain", 10, 5);
+redhttp_negotiate_add(&neg, "text/html", 9, 10);
+ck_assert_int_eq(redhttp_negotiate_get(&neg, -1, NULL, NULL), -1);
+ck_assert_int_eq(redhttp_negotiate_get(&neg, 0, NULL, NULL), 0);
+ck_assert_int_eq(redhttp_negotiate_get(&neg, 0, &type, &q), 0);
+ck_assert_str_eq(type, "text/html");
+ck_assert_int_eq(q, 10);
+ck_assert_int_eq(redhttp_negotiate_get(&neg, 1, &type, &q), 0);
+ck_assert_str_eq(type, "text/plain");
+ck_assert_int_eq(q, 5);
+redhttp_negotiate_free(&neg);
+
+#test negotiate_parse
+redhttp_negotiate_t *neg = redhttp_negotiate_parse("application/xhtml+xml,text/html;q=0.9,image/png,*/*;q=0.5");
+const char* type;
+int q;
+ck_assert_int_eq(redhttp_negotiate_count(&neg), 4);
+ck_assert_int_eq(redhttp_negotiate_get(&neg, 0, &type, &q), 0);
+ck_assert_str_eq(type, "application/xhtml+xml");
+ck_assert_int_eq(q, 10);
+redhttp_negotiate_free(&neg);
+
+#test negotiate_parse_empty
+redhttp_negotiate_t *neg = redhttp_negotiate_parse("");
+ck_assert_int_eq(redhttp_negotiate_get(&neg, 0, NULL, NULL), -1);
+ck_assert_int_eq(redhttp_negotiate_count(&neg), 0);
+redhttp_negotiate_free(&neg);
+
+#test negotiate_parse_null
+redhttp_negotiate_t *neg = redhttp_negotiate_parse(NULL);
+ck_assert_msg(neg == NULL, "redhttp_negotiate_parse(NULL) should be NULL");
+redhttp_negotiate_free(&neg);
+
+#test negotiate_parse_whitespace
+redhttp_negotiate_t *neg = redhttp_negotiate_parse(" application/rdf+xml ; q=0.5 ");
+const char* type;
+int q;
+ck_assert_int_eq(redhttp_negotiate_count(&neg), 1);
+ck_assert_int_eq(redhttp_negotiate_get(&neg, 0, &type, &q), 0);
+ck_assert_str_eq(type, "application/rdf+xml");
+ck_assert_int_eq(q, 5);
+redhttp_negotiate_free(&neg);
+
+#test negotiate_count_empty
+redhttp_negotiate_t *neg = NULL;
+ck_assert_int_eq(redhttp_negotiate_count(&neg), 0);
+redhttp_negotiate_free(&neg);

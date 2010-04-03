@@ -87,10 +87,10 @@ struct redhttp_handler_s {
     struct redhttp_handler_s *next;
 };
 
-struct redhttp_type_q_s {
+struct redhttp_negotiate_s {
     char *type;
     unsigned char q;
-    struct redhttp_type_q_s *next;
+    struct redhttp_negotiate_s *next;
 };
 
 struct redhttp_server_s {

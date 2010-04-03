@@ -2,6 +2,7 @@
 noinst_LTLIBRARIES = libredhttp.la
 libredhttp_la_SOURCES = \
   headers.c \
+  negotiate.c \
   redhttp.h \
   redhttp_private.h \
   request.c \
