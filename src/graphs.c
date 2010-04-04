@@ -25,20 +25,12 @@
 #include "redstore.h"
 
 
-redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_data)
+static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request, librdf_iterator *iterator)
 {
-    redhttp_response_t *response = NULL;
-    librdf_iterator *iterator = NULL;
-
-    iterator = librdf_storage_get_contexts(storage);
-    if (!iterator) {
-        return redstore_error_page(REDSTORE_ERROR,
-                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
-    }
-
-    response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     if (!response)
         return NULL;
+
     page_append_html_header(response, "Named Graphs");
     redhttp_response_content_append(response, "<ul>\n");
 
@@ -69,9 +61,69 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
     }
     redhttp_response_content_append(response, "</ul>\n");
 
-    librdf_free_iterator(iterator);
+    redhttp_response_content_append(response, "<p>This document is also available as <a href=\"/data?format=text/plain\">plain text</a>.</p>\n");
 
     page_append_html_footer(response);
+    
+    return response;
+}
+
+static redhttp_response_t *handle_plain_graph_index(redhttp_request_t * request, librdf_iterator *iterator)
+{
+    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_add_header(response, "Content-Type", "text/plain");
+
+    if (!response)
+        return NULL;
+
+    while (!librdf_iterator_end(iterator)) {
+        librdf_uri *uri;
+        librdf_node *node;
+
+        node = (librdf_node *) librdf_iterator_get_object(iterator);
+        if (!node) {
+            redstore_error("librdf_iterator_get_next returned NULL");
+            break;
+        }
+
+        uri = librdf_node_get_uri(node);
+        if (!uri) {
+            redstore_error("Failed to get URI for context node");
+            break;
+        }
+
+        redhttp_response_content_append(response, "%s\n", librdf_uri_as_string(uri));
+
+        librdf_iterator_next(iterator);
+    }
+    
+    return response;
+}
+
+
+redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_data)
+{
+    redhttp_response_t *response = NULL;
+    librdf_iterator *iterator = NULL;
+    char* format = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
+    
+    
+    iterator = librdf_storage_get_contexts(storage);
+    if (!iterator) {
+        return redstore_error_page(REDSTORE_ERROR,
+                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
+    }
+
+    if (redstore_is_text_format(format))  {
+        response = handle_plain_graph_index(request, iterator);
+    } else if (redstore_is_html_format(format)) {
+        response =  handle_html_graph_index(request, iterator);
+    } else {
+        response = redstore_error_page(REDSTORE_INFO,
+                                       REDHTTP_NOT_ACCEPTABLE, "No acceptable format supported.");
+    }
+    
+    librdf_free_iterator(iterator);
 
     return response;
 }

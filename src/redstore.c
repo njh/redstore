@@ -154,6 +154,44 @@ static int redland_log_handler(void *user, librdf_log_message * msg)
     return 0;
 }
 
+char *redstore_get_format(redhttp_request_t * request, const char* supported)
+{
+    const char *format_str;
+
+    format_str = redhttp_request_get_argument(request, "format");
+    if (format_str) {
+        redstore_debug("format_arg: %s", format_str);
+    } else if (!format_str) {
+        const char *accept_str = redhttp_request_get_header(request, "Accept");
+        format_str = redhttp_negotiate_choose(supported, accept_str);
+        redstore_debug("accept: %s", accept_str);
+        redstore_debug("supported: %s", supported);
+        redstore_debug("chosen: %s", format_str);
+        // FIXME: fix memory leak, format_str needs to be freed()
+    }
+
+    return format_str;
+}
+
+int redstore_is_html_format(const char* str)
+{
+    if (strcmp(str,"html")==0 ||
+        strcmp(str,"text/html")==0 ||
+        strcmp(str,"application/xhtml+xml")==0)
+        return 1;
+    else
+        return 0;
+}
+
+int redstore_is_text_format(const char* str)
+{
+    if (strcmp(str,"text")==0 ||
+        strcmp(str,"text/plain")==0)
+        return 1;
+    else
+        return 0;
+}
+
 
 // Display how to use this program
 static void usage()

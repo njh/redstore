@@ -25,57 +25,6 @@
 #include "redstore.h"
 
 
-/*
-  Return the first item in the accept header
-
-  FIXME: do content negotiation properly
-*/
-static char *parse_accept_header(redhttp_request_t * request)
-{
-    const char *accept_str = redhttp_request_get_header(request, "Accept");
-    int pos = -1;
-    int i;
-
-    if (accept_str == NULL)
-        return NULL;
-
-    for (i = 0; i <= strlen(accept_str); i++) {
-        if (accept_str[i] == '\0' ||
-            accept_str[i] == ' ' || accept_str[i] == ',' || accept_str[i] == ';') {
-            pos = i;
-            break;
-        }
-    }
-
-    if (pos > 0) {
-        char *result = malloc(pos + 1);
-        if (result) {
-            strncpy(result, accept_str, pos);
-            result[pos] = '\0';
-            return result;
-        }
-    }
-
-    return NULL;
-}
-
-const char *get_format(redhttp_request_t * request)
-{
-    const char *format_str;
-
-    format_str = redhttp_request_get_argument(request, "format");
-    redstore_debug("format_str: %s", format_str);
-    if (!format_str) {
-        format_str = parse_accept_header(request);
-        redstore_debug("accept: %s", format_str);
-        if (format_str && strcmp("*/*", format_str) == 0) {
-            format_str = NULL;
-        }
-    }
-
-    return format_str;
-}
-
 
 redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
@@ -111,8 +60,9 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
     serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
     if (!serialiser) {
         return redstore_error_page(REDSTORE_ERROR,
-                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialised.");
+                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser.");
     }
+
     // Send back the response headers
     response = redhttp_response_new(REDHTTP_OK, NULL);
     redhttp_response_add_header(response, "Content-Type", mime_type);
@@ -171,11 +121,8 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
     redhttp_response_t *response;
     const char *format_str;
 
-    format_str = get_format(request);
-    if (format_str == NULL ||
-        strcmp(format_str, "html") == 0 ||
-        strcmp(format_str, "application/xml") == 0 ||
-        strcmp(format_str, "application/xhtml+xml") == 0 || strcmp(format_str, "text/html") == 0) {
+    format_str = redstore_get_format(request, accepted_serialiser_types);
+    if (redstore_is_html_format(format_str)) {
         response = format_graph_stream_html(request, stream, format_str);
     } else {
         response = format_graph_stream_librdf(request, stream, format_str);
@@ -342,10 +289,10 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
     redhttp_response_t *response;
     const char *format_str;
 
-    format_str = get_format(request);
-    if (format_str == NULL || strcmp(format_str, "html") == 0) {
+    format_str = redstore_get_format(request,accepted_query_result_types);
+    if (redstore_is_html_format(format_str)) {
         response = format_bindings_query_result_html(request, results, format_str);
-    } else if (strcmp(format_str, "text") == 0) {
+    } else if (redstore_is_text_format(format_str)) {
         response = format_bindings_query_result_text(request, results, format_str);
     } else {
         response = format_bindings_query_result_librdf(request, results, format_str);

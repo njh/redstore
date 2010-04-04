@@ -50,7 +50,7 @@ ok($response->content_length > 100, "Query page is more than 100 bytes long");
 is_wellformed_xml($response->content, "Query page is valid XML");
 
 # Test getting Service Description page
-$response = $ua->get($base_url.'description');
+$response = $ua->get($base_url.'description', 'Accept' => 'text/html');
 is($response->code, 200, "Getting Service Description page is successful");
 is($response->content_type, 'text/html', "Service Description page is of type text/html");
 ok($response->content_length > 100, "Service Description page is more than 100 bytes long");
@@ -84,6 +84,12 @@ ok($response->content_length > 20, "robots.txt is more than 20 bytes long");
 # Test getting empty list of graphs
 $response = $ua->get($base_url.'data');
 is($response->code, 200, "Getting empty list of graphs is successful");
+is($response->content_type, 'text/plain', "List of graphs page is of type text/plain");
+is($response->content,'', "Empty list of grpahs returns empty page.");
+
+# Test getting empty list of graphs as HTML
+$response = $ua->get($base_url.'data', 'Accept' => 'text/html');
+is($response->code, 200, "Getting empty list of graphs as HTML is successful");
 is($response->content_type, 'text/html', "List of graphs page is of type text/html");
 like($response->content, qr[<ul>\n</ul>], "List of graphs page contains empty unordered list");
 is_wellformed_xml($response->content, "Empty list of graphs is valid XML");
@@ -108,6 +114,12 @@ like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example
 
 # Test getting list of graphs
 $response = $ua->get($base_url.'data');
+is($response->code, 200, "Getting list of graphs is successful");
+is($response->content_type, 'text/plain', "Graph list is of type text/plain");
+is($response->content, "$TEST_CASE_URI\n", "List of graphs page contains graph that was added");
+
+# Test getting list of graphs as HTML
+$response = $ua->get($base_url.'data', 'Accept' => 'text/html');
 is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/html', "Graph list is of type text/html");
 like($response->content, qr[<li><a href="/data/$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");

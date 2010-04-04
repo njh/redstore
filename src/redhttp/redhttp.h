@@ -45,6 +45,7 @@ enum redhttp_status_code {
     REDHTTP_FORBIDDEN = 403,
     REDHTTP_NOT_FOUND = 404,
     REDHTTP_METHOD_NOT_ALLOWED = 405,
+    REDHTTP_NOT_ACCEPTABLE = 406,
 
     REDHTTP_INTERNAL_SERVER_ERROR = 500,
     REDHTTP_NOT_IMPLEMENTED = 501,
@@ -141,6 +142,7 @@ void redhttp_server_set_backlog_size(redhttp_server_t * server, int backlog_size
 int redhttp_server_get_backlog_size(redhttp_server_t * server);
 void redhttp_server_free(redhttp_server_t * server);
 
+char* redhttp_negotiate_choose(const char *server, const char *client);
 redhttp_negotiate_t* redhttp_negotiate_parse(const char *str);
 int redhttp_negotiate_get(redhttp_negotiate_t **first, int i, const char **type, int *q);
 int redhttp_negotiate_count(redhttp_negotiate_t **first);

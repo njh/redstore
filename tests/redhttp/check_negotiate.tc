@@ -75,3 +75,23 @@ redhttp_negotiate_free(&neg);
 redhttp_negotiate_t *neg = NULL;
 ck_assert_int_eq(redhttp_negotiate_count(&neg), 0);
 redhttp_negotiate_free(&neg);
+
+#test negotiate_choose_simple
+char* chosen = redhttp_negotiate_choose("text/plain,text/html", "text/html");
+ck_assert_str_eq(chosen, "text/html");
+if (chosen) free(chosen);
+
+#test negotiate_choose_with_scores
+char* chosen = redhttp_negotiate_choose("text/html;q=0.6,text/plain;q=0.4", "text/plain;q=0.8,text/html;q=0.2");
+ck_assert_str_eq(chosen, "text/plain");
+if (chosen) free(chosen);
+
+#test negotiate_choose_wildcard
+char* chosen = redhttp_negotiate_choose("text/plain;q=0.9,text/html;q=0.8", "*/*");
+ck_assert_str_eq(chosen, "text/plain");
+if (chosen) free(chosen);
+
+#test negotiate_choose_wildcard2
+char* chosen = redhttp_negotiate_choose("text/plain;q=0.9,text/html;q=0.8", "text/html");
+ck_assert_str_eq(chosen, "text/html");
+if (chosen) free(chosen);

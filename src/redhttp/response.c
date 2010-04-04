@@ -87,6 +87,9 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
             case REDHTTP_METHOD_NOT_ALLOWED:
                 message = "Method Not Allowed";
                 break;
+            case REDHTTP_NOT_ACCEPTABLE:
+                message = "Not Acceptable";
+                break;
             case REDHTTP_INTERNAL_SERVER_ERROR:
                 message = "Internal Server Error";
                 break;

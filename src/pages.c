@@ -42,7 +42,7 @@ void page_append_html_header(redhttp_response_t * response, const char *title)
                                     "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
                                     "<head>\n"
                                     "  <title>RedStore - %s</title>\n"
-                                    "</head>\n" "<body>\n" "<h1>%s</h1>\n", title, title);
+                                    "</head>\n<body>\n<h1>%s</h1>\n", title, title);
 }
 
 void page_append_html_footer(redhttp_response_t * response)

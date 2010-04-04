@@ -32,12 +32,57 @@
 #include "redhttp.h"
 
 
+static int compare_types(const char* server_type, const char* client_type)
+{
+    // FIXME: support type/* as well as */*
+    if (strcmp(client_type, "*/*")==0) {
+        return 1;
+    } else {
+        return strcmp(server_type, client_type) == 0;
+    }
+}
+
+char* redhttp_negotiate_choose(const char *server, const char *client)
+{
+    redhttp_negotiate_t *s, *s_list = redhttp_negotiate_parse(server);
+    redhttp_negotiate_t *c, *c_list = redhttp_negotiate_parse(client);
+    const char* best_type = NULL;
+    int best_score = -1;
+    char * result = NULL;
+    
+    for(s=s_list; s; s = s->next) {
+        for(c=c_list; c; c = c->next) {
+            if (compare_types(s->type, c->type)) {
+                int score = s->q * c->q;
+                if (score > best_score) {
+                    best_score = score;
+                    best_type = s->type;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Copy best match into the result buffer
+    if (best_type) {
+        result = calloc(1, strlen(best_type) + 1);
+        if (result) {
+            strcpy(result, best_type);
+        }
+    }
+    
+    redhttp_negotiate_free(&s_list);
+    redhttp_negotiate_free(&c_list);
+    
+    return result;
+}
+
+
 redhttp_negotiate_t* redhttp_negotiate_parse(const char *str)
 {
     redhttp_negotiate_t *first = NULL;
     const char *start = str;
     const char *ptr;
-    int q = 10;
 
     if (str == NULL || *str == '\0')
         return NULL;
@@ -45,6 +90,7 @@ redhttp_negotiate_t* redhttp_negotiate_parse(const char *str)
     for (ptr = str; 1; ptr++) {
         if (*ptr == ',' || *ptr == '\0') {
             const char *params = start;
+            int q = 10;
 
             // Re-scan for start of parameters
             for (params = start; params < ptr; params++) {
@@ -63,6 +109,8 @@ redhttp_negotiate_t* redhttp_negotiate_parse(const char *str)
                 }
             }
 
+            // FIXME: store the other MIME type parameters, for example
+            // text/html;version=2.0
             redhttp_negotiate_add(&first, start, (params - start), q);
             start = ptr + 1;
         }
