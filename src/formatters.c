@@ -24,7 +24,14 @@
 
 #include "redstore.h"
 
-
+static void node_print_xml(librdf_node* node, raptor_iostream* iostream)
+{
+    unsigned char* str;
+    size_t str_len;
+    str = librdf_node_to_counted_string(node, &str_len);
+    raptor_iostream_write_xml_escaped_string(iostream, str, str_len, 0, NULL, NULL);
+    free(str);
+}
 
 redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
@@ -83,14 +90,24 @@ redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     FILE *socket = redhttp_request_get_socket(request);
+    raptor_iostream *iostream = NULL;
+#ifdef RAPTOR_V2_AVAILABLE
+    raptor_world *raptor = librdf_world_get_raptor(world);
+#endif
 
     // Send back the response headers
     redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_send(response, request);
-    fprintf(socket, "<html><head><title>RedStore</title></head><body>");
 
-    fprintf(socket, "<table class=\"triples\" border=\"1\">\n");
-    fprintf(socket, "<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n");
+#ifdef RAPTOR_V2_AVAILABLE
+    iostream = raptor_new_iostream_to_file_handle(raptor, socket);
+#else
+    iostream = raptor_new_iostream_to_file_handle(socket);
+#endif
+    
+    raptor_iostream_string_write("<html><head><title>RedStore</title></head><body>", iostream);
+    raptor_iostream_string_write("<table class=\"triples\" border=\"1\">\n", iostream);
+    raptor_iostream_string_write("<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n", iostream);
     while (!librdf_stream_end(stream)) {
         librdf_statement *statement = librdf_stream_get_object(stream);
         if (!statement) {
@@ -98,18 +115,19 @@ redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
             break;
         }
 
-        fprintf(socket, "<tr><td>");
-        librdf_node_print(librdf_statement_get_subject(statement), socket);
-        fprintf(socket, "</td><td>");
-        librdf_node_print(librdf_statement_get_predicate(statement), socket);
-        fprintf(socket, "</td><td>");
-        librdf_node_print(librdf_statement_get_object(statement), socket);
-        fprintf(socket, "</td></tr>\n");
+        raptor_iostream_string_write("<tr><td>", iostream);
+        node_print_xml(librdf_statement_get_subject(statement), iostream);
+        raptor_iostream_string_write("</td><td>", iostream);
+        node_print_xml(librdf_statement_get_predicate(statement), iostream);
+        raptor_iostream_string_write("</td><td>", iostream);
+        node_print_xml(librdf_statement_get_object(statement), iostream);
+        raptor_iostream_string_write("</td></tr>\n", iostream);
 
         librdf_stream_next(stream);
     }
 
-    fprintf(socket, "</table></body></html>\n");
+    raptor_iostream_string_write("</table></body></html>\n", iostream);
+    raptor_free_iostream(iostream);
 
     return response;
 }
@@ -201,40 +219,53 @@ redhttp_response_t *format_bindings_query_result_html(redhttp_request_t *
                                                       results, const char *format_str)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    raptor_iostream *iostream = NULL;
     FILE *socket = redhttp_request_get_socket(request);
     int i, count;
 
     // Send back the response headers
     redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_send(response, request);
-    fprintf(socket, "<html><head><title>RedStore</title></head><body>");
+
+#ifdef RAPTOR_V2_AVAILABLE
+    iostream = raptor_new_iostream_to_file_handle(raptor, socket);
+#else
+    iostream = raptor_new_iostream_to_file_handle(socket);
+#endif
+
+    raptor_iostream_string_write("<html><head><title>RedStore</title></head><body>", iostream);
 
     count = librdf_query_results_get_bindings_count(results);
-    fprintf(socket, "<table class=\"sparql\" border=\"1\">\n<tr>");
+    raptor_iostream_string_write("<table class=\"sparql\" border=\"1\">\n<tr>", iostream);
     for (i = 0; i < count; i++) {
         const char *name = librdf_query_results_get_binding_name(results, i);
-        fprintf(socket, "<th>?%s</th>", name);
+        // FIXME: this should be escaped
+        raptor_iostream_string_write("<th>", iostream);
+        raptor_iostream_string_write(name, iostream);
+        raptor_iostream_string_write("</th>", iostream);
     }
-    fprintf(socket, "</tr>\n");
+    raptor_iostream_string_write("</tr>\n", iostream);
 
     while (!librdf_query_results_finished(results)) {
-        fprintf(socket, "<tr>");
+        raptor_iostream_string_write("<tr>", iostream);
         for (i = 0; i < count; i++) {
             librdf_node *value = librdf_query_results_get_binding_value(results, i);
-            fprintf(socket, "<td>");
+            raptor_iostream_string_write("<td>", iostream);
             if (value) {
-                librdf_node_print(value, socket);
+                node_print_xml(value, iostream);
                 librdf_free_node(value);
             } else {
-                fputs("NULL", socket);
+                raptor_iostream_string_write("NULL", iostream);
             }
-            fprintf(socket, "</td>");
+            raptor_iostream_string_write("</td>", iostream);
         }
-        fprintf(socket, "</tr>\n");
+        raptor_iostream_string_write("</tr>\n", iostream);
         librdf_query_results_next(results);
     }
 
-    fprintf(socket, "</table></body></html>\n");
+    raptor_iostream_string_write("</table></body></html>\n", iostream);
+
+    raptor_free_iostream(iostream);
 
     return response;
 }

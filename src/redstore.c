@@ -161,7 +161,7 @@ char *redstore_get_format(redhttp_request_t * request, const char *supported)
 
     format_arg = redhttp_request_get_argument(request, "format");
     if (format_arg) {
-        format_str = calloc(1, strlen(format_str) + 1);
+        format_str = calloc(1, strlen(format_arg) + 1);
         strcpy(format_str, format_arg);
         redstore_debug("format_arg: %s", format_str);
     } else if (!format_str) {
