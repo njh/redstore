@@ -8,7 +8,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 71;
+use Test::More tests => 77;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
