@@ -142,14 +142,13 @@ void redhttp_server_set_backlog_size(redhttp_server_t * server, int backlog_size
 int redhttp_server_get_backlog_size(redhttp_server_t * server);
 void redhttp_server_free(redhttp_server_t * server);
 
-char* redhttp_negotiate_choose(const char *server, const char *client);
-redhttp_negotiate_t* redhttp_negotiate_parse(const char *str);
-int redhttp_negotiate_get(redhttp_negotiate_t **first, int i, const char **type, int *q);
-int redhttp_negotiate_count(redhttp_negotiate_t **first);
-void redhttp_negotiate_sort(redhttp_negotiate_t **first);
-void redhttp_negotiate_add(redhttp_negotiate_t **first, const char *type,
-                                       size_t type_len, int q);
-void redhttp_negotiate_free(redhttp_negotiate_t **first);
+char *redhttp_negotiate_choose(const char *server, const char *client);
+redhttp_negotiate_t *redhttp_negotiate_parse(const char *str);
+int redhttp_negotiate_get(redhttp_negotiate_t ** first, int i, const char **type, int *q);
+int redhttp_negotiate_count(redhttp_negotiate_t ** first);
+void redhttp_negotiate_sort(redhttp_negotiate_t ** first);
+void redhttp_negotiate_add(redhttp_negotiate_t ** first, const char *type, size_t type_len, int q);
+void redhttp_negotiate_free(redhttp_negotiate_t ** first);
 
 char *redhttp_url_unescape(const char *escaped);
 char *redhttp_url_escape(const char *arg);

@@ -25,7 +25,8 @@
 #include "redstore.h"
 
 
-static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request, librdf_iterator *iterator)
+static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
+                                                   librdf_iterator * iterator)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     if (!response)
@@ -61,14 +62,16 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request, 
     }
     redhttp_response_content_append(response, "</ul>\n");
 
-    redhttp_response_content_append(response, "<p>This document is also available as <a href=\"/data?format=text/plain\">plain text</a>.</p>\n");
+    redhttp_response_content_append(response,
+                                    "<p>This document is also available as <a href=\"/data?format=text/plain\">plain text</a>.</p>\n");
 
     page_append_html_footer(response);
-    
+
     return response;
 }
 
-static redhttp_response_t *handle_plain_graph_index(redhttp_request_t * request, librdf_iterator *iterator)
+static redhttp_response_t *handle_plain_graph_index(redhttp_request_t * request,
+                                                    librdf_iterator * iterator)
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     redhttp_response_add_header(response, "Content-Type", "text/plain");
@@ -96,7 +99,7 @@ static redhttp_response_t *handle_plain_graph_index(redhttp_request_t * request,
 
         librdf_iterator_next(iterator);
     }
-    
+
     return response;
 }
 
@@ -105,24 +108,24 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
 {
     redhttp_response_t *response = NULL;
     librdf_iterator *iterator = NULL;
-    char* format = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
-    
-    
+    char *format = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
+
     iterator = librdf_storage_get_contexts(storage);
     if (!iterator) {
         return redstore_error_page(REDSTORE_ERROR,
                                    REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
     }
 
-    if (redstore_is_text_format(format))  {
+    if (redstore_is_text_format(format)) {
         response = handle_plain_graph_index(request, iterator);
     } else if (redstore_is_html_format(format)) {
-        response =  handle_html_graph_index(request, iterator);
+        response = handle_html_graph_index(request, iterator);
     } else {
         response = redstore_error_page(REDSTORE_INFO,
                                        REDHTTP_NOT_ACCEPTABLE, "No acceptable format supported.");
     }
-    
+
+    free(format);
     librdf_free_iterator(iterator);
 
     return response;

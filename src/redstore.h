@@ -77,8 +77,8 @@ extern librdf_world *world;
 extern librdf_storage *storage;
 extern librdf_model *model;
 
-extern char* accepted_serialiser_types;
-extern char* accepted_query_result_types;
+extern char *accepted_serialiser_types;
+extern char *accepted_query_result_types;
 
 
 // ------- Prototypes -------
@@ -136,9 +136,9 @@ redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user
 
 void redstore_log(RedstoreLogLevel level, const char *fmt, ...);
 
-char *redstore_get_format(redhttp_request_t * request, const char* supported);
-int redstore_is_html_format(const char* str);
-int redstore_is_text_format(const char* str);
+char *redstore_get_format(redhttp_request_t * request, const char *supported);
+int redstore_is_html_format(const char *str);
+int redstore_is_text_format(const char *str);
 
 
 

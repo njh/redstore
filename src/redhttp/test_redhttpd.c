@@ -63,7 +63,7 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
 {
     redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
     FILE *socket = redhttp_request_get_socket(request);
-    const char* accept_header;
+    const char *accept_header;
 
     redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_send(response, request);

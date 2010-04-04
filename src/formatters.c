@@ -62,7 +62,6 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
         return redstore_error_page(REDSTORE_ERROR,
                                    REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser.");
     }
-
     // Send back the response headers
     response = redhttp_response_new(REDHTTP_OK, NULL);
     redhttp_response_add_header(response, "Content-Type", mime_type);
@@ -119,7 +118,7 @@ redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
 redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stream * stream)
 {
     redhttp_response_t *response;
-    const char *format_str;
+    char *format_str;
 
     format_str = redstore_get_format(request, accepted_serialiser_types);
     if (redstore_is_html_format(format_str)) {
@@ -127,6 +126,8 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
     } else {
         response = format_graph_stream_librdf(request, stream, format_str);
     }
+
+    free(format_str);
 
     return response;
 }
@@ -287,9 +288,9 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
                                                  librdf_query_results * results)
 {
     redhttp_response_t *response;
-    const char *format_str;
+    char *format_str;
 
-    format_str = redstore_get_format(request,accepted_query_result_types);
+    format_str = redstore_get_format(request, accepted_query_result_types);
     if (redstore_is_html_format(format_str)) {
         response = format_bindings_query_result_html(request, results, format_str);
     } else if (redstore_is_text_format(format_str)) {
@@ -297,6 +298,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
     } else {
         response = format_bindings_query_result_librdf(request, results, format_str);
     }
+    free(format_str);
 
     redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
 

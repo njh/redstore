@@ -33,8 +33,8 @@ static librdf_storage *sd_storage = NULL;
 static librdf_model *sd_model = NULL;
 static librdf_node *service_node = NULL;
 
-char* accepted_serialiser_types = NULL;
-char* accepted_query_result_types = NULL;
+char *accepted_serialiser_types = NULL;
+char *accepted_query_result_types = NULL;
 
 
 static int description_add_query_languages()
@@ -94,8 +94,8 @@ static int description_add_query_languages()
 
 
 static int description_add_query_result_formats()
-{  
-    raptor_stringbuffer* buffer = raptor_new_stringbuffer();
+{
+    raptor_stringbuffer *buffer = raptor_new_stringbuffer();
     size_t str_len;
     int i;
 
@@ -133,9 +133,9 @@ static int description_add_query_result_formats()
 
         if (mime_type) {
             if (raptor_stringbuffer_length(buffer))
-                raptor_stringbuffer_append_counted_string(buffer, ",", 1, 1);
-        
-            raptor_stringbuffer_append_string(buffer, mime_type, 1);
+                raptor_stringbuffer_append_counted_string(buffer, (unsigned char *) ",", 1, 1);
+
+            raptor_stringbuffer_append_string(buffer, (unsigned char *) mime_type, 1);
 
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
@@ -157,19 +157,20 @@ static int description_add_query_result_formats()
 
         librdf_free_node(bnode);
     }
-    
+
     // Convert the buffer of accepted mime types into a string
-    str_len = raptor_stringbuffer_length(buffer)+1;
+    str_len = raptor_stringbuffer_length(buffer) + 1;
     accepted_query_result_types = calloc(1, str_len);
-    raptor_stringbuffer_copy_to_string(buffer, accepted_query_result_types, str_len);
+    raptor_stringbuffer_copy_to_string(buffer, (unsigned char *) accepted_query_result_types,
+                                       str_len);
     raptor_free_stringbuffer(buffer);
-    
+
     return 0;
 }
 
 static int description_add_serialisers()
 {
-    raptor_stringbuffer* buffer = raptor_new_stringbuffer();
+    raptor_stringbuffer *buffer = raptor_new_stringbuffer();
     size_t str_len;
     int i;
 
@@ -208,9 +209,9 @@ static int description_add_serialisers()
 
         if (mime_type) {
             if (raptor_stringbuffer_length(buffer))
-                raptor_stringbuffer_append_counted_string(buffer, ",", 1, 1);
-        
-            raptor_stringbuffer_append_string(buffer, mime_type, 1);
+                raptor_stringbuffer_append_counted_string(buffer, (unsigned char *) ",", 1, 1);
+
+            raptor_stringbuffer_append_string(buffer, (unsigned char *) mime_type, 1);
 
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
@@ -232,14 +233,17 @@ static int description_add_serialisers()
 
         librdf_free_node(bnode);
     }
-    
+
     // FIXME: temporary hack until raptor supports HTML
-    raptor_stringbuffer_append_counted_string(buffer, ",text/html,application/xhtml+xml", 32, 1);
-    
+    raptor_stringbuffer_append_counted_string(buffer,
+                                              (unsigned char *) ",text/html,application/xhtml+xml",
+                                              32, 1);
+
     // Convert the buffer of accepted mime types into a string
-    str_len = raptor_stringbuffer_length(buffer)+1;
+    str_len = raptor_stringbuffer_length(buffer) + 1;
     accepted_serialiser_types = calloc(1, str_len);
-    raptor_stringbuffer_copy_to_string(buffer, accepted_serialiser_types, str_len);
+    raptor_stringbuffer_copy_to_string(buffer, (unsigned char *) accepted_serialiser_types,
+                                       str_len);
     raptor_free_stringbuffer(buffer);
 
     return 0;
@@ -466,7 +470,7 @@ static int model_write_target_cell(librdf_node * source, librdf_node * arc,
 }
 
 static void syntax_html_table(const char *title, librdf_node * source, librdf_node * arc,
-                         redhttp_response_t * response)
+                              redhttp_response_t * response)
 {
     librdf_node *mt_node =
         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char *) "mediaType");
@@ -558,22 +562,28 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
 
 redhttp_response_t *handle_description_get(redhttp_request_t * request, void *user_data)
 {
-    const char *format_str = redstore_get_format(request, accepted_serialiser_types);
+    char *format_str = redstore_get_format(request, accepted_serialiser_types);
+    redhttp_response_t *response = NULL;
 
     description_update();
 
     if (redstore_is_html_format(format_str)) {
-        return handle_html_description(request, user_data);
+        response = handle_html_description(request, user_data);
     } else {
-        return format_graph_stream_librdf(request, librdf_model_as_stream(sd_model), format_str);
+        response =
+            format_graph_stream_librdf(request, librdf_model_as_stream(sd_model), format_str);
     }
+
+    free(format_str);
+
+    return response;
 }
 
 void description_free(void)
 {
     if (accepted_serialiser_types)
         free(accepted_serialiser_types);
-    
+
     if (accepted_query_result_types)
         free(accepted_query_result_types);
 

@@ -32,26 +32,26 @@
 #include "redhttp.h"
 
 
-static int compare_types(const char* server_type, const char* client_type)
+static int compare_types(const char *server_type, const char *client_type)
 {
     // FIXME: support type/* as well as */*
-    if (strcmp(client_type, "*/*")==0) {
+    if (strcmp(client_type, "*/*") == 0) {
         return 1;
     } else {
         return strcmp(server_type, client_type) == 0;
     }
 }
 
-char* redhttp_negotiate_choose(const char *server, const char *client)
+char *redhttp_negotiate_choose(const char *server, const char *client)
 {
     redhttp_negotiate_t *s, *s_list = redhttp_negotiate_parse(server);
     redhttp_negotiate_t *c, *c_list = redhttp_negotiate_parse(client);
-    const char* best_type = NULL;
+    const char *best_type = NULL;
     int best_score = -1;
-    char * result = NULL;
-    
-    for(s=s_list; s; s = s->next) {
-        for(c=c_list; c; c = c->next) {
+    char *result = NULL;
+
+    for (s = s_list; s; s = s->next) {
+        for (c = c_list; c; c = c->next) {
             if (compare_types(s->type, c->type)) {
                 int score = s->q * c->q;
                 if (score > best_score) {
@@ -62,7 +62,7 @@ char* redhttp_negotiate_choose(const char *server, const char *client)
             }
         }
     }
-    
+
     // Copy best match into the result buffer
     if (best_type) {
         result = calloc(1, strlen(best_type) + 1);
@@ -70,15 +70,15 @@ char* redhttp_negotiate_choose(const char *server, const char *client)
             strcpy(result, best_type);
         }
     }
-    
+
     redhttp_negotiate_free(&s_list);
     redhttp_negotiate_free(&c_list);
-    
+
     return result;
 }
 
 
-redhttp_negotiate_t* redhttp_negotiate_parse(const char *str)
+redhttp_negotiate_t *redhttp_negotiate_parse(const char *str)
 {
     redhttp_negotiate_t *first = NULL;
     const char *start = str;
@@ -118,11 +118,11 @@ redhttp_negotiate_t* redhttp_negotiate_parse(const char *str)
         if (*ptr == '\0')
             break;
     }
-    
+
     return first;
 }
 
-int redhttp_negotiate_get(redhttp_negotiate_t **first, int i, const char **type, int *q)
+int redhttp_negotiate_get(redhttp_negotiate_t ** first, int i, const char **type, int *q)
 {
     redhttp_negotiate_t *it;
     int count = 0;
@@ -148,7 +148,7 @@ int redhttp_negotiate_get(redhttp_negotiate_t **first, int i, const char **type,
     return -1;
 }
 
-int redhttp_negotiate_count(redhttp_negotiate_t **first)
+int redhttp_negotiate_count(redhttp_negotiate_t ** first)
 {
     redhttp_negotiate_t *it;
     int count = 0;
@@ -162,7 +162,7 @@ int redhttp_negotiate_count(redhttp_negotiate_t **first)
     return count;
 }
 
-void redhttp_negotiate_sort(redhttp_negotiate_t **first)
+void redhttp_negotiate_sort(redhttp_negotiate_t ** first)
 {
     redhttp_negotiate_t *a = NULL;
     redhttp_negotiate_t *b = NULL;
@@ -172,7 +172,7 @@ void redhttp_negotiate_sort(redhttp_negotiate_t **first)
 
     if (first == NULL || *first == NULL)
         return;
-        
+
     while (e != (*first)->next) {
         c = a = *first;
         b = a->next;
@@ -202,8 +202,7 @@ void redhttp_negotiate_sort(redhttp_negotiate_t **first)
     }
 }
 
-void redhttp_negotiate_add(redhttp_negotiate_t **first, const char *type,
-                                       size_t type_len, int q)
+void redhttp_negotiate_add(redhttp_negotiate_t ** first, const char *type, size_t type_len, int q)
 {
     redhttp_negotiate_t *new;
 
@@ -213,15 +212,16 @@ void redhttp_negotiate_add(redhttp_negotiate_t **first, const char *type,
     assert(q <= 10 && q >= 0);
 
     // Skip whitespace at the start
-    while(isspace(*type)) {
-        type++; type_len--;
+    while (isspace(*type)) {
+        type++;
+        type_len--;
     }
 
     // Skip whitespace at the end
-    while(isspace(type[type_len-1])) {
+    while (isspace(type[type_len - 1])) {
         type_len--;
     }
-    
+
     // Create new MIME Type stucture
     new = calloc(1, sizeof(redhttp_negotiate_t));
     new->type = calloc(1, type_len + 1);
@@ -242,7 +242,7 @@ void redhttp_negotiate_add(redhttp_negotiate_t **first, const char *type,
     redhttp_negotiate_sort(first);
 }
 
-void redhttp_negotiate_free(redhttp_negotiate_t **first)
+void redhttp_negotiate_free(redhttp_negotiate_t ** first)
 {
     redhttp_negotiate_t *it, *next;
 
@@ -254,4 +254,3 @@ void redhttp_negotiate_free(redhttp_negotiate_t **first)
         free(it);
     }
 }
-
