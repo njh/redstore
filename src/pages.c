@@ -126,7 +126,7 @@ redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_dat
 {
     redhttp_response_t *response = redstore_page_new("RedStore");
     redstore_page_append_string(response, "<ul>\n");
-    redstore_page_append_string(response, "  <li><a href=\"/query\">Query Page</a></li>\n");
+    redstore_page_append_string(response, "  <li><a href=\"/query\">Query Form</a></li>\n");
     redstore_page_append_string(response, "  <li><a href=\"/load\">Load URI</a></li>\n");
     redstore_page_append_string(response, "  <li><a href=\"/data\">Named Graphs</a></li>\n");
     redstore_page_append_string(response, "  <li><a href=\"/dump\">Download Full Dump</a></li>\n");
