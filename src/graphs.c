@@ -267,7 +267,7 @@ redhttp_response_t *handle_graph_put(redhttp_request_t * request, void *user_dat
     }
     // FIXME: delete existing statements first
 
-    response = load_stream_into_graph(stream, graph_uri);
+    response = load_stream_into_graph(request, stream, graph_uri);
 
   CLEANUP:
     if (stream)

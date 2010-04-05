@@ -116,7 +116,8 @@ redhttp_response_t *handle_graph_get(redhttp_request_t * request, void *user_dat
 redhttp_response_t *handle_graph_put(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_graph_delete(redhttp_request_t * request, void *user_data);
 
-redhttp_response_t *load_stream_into_graph(librdf_stream * stream, librdf_uri * graph_uri);
+redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream,
+                                           librdf_uri * graph_uri);
 redhttp_response_t *handle_load_get(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_data);
 

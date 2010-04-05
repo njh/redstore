@@ -40,9 +40,11 @@ redhttp_response_t *handle_load_get(redhttp_request_t * request, void *user_data
     return response;
 }
 
-redhttp_response_t *load_stream_into_graph(librdf_stream * stream, librdf_uri * graph_uri)
+redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream,
+                                           librdf_uri * graph_uri)
 {
     redhttp_response_t *response = NULL;
+    const char *graph_str = (char *) librdf_uri_as_string(graph_uri);
     librdf_node *graph = NULL;
     size_t count = 0;
 
@@ -76,15 +78,26 @@ redhttp_response_t *load_stream_into_graph(librdf_stream * stream, librdf_uri * 
 
     // FIXME: check for parse errors or parse warnings
     if (!response) {
-        response = redstore_page_new("Success");
+        const char *format_str;
+
         redstore_info("Added %d triples to graph.", count);
-        redstore_page_append_string(response, "<p>Added ");
-        redstore_page_append_decimal(response, count);
-        redstore_page_append_string(response, " triples to graph: ");
-        redstore_page_append_escaped(response, (char *) librdf_uri_as_string(graph_uri), 0);
-        redstore_page_append_string(response, "</p>\n");
-        redstore_page_end(response);
         import_count++;
+
+        format_str = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
+        if (redstore_is_html_format(format_str)) {
+            response = redstore_page_new("Success");
+            redstore_page_append_string(response, "<p>Added ");
+            redstore_page_append_decimal(response, count);
+            redstore_page_append_string(response, " triples to graph: ");
+            redstore_page_append_escaped(response, graph_str, 0);
+            redstore_page_append_string(response, "</p>\n");
+            redstore_page_end(response);
+        } else {
+            char *text = calloc(1, BUFSIZ);
+            response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
+            snprintf(text, BUFSIZ, "Added %d triples to graph: %s\n", (int) count, graph_str);
+            redhttp_response_set_content(response, text, BUFSIZ);
+        }
     }
 
     librdf_free_node(graph);
@@ -161,7 +174,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
     }
 
 
-    response = load_stream_into_graph(stream, graph_uri);
+    response = load_stream_into_graph(request, stream, graph_uri);
 
 
   CLEANUP:
