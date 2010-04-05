@@ -114,30 +114,43 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
     return response;
 }
 
+redhttp_response_t *redhttp_response_new_with_type(int status, const char *message, const char* type)
+{
+    redhttp_response_t* response = redhttp_response_new(status, message);
+    redhttp_response_add_header(response, "Content-Type", type);
+    return response;
+}
+
 redhttp_response_t *redhttp_response_new_error_page(int code, const char *explanation)
 {
-    redhttp_response_t *response = redhttp_response_new(code, NULL);
+    redhttp_response_t *response = redhttp_response_new_with_type(code, NULL, "text/html");
+    static const char ERROR_PAGE_FMT[] =
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+        "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
+        " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+        "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+        "<head><title>%d %s</title></head>\n"
+        "<body><h1>%d %s</h1>\n"
+        "<p>%s</p>\n"
+        "</body></html>\n";
 
     assert(code >= 100 && code < 1000);
     if (!response)
         return NULL;
-
-    redhttp_response_add_header(response, "Content-Type", "text/html");
-    redhttp_response_content_append(response, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-    redhttp_response_content_append(response,
-                                    "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""
-                                    " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n");
-    redhttp_response_content_append(response, "<html>\n");
-    redhttp_response_content_append(response,
-                                    "<head><title>%d %s</title></head>\n", code,
-                                    response->status_message);
-    redhttp_response_content_append(response, "<body><h1>%d %s</h1>\n", code,
-                                    response->status_message);
-
-    if (explanation) {
-        redhttp_response_content_append(response, "<p>%s</p>\n", explanation);
+    
+    // Calculate the page length
+    response->content_length = snprintf(NULL, 0, ERROR_PAGE_FMT, code, response->status_message, code, response->status_message, explanation);
+    if (response->content_length <= 0) {
+        redhttp_response_free(response);
+        return NULL;
     }
-    redhttp_response_content_append(response, "</body></html>\n");
+    
+    response->content_buffer = calloc(1, response->content_length + 1);
+    if (response->content_buffer == NULL) {
+        redhttp_response_free(response);
+        return NULL;
+    }
+    snprintf(response->content_buffer, response->content_length+1, ERROR_PAGE_FMT, code, response->status_message, code, response->status_message, explanation);
 
     return response;
 }
@@ -162,67 +175,6 @@ redhttp_response_t *redhttp_response_new_redirect(const char *url)
     free(message);
 
     return response;
-}
-
-redhttp_response_t *redhttp_response_new_with_content(const char *data,
-                                                      size_t length, const char *type)
-{
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
-    if (response)
-        redhttp_response_set_content(response, data, length, type);
-    return response;
-}
-
-int redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...)
-{
-    va_list args;
-    int len;
-
-    assert(response != NULL);
-    assert(fmt != NULL);
-
-    if (strlen(fmt) == 0)
-        return 0;
-
-    // Get the length of the formatted string
-    va_start(args, fmt);
-    len = vsnprintf(NULL, 0, fmt, args);
-    va_end(args);
-
-    // Does the buffer already exist?
-    if (!response->content_buffer) {
-        response->content_buffer = malloc(BUFSIZ + len);
-        if (response->content_buffer) {
-            response->content_buffer_size = BUFSIZ + len;
-            response->content_length = 0;
-        } else {
-            // Memory allocation error
-            response->content_buffer_size = 0;
-            response->content_length = 0;
-            return -1;
-        }
-    }
-    // Is the buffer big enough?
-    if (response->content_buffer_size - response->content_length <= len) {
-        int new_size = response->content_buffer_size + len + BUFSIZ;
-        char *new_buf = realloc(response->content_buffer, new_size);
-        if (new_buf) {
-            response->content_buffer_size = new_size;
-            response->content_buffer = new_buf;
-        } else {
-            // Memory allocation error
-            return -1;
-        }
-    }
-    // Add formatted string the buffer
-    va_start(args, fmt);
-    response->content_length +=
-        vsnprintf(&response->content_buffer[response->content_length],
-                  response->content_buffer_size - response->content_length, fmt, args);
-    va_end(args);
-
-    // Success
-    return 0;
 }
 
 int redhttp_response_count_headers(redhttp_response_t * response)
@@ -261,27 +213,33 @@ void redhttp_response_add_time_header(redhttp_response_t * response, const char 
     free(date_str);
 }
 
-
-void redhttp_response_set_content(redhttp_response_t * response,
-                                  const char *data, size_t length, const char *type)
+void redhttp_response_copy_content(redhttp_response_t * response,
+                                  const char *content, size_t length)
 {
     char *new_buf;
-
+    
     assert(response != NULL);
-    assert(data != NULL);
+    assert(content != NULL);
     assert(length > 0);
-    assert(type != NULL);
 
     new_buf = realloc(response->content_buffer, length);
     if (new_buf) {
-        memcpy(new_buf, data, length);
+        memcpy(new_buf, content, length);
         response->content_buffer = new_buf;
-        response->content_buffer_size = length;
         response->content_length = length;
-        redhttp_headers_add(&response->headers, "Content-Type", type);
     }
 }
 
+void redhttp_response_set_content(redhttp_response_t * response,
+                                  char *content, size_t length)
+{
+    assert(response != NULL);
+    assert(content != NULL);
+    assert(length > 0);
+
+    response->content_buffer = content;
+    response->content_length = length;
+}
 
 void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * request)
 {
@@ -346,6 +304,16 @@ char *redhttp_response_get_content_buffer(redhttp_response_t * response)
 size_t redhttp_response_get_content_length(redhttp_response_t * response)
 {
     return response->content_length;
+}
+
+void *redhttp_response_get_user_data(redhttp_response_t * response)
+{
+    return response->user_data;
+}
+
+void redhttp_response_set_user_data(redhttp_response_t * response, void* user_data)
+{
+    response->user_data = user_data;
 }
 
 void redhttp_response_free(redhttp_response_t * response)

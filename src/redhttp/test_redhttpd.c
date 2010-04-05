@@ -43,7 +43,8 @@ static void print_help(char *pname)
 
 static redhttp_response_t *handle_homepage(redhttp_request_t * request, void *user_data)
 {
-    const char *page =
+    redhttp_response_t * response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/html");
+    const char page[] =
         "<html><head><title>Homepage</title></head>"
         "<body><h1>Homepage</h1>"
         "<p>This is the homepage.</p>"
@@ -54,18 +55,19 @@ static redhttp_response_t *handle_homepage(redhttp_request_t * request, void *us
         "<div><h2>POST</h2><form action=\"/query\" method=\"post\">"
         "Enter a URL: <input name=\"url\" size=\"25\" value=\"http://www.example.com/\"/><br />"
         "Enter a Title: <input name=\"title\" size=\"25\" value=\"Example Website\"/><br />"
-        "<input type=\"submit\"></form></div>" "</body></html>";
+        "<input type=\"submit\"></form></div></body></html>\n";
 
-    return redhttp_response_new_with_content(page, strlen(page), "text/html");
+    redhttp_response_copy_content(response, page, sizeof(page));
+    
+    return response;
 }
 
 static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_data)
 {
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/html");
     FILE *socket = redhttp_request_get_socket(request);
     const char *accept_header;
 
-    redhttp_response_add_header(response, "Content-Type", "text/html");
     redhttp_response_send(response, request);
 
     fprintf(socket, "<html><body><h1>Query Page</h1>");

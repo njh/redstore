@@ -27,16 +27,16 @@
 
 redhttp_response_t *handle_load_get(redhttp_request_t * request, void *user_data)
 {
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
-    page_append_html_header(response, "Load URI");
-    redhttp_response_content_append(response,
-                                    "<form method=\"post\" action=\"/load\"><div>\n"
+    redhttp_response_t *response = redstore_page_new("Load URI");
+    redstore_page_append_string(response, "<form method=\"post\" action=\"/load\"><div>\n"
                                     "<label for=\"uri\">URI:</label> <input id=\"uri\" name=\"uri\" type=\"text\" size=\"40\" /><br />\n"
                                     "<label for=\"base-uri\">Base URI:</label> <input id=\"base-uri\" name=\"base-uri\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
                                     "<label for=\"graph\">Graph:</label> <input id=\"graph\" name=\"graph\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
                                     "<input type=\"reset\" /> <input type=\"submit\" />\n"
                                     "</div></form>\n");
-    page_append_html_footer(response);
+
+    redstore_page_end(response);
+
     return response;
 }
 
@@ -76,13 +76,14 @@ redhttp_response_t *load_stream_into_graph(librdf_stream * stream, librdf_uri * 
 
     // FIXME: check for parse errors or parse warnings
     if (!response) {
-        response = redhttp_response_new(REDHTTP_OK, NULL);
-        page_append_html_header(response, "Success");
+        response = redstore_page_new("Success");
         redstore_info("Added %d triples to graph.", count);
-        redhttp_response_content_append(response,
-                                        "<p>Added %d triples to graph: %s</p>",
-                                        count, librdf_uri_as_string(graph_uri));
-        page_append_html_footer(response);
+        redstore_page_append_string(response, "<p>Added ");
+        redstore_page_append_decimal(response, count);
+        redstore_page_append_string(response, " triples to graph: ");
+        redstore_page_append_escaped(response, (char*)librdf_uri_as_string(graph_uri), 0);
+        redstore_page_append_string(response,"</p>\n");
+        redstore_page_end(response);
         import_count++;
     }
 

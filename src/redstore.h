@@ -94,6 +94,13 @@ redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_da
 redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data);
 
 redhttp_response_t *redstore_error_page(int level, int code, const char *message);
+redhttp_response_t *redstore_page_new(const char *title);
+int redstore_page_append_string(redhttp_response_t * response, const char *str);
+int redstore_page_append_decimal(redhttp_response_t * response, int decimal);
+int redstore_page_append_strings(redhttp_response_t * response, ...);
+int redstore_page_append_escaped(redhttp_response_t * response, const char *str, char quote);
+void redstore_page_end(redhttp_response_t *response);
+
 void page_append_html_header(redhttp_response_t * response, const char *title);
 void page_append_html_footer(redhttp_response_t * response);
 

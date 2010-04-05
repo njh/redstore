@@ -68,6 +68,7 @@ redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user
         0x00, 0x00, 0xe0, 0x07, 0x00, 0x00,
     };
 
-    return redhttp_response_new_with_content((const char *) const_data,
-                                             sizeof(const_data), "image/x-icon");
+    redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "image/x-icon");
+    redhttp_response_copy_content(response, (char*)const_data, sizeof(const_data));
+    return response;
 }

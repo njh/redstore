@@ -73,8 +73,9 @@ struct redhttp_response_s {
     unsigned int status_code;
     char *status_message;
     char *content_buffer;
-    size_t content_buffer_size;
     size_t content_length;
+    
+    void *user_data;
 
     int headers_sent;
 };

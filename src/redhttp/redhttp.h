@@ -107,23 +107,24 @@ int redhttp_request_read(redhttp_request_t * request);
 void redhttp_request_free(redhttp_request_t * request);
 
 redhttp_response_t *redhttp_response_new(int status, const char *message);
+redhttp_response_t *redhttp_response_new_with_type(int status, const char *message, const char* type);
 redhttp_response_t *redhttp_response_new_error_page(int code, const char *explanation);
 redhttp_response_t *redhttp_response_new_redirect(const char *url);
-redhttp_response_t *redhttp_response_new_with_content(const char *data,
-                                                      size_t length, const char *type);
-int redhttp_response_content_append(redhttp_response_t * response, const char *fmt, ...);
 int redhttp_response_count_headers(redhttp_response_t * response);
 void redhttp_response_print_headers(redhttp_response_t * response, FILE * socket);
 const char *redhttp_response_get_header(redhttp_response_t * response, const char *key);
 void redhttp_response_add_header(redhttp_response_t * response, const char *key, const char *value);
 void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer);
-void redhttp_response_set_content(redhttp_response_t * response,
-                                  const char *data, size_t length, const char *type);
+void redhttp_response_copy_content(redhttp_response_t * response,
+                                  const char *content, size_t length);
+void redhttp_response_set_content(redhttp_response_t * response, char* buffer, size_t length);
 void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * request);
 int redhttp_response_get_status_code(redhttp_response_t * response);
 const char *redhttp_response_get_status_message(redhttp_response_t * response);
 char *redhttp_response_get_content_buffer(redhttp_response_t * response);
 size_t redhttp_response_get_content_length(redhttp_response_t * response);
+void *redhttp_response_get_user_data(redhttp_response_t * response);
+void redhttp_response_set_user_data(redhttp_response_t * response, void* user_data);
 void redhttp_response_free(redhttp_response_t * response);
 
 redhttp_server_t *redhttp_server_new(void);

@@ -28,12 +28,11 @@
 static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
                                                    librdf_iterator * iterator)
 {
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_t *response = redstore_page_new("Named Graphs");
     if (!response)
         return NULL;
 
-    page_append_html_header(response, "Named Graphs");
-    redhttp_response_content_append(response, "<ul>\n");
+    redstore_page_append_string(response, "<ul>\n");
 
     while (!librdf_iterator_end(iterator)) {
         librdf_uri *uri;
@@ -53,29 +52,33 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
         }
 
         escaped = redhttp_url_escape((char *) librdf_uri_as_string(uri));
-        redhttp_response_content_append(response,
-                                        "<li><a href=\"/data/%s\">%s</a></li>\n",
-                                        escaped, librdf_uri_as_string(uri));
+        redstore_page_append_string(response, "<li><a href=\"/data/");
+        redstore_page_append_escaped(response, escaped, 0);
+        redstore_page_append_string(response, "\">");
+        redstore_page_append_escaped(response, (char*)librdf_uri_as_string(uri), 0);
+        redstore_page_append_string(response, "</a></li>\n");
         free(escaped);
 
         librdf_iterator_next(iterator);
     }
-    redhttp_response_content_append(response, "</ul>\n");
+    redstore_page_append_string(response, "</ul>\n");
 
-    redhttp_response_content_append(response,
+    redstore_page_append_string(response,
                                     "<p>This document is also available as <a href=\"/data?format=text/plain\">plain text</a>.</p>\n");
 
-    page_append_html_footer(response);
+    redstore_page_end(response);
 
     return response;
 }
 
-static redhttp_response_t *handle_plain_graph_index(redhttp_request_t * request,
+static redhttp_response_t *handle_text_graph_index(redhttp_request_t * request,
                                                     librdf_iterator * iterator)
 {
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
-    redhttp_response_add_header(response, "Content-Type", "text/plain");
-
+    redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
+    FILE* socket = redhttp_request_get_socket(request);
+    redhttp_response_send(response, request);
+    
+    
     if (!response)
         return NULL;
 
@@ -95,7 +98,7 @@ static redhttp_response_t *handle_plain_graph_index(redhttp_request_t * request,
             break;
         }
 
-        redhttp_response_content_append(response, "%s\n", librdf_uri_as_string(uri));
+        fprintf(socket, "%s\n", librdf_uri_as_string(uri));
 
         librdf_iterator_next(iterator);
     }
@@ -117,7 +120,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
     }
 
     if (redstore_is_text_format(format)) {
-        response = handle_plain_graph_index(request, iterator);
+        response = handle_text_graph_index(request, iterator);
     } else if (redstore_is_html_format(format)) {
         response = handle_html_graph_index(request, iterator);
     } else {

@@ -449,21 +449,29 @@ static int model_write_target_cell(librdf_node * source, librdf_node * arc,
                                    redhttp_response_t * response)
 {
     librdf_node *node = librdf_model_get_target(sd_model, source, arc);
-    unsigned char *str;
+    char *str;
 
     if (node) {
         if (librdf_node_is_literal(node)) {
-            str = librdf_node_get_literal_value(node);
-            redhttp_response_content_append(response, "<td>%s</td>", str);
+            str = (char*)librdf_node_get_literal_value(node);
+            redstore_page_append_string(response, "<td>");
+            redstore_page_append_escaped(response, str, 0);
+            redstore_page_append_string(response, "</td>");
         } else if (librdf_node_is_resource(node)) {
-            str = librdf_uri_as_string(librdf_node_get_uri(node));
-            redhttp_response_content_append(response, "<td><a href=\"%s\">%s</a></td>", str, str);
+            str = (char*)librdf_uri_as_string(librdf_node_get_uri(node));
+            redstore_page_append_string(response, "<td><a href=\"");
+            redstore_page_append_escaped(response, str, '"');
+            redstore_page_append_string(response, "\">");
+            redstore_page_append_escaped(response, str, 0);
+            redstore_page_append_string(response, "</a></td>");
         } else if (librdf_node_is_blank(node)) {
-            str = librdf_node_get_blank_identifier(node);
-            redhttp_response_content_append(response, "<td>_:%s</td>", str);
+            str = (char*)librdf_node_get_blank_identifier(node);
+            redstore_page_append_string(response, "<td>_:");
+            redstore_page_append_escaped(response, str, 0);
+            redstore_page_append_string(response, "</td>");
         }
     } else {
-        redhttp_response_content_append(response, "<td>&nbsp;</td>");
+        redstore_page_append_string(response, "<td>&nbsp;</td>");
     }
 
     return 0;
@@ -478,25 +486,25 @@ static void syntax_html_table(const char *title, librdf_node * source, librdf_no
         librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char *) "spec");
     librdf_iterator *iterator;
 
-    redhttp_response_content_append(response, "<h2>%s</h2>\n", title);
-    redhttp_response_content_append(response, "<table border=\"1\">\n");
-    redhttp_response_content_append(response,
+    redstore_page_append_strings(response, "<h2>", title, "</h2>\n", NULL);
+    redstore_page_append_string(response, "<table border=\"1\">\n");
+    redstore_page_append_string(response,
                                     "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>Spec</th></tr>\n");
     iterator = librdf_model_get_targets(sd_model, source, arc);
     while (!librdf_iterator_end(iterator)) {
         librdf_node *format_node = librdf_iterator_get_object(iterator);
         if (format_node) {
-            redhttp_response_content_append(response, "<tr>");
+            redstore_page_append_string(response, "<tr>");
             model_write_target_cell(format_node, LIBRDF_S_label(world), response);
             model_write_target_cell(format_node, LIBRDF_S_comment(world), response);
             model_write_target_cell(format_node, mt_node, response);
             model_write_target_cell(format_node, spec_node, response);
-            redhttp_response_content_append(response, "</tr>\n");
+            redstore_page_append_string(response, "</tr>\n");
         }
         librdf_iterator_next(iterator);
     }
     librdf_free_iterator(iterator);
-    redhttp_response_content_append(response, "</table>\n");
+    redstore_page_append_string(response, "</table>\n");
 
     librdf_free_node(mt_node);
     librdf_free_node(spec_node);
@@ -504,7 +512,7 @@ static void syntax_html_table(const char *title, librdf_node * source, librdf_no
 
 static redhttp_response_t *handle_html_description(redhttp_request_t * request, void *user_data)
 {
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+    redhttp_response_t *response = redstore_page_new("Service Description");
     librdf_node *total_node =
         librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "totalTriples");
     librdf_node *rf_node =
@@ -514,43 +522,45 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
     librdf_node *ql_node = librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
                                                                (unsigned char *) "queryLanguage");
 
-    page_append_html_header(response, "Service Description");
-
-    redhttp_response_content_append(response, "<h2>Store Information</h2>\n");
-    redhttp_response_content_append(response, "<table border=\"1\">\n");
-    redhttp_response_content_append(response, "<tr><th>Store Name</th>");
+    redstore_page_append_string(response, "<h2>Store Information</h2>\n");
+    redstore_page_append_string(response, "<table border=\"1\">\n");
+    redstore_page_append_string(response, "<tr><th>Store Name</th>");
     model_write_target_cell(service_node, LIBRDF_S_label(world), response);
-    redhttp_response_content_append(response, "</tr>\n");
-    redhttp_response_content_append(response, "<tr><th>Description</th>");
+    redstore_page_append_string(response, "</tr>\n");
+    redstore_page_append_string(response, "<tr><th>Description</th>");
     model_write_target_cell(service_node, LIBRDF_S_comment(world), response);
-    redhttp_response_content_append(response, "</tr>\n");
-    redhttp_response_content_append(response, "<tr><th>Triple Count</th>");
+    redstore_page_append_string(response, "</tr>\n");
+    redstore_page_append_string(response, "<tr><th>Triple Count</th>");
     model_write_target_cell(service_node, total_node, response);
-    redhttp_response_content_append(response, "</tr>\n");
-    // FIXME: Put these into the RDF:
-    redhttp_response_content_append(response,
-                                    "<tr><th>Named Graph Count</th><td>%d</td></tr>\n",
-                                    context_count(storage));
-    redhttp_response_content_append(response,
-                                    "<tr><th>HTTP Request Count</th><td>%lu</td></tr>\n",
-                                    request_count);
-    redhttp_response_content_append(response,
-                                    "<tr><th>Successful Import Count</th><td>%lu</td></tr>\n",
-                                    import_count);
-    redhttp_response_content_append(response, "<tr><th>SPARQL Query Count</th><td>%lu</td></tr>\n",
-                                    query_count);
-    redhttp_response_content_append(response, "</table>\n");
+    redstore_page_append_string(response, "</tr>\n");
 
+    // FIXME: Put these into the RDF:
+    redstore_page_append_string(response, "<tr><th>Named Graph Count</th><td>");
+    redstore_page_append_decimal(response, context_count(storage));
+    redstore_page_append_string(response, "</td></tr>\n");
+
+    redstore_page_append_string(response, "<tr><th>HTTP Request Count</th><td>");
+    redstore_page_append_decimal(response, request_count);
+    redstore_page_append_string(response, "</td></tr>\n");
+
+    redstore_page_append_string(response, "<tr><th>Successful Import Count</th><td>");
+    redstore_page_append_decimal(response, import_count);
+    redstore_page_append_string(response, "</td></tr>\n");
+
+    redstore_page_append_string(response, "<tr><th>SPARQL Query Count</th><td>");
+    redstore_page_append_decimal(response, query_count);
+    redstore_page_append_string(response, "</td></tr>\n");
+    redstore_page_append_string(response, "</table>\n");
 
     syntax_html_table("Query Languages", service_node, ql_node, response);
     syntax_html_table("Parser Sytaxes", service_node, pf_node, response);
     syntax_html_table("Result Formats", service_node, rf_node, response);
 
-    redhttp_response_content_append(response,
+    redstore_page_append_string(response,
                                     "<p>This document is also available as "
                                     "<a href=\"description?format=application/x-turtle\">RDF</a>.</p>\n");
 
-    page_append_html_footer(response);
+    redstore_page_end(response);
 
     librdf_free_node(total_node);
     librdf_free_node(ql_node);
