@@ -27,8 +27,15 @@
 #test new_response
 redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
 ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
-ck_assert(redhttp_response_get_status_code(response) == REDHTTP_OK);
+ck_assert_int_eq(redhttp_response_get_status_code(response), REDHTTP_OK);
 ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
+redhttp_response_free(response);
+
+#test new_response_unknown
+redhttp_response_t *response = redhttp_response_new(999, NULL);
+ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
+ck_assert_int_eq(redhttp_response_get_status_code(response), 999);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "Unknown");
 redhttp_response_free(response);
 
 #test header_add_and_get

@@ -32,10 +32,34 @@
 #include "redhttp_private.h"
 #include "redhttp.h"
 
+static struct redhttp_message_s {
+    unsigned int code;
+    const char* message;
+} redhttp_status_messages[] = {
+    { REDHTTP_OK, "OK" },
+    { REDHTTP_CREATED, "Created" },
+    { REDHTTP_ACCEPTED, "Accepted" },
+    { REDHTTP_NO_CONTENT, "No Content" },
+    { REDHTTP_MOVED_PERMANENTLY, "Moved Permanently" },
+    { REDHTTP_MOVED_TEMPORARILY, "Moved Temporarily" },
+    { REDHTTP_SEE_OTHER, "See Other" },
+    { REDHTTP_NOT_MODIFIED, "Not Modified" },
+    { REDHTTP_BAD_REQUEST, "Bad Request" },
+    { REDHTTP_UNAUTHORIZED, "Unauthorized" },
+    { REDHTTP_FORBIDDEN, "Forbidden" },
+    { REDHTTP_NOT_FOUND, "Not Found" },
+    { REDHTTP_METHOD_NOT_ALLOWED, "Method Not Allowed" },
+    { REDHTTP_NOT_ACCEPTABLE, "Not Acceptable" },
+    { REDHTTP_INTERNAL_SERVER_ERROR, "Internal Server Error" },
+    { REDHTTP_NOT_IMPLEMENTED, "Not Implemented" },
+    { REDHTTP_BAD_GATEWAY, "Bad Gateway" },
+    { REDHTTP_SERVICE_UNAVAILABLE, "Service Unavailable" },
+};
 
 redhttp_response_t *redhttp_response_new(int code, const char *message)
 {
     redhttp_response_t *response;
+    unsigned int i;
 
     assert(code >= 100 && code < 1000);
 
@@ -46,65 +70,14 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
     } else {
         response->status_code = code;
         if (message == NULL) {
-            switch (code) {
-            case REDHTTP_OK:
-                message = "OK";
-                break;
-            case REDHTTP_CREATED:
-                message = "Created";
-                break;
-            case REDHTTP_ACCEPTED:
-                message = "Accepted";
-                break;
-            case REDHTTP_NO_CONTENT:
-                message = "No Content";
-                break;
-            case REDHTTP_MOVED_PERMANENTLY:
-                message = "Moved Permanently";
-                break;
-            case REDHTTP_MOVED_TEMPORARILY:
-                message = "Moved Temporarily";
-                break;
-            case REDHTTP_SEE_OTHER:
-                message = "See Other";
-                break;
-            case REDHTTP_NOT_MODIFIED:
-                message = "Not Modified";
-                break;
-            case REDHTTP_BAD_REQUEST:
-                message = "Bad Request";
-                break;
-            case REDHTTP_UNAUTHORIZED:
-                message = "Unauthorized";
-                break;
-            case REDHTTP_FORBIDDEN:
-                message = "Forbidden";
-                break;
-            case REDHTTP_NOT_FOUND:
-                message = "Not Found";
-                break;
-            case REDHTTP_METHOD_NOT_ALLOWED:
-                message = "Method Not Allowed";
-                break;
-            case REDHTTP_NOT_ACCEPTABLE:
-                message = "Not Acceptable";
-                break;
-            case REDHTTP_INTERNAL_SERVER_ERROR:
-                message = "Internal Server Error";
-                break;
-            case REDHTTP_NOT_IMPLEMENTED:
-                message = "Not Implemented";
-                break;
-            case REDHTTP_BAD_GATEWAY:
-                message = "Bad Gateway";
-                break;
-            case REDHTTP_SERVICE_UNAVAILABLE:
-                message = "Service Unavailable";
-                break;
-            default:
-                message = "Unknown";
-                break;
+            for (i=0; i<sizeof(redhttp_status_messages); i++) {
+                if (redhttp_status_messages[i].code == code) {
+                    message = redhttp_status_messages[i].message;
+                    break;
+                }
             }
+            if (message == NULL)
+                message = "Unknown";
         }
         response->status_message = calloc(1, strlen(message) + 1);
         strcpy(response->status_message, message);
@@ -129,13 +102,16 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
         " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
         "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
         "<head><title>%d %s</title></head>\n"
-        "<body><h1>%d %s</h1>\n"
+        "<body>\n<h1>%d %s</h1>\n"
         "<p>%s</p>\n"
         "</body></html>\n";
 
     assert(code >= 100 && code < 1000);
     if (!response)
         return NULL;
+        
+    if (!explanation)
+        explanation = "";
     
     // Calculate the page length
     response->content_length = snprintf(NULL, 0, ERROR_PAGE_FMT, code, response->status_message, code, response->status_message, explanation);
