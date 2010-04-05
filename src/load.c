@@ -29,11 +29,11 @@ redhttp_response_t *handle_load_get(redhttp_request_t * request, void *user_data
 {
     redhttp_response_t *response = redstore_page_new("Load URI");
     redstore_page_append_string(response, "<form method=\"post\" action=\"/load\"><div>\n"
-                                    "<label for=\"uri\">URI:</label> <input id=\"uri\" name=\"uri\" type=\"text\" size=\"40\" /><br />\n"
-                                    "<label for=\"base-uri\">Base URI:</label> <input id=\"base-uri\" name=\"base-uri\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
-                                    "<label for=\"graph\">Graph:</label> <input id=\"graph\" name=\"graph\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
-                                    "<input type=\"reset\" /> <input type=\"submit\" />\n"
-                                    "</div></form>\n");
+                                "<label for=\"uri\">URI:</label> <input id=\"uri\" name=\"uri\" type=\"text\" size=\"40\" /><br />\n"
+                                "<label for=\"base-uri\">Base URI:</label> <input id=\"base-uri\" name=\"base-uri\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
+                                "<label for=\"graph\">Graph:</label> <input id=\"graph\" name=\"graph\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
+                                "<input type=\"reset\" /> <input type=\"submit\" />\n"
+                                "</div></form>\n");
 
     redstore_page_end(response);
 
@@ -81,8 +81,8 @@ redhttp_response_t *load_stream_into_graph(librdf_stream * stream, librdf_uri * 
         redstore_page_append_string(response, "<p>Added ");
         redstore_page_append_decimal(response, count);
         redstore_page_append_string(response, " triples to graph: ");
-        redstore_page_append_escaped(response, (char*)librdf_uri_as_string(graph_uri), 0);
-        redstore_page_append_string(response,"</p>\n");
+        redstore_page_append_escaped(response, (char *) librdf_uri_as_string(graph_uri), 0);
+        redstore_page_append_string(response, "</p>\n");
         redstore_page_end(response);
         import_count++;
     }

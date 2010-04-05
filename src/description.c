@@ -26,13 +26,12 @@
 #include "redstore.h"
 
 
-static librdf_uri *saddle_ns_uri = NULL;
-static librdf_uri *sd_ns_uri = NULL;
-
-static librdf_storage *sd_storage = NULL;
-static librdf_model *sd_model = NULL;
-static librdf_node *service_node = NULL;
-
+// Globals
+librdf_storage *sd_storage = NULL;
+librdf_model *sd_model = NULL;
+librdf_node *service_node = NULL;
+librdf_uri *saddle_ns_uri = NULL;
+librdf_uri *sd_ns_uri = NULL;
 char *accepted_serialiser_types = NULL;
 char *accepted_query_result_types = NULL;
 
@@ -175,6 +174,7 @@ static int description_add_serialisers()
     int i;
 
     // FIXME: This should use the librdf API
+    // FIXME: ignore duplicates
     for (i = 0; 1; i++) {
         const char *name, *label, *mime_type;
         const unsigned char *uri;
@@ -453,19 +453,19 @@ static int model_write_target_cell(librdf_node * source, librdf_node * arc,
 
     if (node) {
         if (librdf_node_is_literal(node)) {
-            str = (char*)librdf_node_get_literal_value(node);
+            str = (char *) librdf_node_get_literal_value(node);
             redstore_page_append_string(response, "<td>");
             redstore_page_append_escaped(response, str, 0);
             redstore_page_append_string(response, "</td>");
         } else if (librdf_node_is_resource(node)) {
-            str = (char*)librdf_uri_as_string(librdf_node_get_uri(node));
+            str = (char *) librdf_uri_as_string(librdf_node_get_uri(node));
             redstore_page_append_string(response, "<td><a href=\"");
             redstore_page_append_escaped(response, str, '"');
             redstore_page_append_string(response, "\">");
             redstore_page_append_escaped(response, str, 0);
             redstore_page_append_string(response, "</a></td>");
         } else if (librdf_node_is_blank(node)) {
-            str = (char*)librdf_node_get_blank_identifier(node);
+            str = (char *) librdf_node_get_blank_identifier(node);
             redstore_page_append_string(response, "<td>_:");
             redstore_page_append_escaped(response, str, 0);
             redstore_page_append_string(response, "</td>");
@@ -489,7 +489,7 @@ static void syntax_html_table(const char *title, librdf_node * source, librdf_no
     redstore_page_append_strings(response, "<h2>", title, "</h2>\n", NULL);
     redstore_page_append_string(response, "<table border=\"1\">\n");
     redstore_page_append_string(response,
-                                    "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>Spec</th></tr>\n");
+                                "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>Spec</th></tr>\n");
     iterator = librdf_model_get_targets(sd_model, source, arc);
     while (!librdf_iterator_end(iterator)) {
         librdf_node *format_node = librdf_iterator_get_object(iterator);
@@ -557,8 +557,8 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
     syntax_html_table("Result Formats", service_node, rf_node, response);
 
     redstore_page_append_string(response,
-                                    "<p>This document is also available as "
-                                    "<a href=\"description?format=application/x-turtle\">RDF</a>.</p>\n");
+                                "<p>This document is also available as "
+                                "<a href=\"description?format=turtle\">RDF</a>.</p>\n");
 
     redstore_page_end(response);
 

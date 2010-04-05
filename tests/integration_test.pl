@@ -139,35 +139,35 @@ is($response->header('Location'), "/query", "Getting a URL with a trailing slash
 is_wellformed_xml($response->content, "Redirect page is valid XML");
 
 # Test a SELECT query with an HTML response
-$response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=html");
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=html");
 is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "text/html", "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[<td>"?v"?</td>], "SPARQL SELECT Query returned correct value");
 is_wellformed_xml($response->content, "HTML SPARQL response is valid XML");
 
 # Test a SELECT query with an XML response
-$response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
 is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[<binding name="o"><literal>v</literal></binding>], "SPARQL SELECT Query contains right content");
 is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # Test a ASK query with an XML response
-$response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
+$response = $ua->get($base_url."query?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
 is($response->code, 200, "SPARQL ASK query is successful");
 is($response->content_type, "application/sparql-results+xml", "SPARQL ASK query Content Type data is correct");
 like($response->content, qr[<boolean>true</boolean>], "SPARQL ASK Query contains right content");
 is_wellformed_xml($response->content, "SPARQL ASK response is valid XML");
 
 # Test a SELECT query with a JSON response
-$response = $ua->get($base_url."sparql?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=json");
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=json");
 is($response->code, 200, "SPARQL SELECT query is successful");
 like($response->content_type, qr[^(application|text)/json$], "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[{ "type": "literal", "value": "v" }], "SPARQL SELECT Query contains right content");
 #is_wellformed_json($response->content);
 
 # Test a ASK query with a JSON response
-$response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
+$response = $ua->get($base_url."query?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
 is($response->code, 200, "SPARQL ASK query is successful");
 like($response->content_type, qr[^(application|text)/json$], "SPARQL ASK query Content Type data is correct");
 like($response->content, qr["boolean" : true], "SPARQL ASK Query contains right content");

@@ -55,7 +55,7 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
         redstore_page_append_string(response, "<li><a href=\"/data/");
         redstore_page_append_escaped(response, escaped, 0);
         redstore_page_append_string(response, "\">");
-        redstore_page_append_escaped(response, (char*)librdf_uri_as_string(uri), 0);
+        redstore_page_append_escaped(response, (char *) librdf_uri_as_string(uri), 0);
         redstore_page_append_string(response, "</a></li>\n");
         free(escaped);
 
@@ -64,7 +64,7 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
     redstore_page_append_string(response, "</ul>\n");
 
     redstore_page_append_string(response,
-                                    "<p>This document is also available as <a href=\"/data?format=text/plain\">plain text</a>.</p>\n");
+                                "<p>This document is also available as <a href=\"/data?format=text\">plain text</a>.</p>\n");
 
     redstore_page_end(response);
 
@@ -72,13 +72,13 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
 }
 
 static redhttp_response_t *handle_text_graph_index(redhttp_request_t * request,
-                                                    librdf_iterator * iterator)
+                                                   librdf_iterator * iterator)
 {
     redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
-    FILE* socket = redhttp_request_get_socket(request);
+    FILE *socket = redhttp_request_get_socket(request);
     redhttp_response_send(response, request);
-    
-    
+
+
     if (!response)
         return NULL;
 

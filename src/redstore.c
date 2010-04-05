@@ -299,10 +299,12 @@ int main(int argc, char *argv[])
     // Configure routing
     redhttp_server_add_handler(server, NULL, NULL, request_counter, &request_count);
     redhttp_server_add_handler(server, NULL, NULL, request_log, NULL);
-    redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql_query, NULL);
-    redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql_query, NULL);
-    redhttp_server_add_handler(server, "POST", "/sparql", handle_sparql_query, NULL);
-    redhttp_server_add_handler(server, "POST", "/sparql/", handle_sparql_query, NULL);
+    redhttp_server_add_handler(server, "GET", "/query", handle_query, NULL);
+    redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql, NULL);
+    redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql, NULL);
+    redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
+    redhttp_server_add_handler(server, "POST", "/sparql", handle_sparql, NULL);
+    redhttp_server_add_handler(server, "POST", "/sparql/", handle_sparql, NULL);
     redhttp_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
     redhttp_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
     redhttp_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
@@ -314,7 +316,6 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
     redhttp_server_add_handler(server, "GET", "/dump", handle_dump_get, NULL);
     redhttp_server_add_handler(server, "GET", "/description", handle_description_get, NULL);
-    redhttp_server_add_handler(server, "GET", "/query", handle_page_query, NULL);
     redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
     redhttp_server_add_handler(server, "GET", "/robots.txt", handle_page_robots_txt, NULL);
     redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);

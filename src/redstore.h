@@ -37,8 +37,9 @@
 #define DEFAULT_STORAGE_NAME    "redstore"
 #define DEFAULT_STORAGE_TYPE    "memory"
 #define DEFAULT_STORAGE_OPTIONS ""
-#define DEFAULT_GRAPH_FORMAT    "application/rdf+xml"
-#define DEFAULT_RESULTS_FORMAT  "application/sparql-results+xml"
+#define DEFAULT_QUERY_LANGUAGE  "laqrs"
+#define DEFAULT_GRAPH_FORMAT    "rdfxml"
+#define DEFAULT_RESULTS_FORMAT  "xml"
 
 
 // ------- Logging ---------
@@ -77,6 +78,11 @@ extern librdf_world *world;
 extern librdf_storage *storage;
 extern librdf_model *model;
 
+extern librdf_storage *sd_storage;
+extern librdf_model *sd_model;
+extern librdf_node *service_node;
+extern librdf_uri *saddle_ns_uri;
+extern librdf_uri *sd_ns_uri;
 extern char *accepted_serialiser_types;
 extern char *accepted_query_result_types;
 
@@ -88,9 +94,9 @@ redhttp_response_t *handle_description_get(redhttp_request_t * request, void *us
 int description_update(void);
 void description_free(void);
 
-redhttp_response_t *handle_sparql_query(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_query(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_sparql(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data);
 
 redhttp_response_t *redstore_error_page(int level, int code, const char *message);
@@ -99,7 +105,7 @@ int redstore_page_append_string(redhttp_response_t * response, const char *str);
 int redstore_page_append_decimal(redhttp_response_t * response, int decimal);
 int redstore_page_append_strings(redhttp_response_t * response, ...);
 int redstore_page_append_escaped(redhttp_response_t * response, const char *str, char quote);
-void redstore_page_end(redhttp_response_t *response);
+void redstore_page_end(redhttp_response_t * response);
 
 void page_append_html_header(redhttp_response_t * response, const char *title);
 void page_append_html_footer(redhttp_response_t * response);

@@ -43,16 +43,18 @@ redhttp_response_t *redstore_page_new(const char *title)
 {
     redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/html");
     redstore_page_t *page = NULL;
-    
+
     // Create the iostream
     page = calloc(1, sizeof(redstore_page_t));
     page->iostream = raptor_new_iostream_to_string(&page->buffer, &page->buffer_len, NULL);
     page->title = title;
     redhttp_response_set_user_data(response, page);
-    
+
     redstore_page_append_string(response, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-    redstore_page_append_string(response, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n");
-    redstore_page_append_string(response, "          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n");
+    redstore_page_append_string(response,
+                                "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n");
+    redstore_page_append_string(response,
+                                "          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n");
     redstore_page_append_string(response, "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n");
     redstore_page_append_string(response, "<head>\n");
     redstore_page_append_strings(response, "  <title>RedStore - ", title, "</title>\n", NULL);
@@ -65,44 +67,45 @@ redhttp_response_t *redstore_page_new(const char *title)
 
 int redstore_page_append_string(redhttp_response_t * response, const char *str)
 {
-    redstore_page_t *page = (redstore_page_t*)redhttp_response_get_user_data(response);
+    redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
 
-    return raptor_iostream_write_string(page->iostream, (unsigned char*)str);   
+    return raptor_iostream_write_string(page->iostream, (unsigned char *) str);
 }
 
 int redstore_page_append_decimal(redhttp_response_t * response, int decimal)
 {
-    redstore_page_t *page = (redstore_page_t*)redhttp_response_get_user_data(response);
+    redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
 
-    return raptor_iostream_write_decimal(page->iostream, decimal);   
+    return raptor_iostream_write_decimal(page->iostream, decimal);
 }
 
 int redstore_page_append_strings(redhttp_response_t * response, ...)
 {
-    redstore_page_t *page = (redstore_page_t*)redhttp_response_get_user_data(response);
+    redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
     va_list ap;
-    char* str;
+    char *str;
 
     va_start(ap, response);
     while ((str = va_arg(ap, char *)) != NULL) {
-        raptor_iostream_string_write((unsigned char*)str, page->iostream);
+        raptor_iostream_string_write((unsigned char *) str, page->iostream);
     }
     va_end(ap);
-    
+
     return 0;
 }
 
 int redstore_page_append_escaped(redhttp_response_t * response, const char *str, char quote)
 {
-    redstore_page_t *page = (redstore_page_t*)redhttp_response_get_user_data(response);
+    redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
     size_t str_len = strlen(str);
 
-    return raptor_iostream_write_xml_escaped_string(page->iostream, (unsigned char*)str, str_len, quote, NULL, NULL);
+    return raptor_iostream_write_xml_escaped_string(page->iostream, (unsigned char *) str, str_len,
+                                                    quote, NULL, NULL);
 }
 
 void redstore_page_end(redhttp_response_t * response)
 {
-    redstore_page_t *page = (redstore_page_t*)redhttp_response_get_user_data(response);
+    redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
 
     // Footer
     redstore_page_append_string(response, "<hr /><address>");
@@ -123,48 +126,17 @@ redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_dat
 {
     redhttp_response_t *response = redstore_page_new("RedStore");
     redstore_page_append_string(response, "<ul>\n");
-    redstore_page_append_string(response, "  <li><a href=\"/query\">SPARQL Query Page</a></li>\n");
+    redstore_page_append_string(response, "  <li><a href=\"/query\">Query Page</a></li>\n");
     redstore_page_append_string(response, "  <li><a href=\"/load\">Load URI</a></li>\n");
     redstore_page_append_string(response, "  <li><a href=\"/data\">Named Graphs</a></li>\n");
     redstore_page_append_string(response, "  <li><a href=\"/dump\">Download Full Dump</a></li>\n");
-    redstore_page_append_string(response, "  <li><a href=\"/description\">Service Description</a></li>\n");
+    redstore_page_append_string(response,
+                                "  <li><a href=\"/description\">Service Description</a></li>\n");
     redstore_page_append_string(response, "</ul>\n");
     redstore_page_end(response);
 
     return response;
 }
-
-
-redhttp_response_t *handle_page_query(redhttp_request_t * request, void *user_data)
-{
-    redhttp_response_t *response = redstore_page_new("SPARQL Query");
-
-    redstore_page_append_string(response,
-                                    "<form action=\"../sparql\" method=\"get\">\n"
-                                    "<div><textarea name=\"query\" cols=\"80\" rows=\"18\">"
-                                    "PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;\n"
-                                    "PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;\n"
-                                    "\n"
-                                    "SELECT * WHERE {\n"
-                                    " ?s ?p ?o\n"
-                                    "} LIMIT 10\n"
-                                    "</textarea></div>\n"
-                                    "<div class=\"buttons\">Output Format: <select name=\"format\">\n"
-                                    "  <option value=\"html\">HTML</option>\n"
-                                    "  <option value=\"text\">Plain Text</option>\n"
-                                    "  <option value=\"xml\">XML</option>\n"
-                                    "  <option value=\"json\">JSON</option>\n"
-                                    "</select>\n"
-                                    "<input type=\"reset\" /> "
-                                    "<input type=\"submit\" value=\"Execute\" /></div>\n</form>\n");
-
-    // FIXME: list output formats based on enumeration of formats that Redland supports
-
-    redstore_page_end(response);
-
-    return response;
-}
-
 
 redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data)
 {

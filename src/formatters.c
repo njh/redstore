@@ -24,9 +24,9 @@
 
 #include "redstore.h"
 
-static void node_print_xml(librdf_node* node, raptor_iostream* iostream)
+static void node_print_xml(librdf_node * node, raptor_iostream * iostream)
 {
-    unsigned char* str;
+    unsigned char *str;
     size_t str_len;
     str = librdf_node_to_counted_string(node, &str_len);
     raptor_iostream_write_xml_escaped_string(iostream, str, str_len, 0, NULL, NULL);
@@ -60,8 +60,8 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
     }
 
     if (!format_name) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "Unknown file format.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+                                   "Result format not supported for graph query type.");
     }
 
     serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
@@ -104,10 +104,11 @@ redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
 #else
     iostream = raptor_new_iostream_to_file_handle(socket);
 #endif
-    
+
     raptor_iostream_string_write("<html><head><title>RedStore</title></head><body>", iostream);
     raptor_iostream_string_write("<table class=\"triples\" border=\"1\">\n", iostream);
-    raptor_iostream_string_write("<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n", iostream);
+    raptor_iostream_string_write("<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n",
+                                 iostream);
     while (!librdf_stream_end(stream)) {
         librdf_statement *statement = librdf_stream_get_object(stream);
         if (!statement) {
@@ -139,6 +140,9 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
     char *format_str;
 
     format_str = redstore_get_format(request, accepted_serialiser_types);
+    if (format_str == NULL)
+        format_str = DEFAULT_GRAPH_FORMAT;
+
     if (redstore_is_html_format(format_str)) {
         response = format_graph_stream_html(request, stream, format_str);
     } else {
@@ -181,8 +185,8 @@ redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
     }
 
     if (!formatter) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "Failed to match file format.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+                                   "Result format not supported for bindings query type.");
     }
 #ifdef RAPTOR_V2_AVAILABLE
     iostream = raptor_new_iostream_to_file_handle(raptor, socket);
@@ -322,6 +326,9 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
     char *format_str;
 
     format_str = redstore_get_format(request, accepted_query_result_types);
+    if (format_str == NULL)
+        format_str = DEFAULT_RESULTS_FORMAT;
+
     if (redstore_is_html_format(format_str)) {
         response = format_bindings_query_result_html(request, results, format_str);
     } else if (redstore_is_text_format(format_str)) {
