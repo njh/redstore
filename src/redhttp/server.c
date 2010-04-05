@@ -25,7 +25,6 @@
 #include <ctype.h>
 #include <time.h>
 #include <assert.h>
-#include <stdarg.h>
 
 #include <errno.h>
 #include <sys/types.h>
