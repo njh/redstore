@@ -34,27 +34,27 @@
 
 static struct redhttp_message_s {
     unsigned int code;
-    const char* message;
+    const char *message;
 } redhttp_status_messages[] = {
-    { REDHTTP_OK, "OK" },
-    { REDHTTP_CREATED, "Created" },
-    { REDHTTP_ACCEPTED, "Accepted" },
-    { REDHTTP_NO_CONTENT, "No Content" },
-    { REDHTTP_MOVED_PERMANENTLY, "Moved Permanently" },
-    { REDHTTP_MOVED_TEMPORARILY, "Moved Temporarily" },
-    { REDHTTP_SEE_OTHER, "See Other" },
-    { REDHTTP_NOT_MODIFIED, "Not Modified" },
-    { REDHTTP_BAD_REQUEST, "Bad Request" },
-    { REDHTTP_UNAUTHORIZED, "Unauthorized" },
-    { REDHTTP_FORBIDDEN, "Forbidden" },
-    { REDHTTP_NOT_FOUND, "Not Found" },
-    { REDHTTP_METHOD_NOT_ALLOWED, "Method Not Allowed" },
-    { REDHTTP_NOT_ACCEPTABLE, "Not Acceptable" },
-    { REDHTTP_INTERNAL_SERVER_ERROR, "Internal Server Error" },
-    { REDHTTP_NOT_IMPLEMENTED, "Not Implemented" },
-    { REDHTTP_BAD_GATEWAY, "Bad Gateway" },
-    { REDHTTP_SERVICE_UNAVAILABLE, "Service Unavailable" },
-};
+    {
+    REDHTTP_OK, "OK"}, {
+    REDHTTP_CREATED, "Created"}, {
+    REDHTTP_ACCEPTED, "Accepted"}, {
+    REDHTTP_NO_CONTENT, "No Content"}, {
+    REDHTTP_MOVED_PERMANENTLY, "Moved Permanently"}, {
+    REDHTTP_MOVED_TEMPORARILY, "Moved Temporarily"}, {
+    REDHTTP_SEE_OTHER, "See Other"}, {
+    REDHTTP_NOT_MODIFIED, "Not Modified"}, {
+    REDHTTP_BAD_REQUEST, "Bad Request"}, {
+    REDHTTP_UNAUTHORIZED, "Unauthorized"}, {
+    REDHTTP_FORBIDDEN, "Forbidden"}, {
+    REDHTTP_NOT_FOUND, "Not Found"}, {
+    REDHTTP_METHOD_NOT_ALLOWED, "Method Not Allowed"}, {
+    REDHTTP_NOT_ACCEPTABLE, "Not Acceptable"}, {
+    REDHTTP_INTERNAL_SERVER_ERROR, "Internal Server Error"}, {
+    REDHTTP_NOT_IMPLEMENTED, "Not Implemented"}, {
+    REDHTTP_BAD_GATEWAY, "Bad Gateway"}, {
+REDHTTP_SERVICE_UNAVAILABLE, "Service Unavailable"},};
 
 redhttp_response_t *redhttp_response_new(int code, const char *message)
 {
@@ -70,7 +70,7 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
     } else {
         response->status_code = code;
         if (message == NULL) {
-            for (i=0; i<sizeof(redhttp_status_messages); i++) {
+            for (i = 0; i < sizeof(redhttp_status_messages); i++) {
                 if (redhttp_status_messages[i].code == code) {
                     message = redhttp_status_messages[i].message;
                     break;
@@ -86,9 +86,10 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
     return response;
 }
 
-redhttp_response_t *redhttp_response_new_with_type(int status, const char *message, const char* type)
+redhttp_response_t *redhttp_response_new_with_type(int status, const char *message,
+                                                   const char *type)
 {
-    redhttp_response_t* response = redhttp_response_new(status, message);
+    redhttp_response_t *response = redhttp_response_new(status, message);
     redhttp_response_add_header(response, "Content-Type", type);
     return response;
 }
@@ -102,30 +103,31 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
         " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
         "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
         "<head><title>%d %s</title></head>\n"
-        "<body>\n<h1>%d %s</h1>\n"
-        "<p>%s</p>\n"
-        "</body></html>\n";
+        "<body>\n<h1>%d %s</h1>\n" "<p>%s</p>\n" "</body></html>\n";
 
     assert(code >= 100 && code < 1000);
     if (!response)
         return NULL;
-        
+
     if (!explanation)
         explanation = "";
-    
+
     // Calculate the page length
-    response->content_length = snprintf(NULL, 0, ERROR_PAGE_FMT, code, response->status_message, code, response->status_message, explanation);
+    response->content_length =
+        snprintf(NULL, 0, ERROR_PAGE_FMT, code, response->status_message, code,
+                 response->status_message, explanation);
     if (response->content_length <= 0) {
         redhttp_response_free(response);
         return NULL;
     }
-    
+
     response->content_buffer = calloc(1, response->content_length + 1);
     if (response->content_buffer == NULL) {
         redhttp_response_free(response);
         return NULL;
     }
-    snprintf(response->content_buffer, response->content_length+1, ERROR_PAGE_FMT, code, response->status_message, code, response->status_message, explanation);
+    snprintf(response->content_buffer, response->content_length + 1, ERROR_PAGE_FMT, code,
+             response->status_message, code, response->status_message, explanation);
 
     return response;
 }
@@ -189,10 +191,10 @@ void redhttp_response_add_time_header(redhttp_response_t * response, const char 
 }
 
 void redhttp_response_copy_content(redhttp_response_t * response,
-                                  const char *content, size_t length)
+                                   const char *content, size_t length)
 {
     char *new_buf;
-    
+
     assert(response != NULL);
     assert(content != NULL);
     assert(length > 0);
@@ -205,8 +207,7 @@ void redhttp_response_copy_content(redhttp_response_t * response,
     }
 }
 
-void redhttp_response_set_content(redhttp_response_t * response,
-                                  char *content, size_t length)
+void redhttp_response_set_content(redhttp_response_t * response, char *content, size_t length)
 {
     assert(response != NULL);
     assert(content != NULL);
@@ -286,7 +287,7 @@ void *redhttp_response_get_user_data(redhttp_response_t * response)
     return response->user_data;
 }
 
-void redhttp_response_set_user_data(redhttp_response_t * response, void* user_data)
+void redhttp_response_set_user_data(redhttp_response_t * response, void *user_data)
 {
     response->user_data = user_data;
 }
