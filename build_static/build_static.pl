@@ -59,10 +59,11 @@ my $packages = [
         'checkfor' => 'lib/libdb.a',
     },
     {
-        'url' => 'http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.43.tar.gz',
+        'url' => 'http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.44.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
         'checkfor' => 'lib/mysql/libmysqlclient.la',
     },
+# FIXME: add support for Postgres
 #    {
 #        'url' => 'http://www.mirrorservice.org/sites/ftp.postgresql.org/source/v8.4.2/postgresql-8.4.2.tar.gz',
 #    },
@@ -92,6 +93,7 @@ $ENV{'CFLAGS'} = "-O2 -I${ROOT_DIR}/include";
 $ENV{'CPPFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'ASFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'LDFLAGS'} = "-L${ROOT_DIR}/lib";
+$ENV{'ASFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'INFOPATH'} = "${ROOT_DIR}/share/info";
 $ENV{'MANPATH'} = "${ROOT_DIR}/share/man";
 $ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin:/usr/sbin:/sbin";
@@ -110,10 +112,18 @@ if (`uname` =~ /^Darwin/) {
     $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
     $ENV{'LDFLAGS'} .= " -Wl,-headerpad_max_install_names";
     $ENV{'MACOSX_DEPLOYMENT_TARGET'} = '10.4';
+
+    $ENV{'CC'} = '/usr/bin/gcc-4.0';
+    $ENV{'CPP'} = '/usr/bin/cpp-4.0';
+    $ENV{'CXX'} = '/usr/bin/g++-4.0';
+    die "gcc version 4.0 is not available." unless (-e $ENV{'CC'});
+
+    # Not sure why these are required
+    $ENV{'CFLAGS'} .= " -I$SDK/usr/include";   
+    $ENV{'LDFLAGS'} .= " -L$SDK/usr/lib";
 }
 
 $ENV{'CXXFLAGS'} = $ENV{'CFLAGS'};
-
 
 print "Root directory: $ROOT_DIR\n";
 mkdir($ROOT_DIR);
