@@ -8,7 +8,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 77;
+use Test::More tests => 81;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -101,8 +101,8 @@ $request->content_length( length($request->content) );
 $request->content_type( 'application/rdf+xml' );
 $response = $ua->request($request);
 is($response->code, 200, "Putting a data into a graph");
+is($response->content_type, 'text/plain', "Non negotiated PUT response is of type text/plain");
 like($response->content, qr/Added 1 triples to graph/, "Load response message contain triple count");
-is_wellformed_xml($response->content, "Response to PUTing a graph is valid XML");
 
 # Test getting a graph
 $request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
@@ -180,8 +180,22 @@ $request->content_length( length($request->content) );
 $request->content_type( 'application/x-turtle' );
 $response = $ua->request($request);
 is($response->code, 200, "Putting Tutle formatted data into a graph");
+is($response->content_type, 'text/plain', "Non negotiated PUT response is of type text/plain");
 like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
-is_wellformed_xml($response->content, "Response to PUTing turtle is valid XML");
+
+# Test PUTing some Turtle with an HTML response
+$request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+$request->content( read_fixture('foaf.ttl') );
+$request->content_length( length($request->content) );
+$request->content_type( 'application/x-turtle' );
+$request->header( 'Accept', 'text/html' );
+$response = $ua->request($request);
+is($response->code, 200, "Putting Tutle formatted data into a graph");
+is($response->content_type, 'text/html', "PUT with HTML response is of type text/html");
+like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
+is_wellformed_xml($response->content, "HTML Response to PUTing a graph is valid XML");
+
+# FIXME: test 
 
 # Test a head request
 $response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
