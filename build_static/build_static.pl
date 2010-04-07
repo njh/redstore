@@ -113,10 +113,11 @@ if (`uname` =~ /^Darwin/) {
     $ENV{'LDFLAGS'} .= " -Wl,-headerpad_max_install_names";
     $ENV{'MACOSX_DEPLOYMENT_TARGET'} = '10.4';
 
-    $ENV{'CC'} = '/usr/bin/gcc-4.0';
-    $ENV{'CPP'} = '/usr/bin/cpp-4.0';
-    $ENV{'CXX'} = '/usr/bin/g++-4.0';
-    die "gcc version 4.0 is not available." unless (-e $ENV{'CC'});
+    my $GCC_VER = '4.0';
+    $ENV{'CC'} = "/usr/bin/gcc-$GCC_VER";
+    $ENV{"CPP"} = "/usr/bin/cpp-$GCC_VER";
+    $ENV{"CXX"} = "/usr/bin/g++-$GCC_VER";
+    die "gcc version $GCC_VER is not available." unless (-e $ENV{'CC'});
 
     # Not sure why these are required
     $ENV{'CFLAGS'} .= " -I$SDK/usr/include";   
