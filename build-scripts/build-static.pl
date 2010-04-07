@@ -1,11 +1,13 @@
 #!/usr/bin/perl
 
-use File::Spec;
+use File::Basename;
+use Cwd;
 use strict;
 use warnings;
 
-my $TOP_DIR = File::Spec->rel2abs(File::Spec->curdir());
-my $ROOT_DIR = File::Spec->rel2abs(File::Spec->curdir()).'/root';
+my $TOP_DIR = Cwd::realpath(dirname(__FILE__).'/..');
+my $BUILD_DIR = "$TOP_DIR/build";
+my $ROOT_DIR = "$TOP_DIR/root";
 my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DIR ".
                              "--disable-gtk-doc --disable-dependency-tracking";
 
@@ -14,6 +16,11 @@ my $packages = [
         'url' => 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.23.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-pc-path=${ROOT_DIR}/lib/pkgconfig",
         'checkfor' => 'bin/pkg-config',
+    },
+    {
+        'url' => 'http://kent.dl.sourceforge.net/project/check/check/0.9.8/check-0.9.8.tar.gz',
+        'checkfor' => 'include/check.h',
+#        'checkfor' => 'bin/checkmk',
     },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.20.0.tar.gz',
@@ -96,7 +103,7 @@ $ENV{'LDFLAGS'} = "-L${ROOT_DIR}/lib";
 $ENV{'ASFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'INFOPATH'} = "${ROOT_DIR}/share/info";
 $ENV{'MANPATH'} = "${ROOT_DIR}/share/man";
-$ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+$ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin";
 $ENV{'PKG_CONFIG_PATH'} = "${ROOT_DIR}/lib/pkgconfig";
 $ENV{'CLASSPATH'} = '';
 
@@ -170,7 +177,7 @@ foreach my $pkg (sort {$a->{'dirname'} cmp $b->{'dirname'}} @$packages) {
 
 sub extract_package {
     my ($pkg) = @_;
-    if (-e $TOP_DIR.'/'.$pkg->{'dirname'}) {
+    if (-e $BUILD_DIR.'/'.$pkg->{'dirname'}) {
         print "Deleting old: $pkg->{'dirname'}\n";
         safe_system('rm', '-Rf', $pkg->{'dirname'});
     }
@@ -178,9 +185,9 @@ sub extract_package {
     safe_chdir();
     print "Extracting: $pkg->{'tarname'} into $pkg->{'dirname'}\n";
     if ($pkg->{'tarname'} =~ /bz2$/) {
-        safe_system('tar', '-jxvf', $TOP_DIR.'/'.$pkg->{'tarname'});
+        safe_system('tar', '-jxvf', $BUILD_DIR.'/'.$pkg->{'tarname'});
     } elsif ($pkg->{'tarname'} =~ /gz$/) {
-        safe_system('tar', '-zxvf', $TOP_DIR.'/'.$pkg->{'tarname'});
+        safe_system('tar', '-zxvf', $BUILD_DIR.'/'.$pkg->{'tarname'});
     } else {
         die "Don't know how to decomress archive.";
     }
@@ -189,10 +196,10 @@ sub extract_package {
 sub download_package {
     my ($pkg) = @_;
     
-    unless (-e $TOP_DIR.'/'.$pkg->{'tarname'}) {
+    unless (-e $BUILD_DIR.'/'.$pkg->{'tarname'}) {
         safe_chdir();
         print "Downloading: ".$pkg->{'tarname'}."\n";
-        safe_system('curl', '-o', $TOP_DIR.'/'.$pkg->{'tarname'}, $pkg->{'url'});
+        safe_system('curl', '-o', $BUILD_DIR.'/'.$pkg->{'tarname'}, $pkg->{'url'});
     }
 
     # FIXME: check md5sum?
@@ -235,7 +242,7 @@ sub install_package {
 }
 
 sub safe_chdir {
-    my $dir = File::Spec->catfile($TOP_DIR,@_);
+    my $dir = join('/', $BUILD_DIR, @_);
     print "Changing to: $dir\n";
     chdir($dir) or die "Failed to change directory: $!";
 }

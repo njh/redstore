@@ -4,10 +4,10 @@ AC_PREREQ(2.59)
 
 dnl ############# Initialization
 
-AC_INIT([RedStore], [0.3], [njh@aelius.com])
-AC_CONFIG_SRCDIR(src/redstore.c)
-AC_CONFIG_AUX_DIR(build)
-AC_CONFIG_MACRO_DIR(build)
+AC_INIT([RedStore], [0.3], [njh@aelius.com], redstore)
+AC_CONFIG_SRCDIR([src/redstore.c])
+AC_CONFIG_AUX_DIR([build-scripts])
+AC_CONFIG_MACRO_DIR([build-scripts])
 AM_INIT_AUTOMAKE
 LT_INIT
 

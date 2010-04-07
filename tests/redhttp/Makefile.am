@@ -25,9 +25,6 @@ check_server_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 check_url_SOURCES = check_url.tc $(top_srcdir)/src/redhttp/redhttp.h
 check_url_LDADD = $(top_builddir)/src/redhttp/libredhttp.la
 
-# FIXME: could this list be made automatically?
-CLEANFILES = check_headers.c check_negotiate.c check_request.c check_response.c check_server.c check_url.c
-
 EXTRA_DIST = \
     http_request_09.txt \
     http_request_crlf.txt \
@@ -37,3 +34,7 @@ EXTRA_DIST = \
     http_request_post_truncated.txt \
     http_request_post.txt \
     http_request_with_spaces.txt
+
+# FIXME: could this list be made automatically?
+CLEANFILES = check_headers.c check_negotiate.c check_request.c check_response.c check_server.c check_url.c
+CLEANFILES += *.gcov *.gcda *.gcno

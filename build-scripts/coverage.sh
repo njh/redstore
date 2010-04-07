@@ -14,7 +14,7 @@ if ! which genhtml &>/dev/null; then
 fi
 
 
-cd `dirname $0`
+cd `dirname $0`/..
 
 if [ ! -d coverage ]; then
     mkdir coverage
@@ -24,9 +24,6 @@ if [ -e Makefile ]; then
     make clean
 fi
 
-find . -name '*.gcda' -delete
-find . -name '*.gcno' -delete
-find . -name '*.gcov' -delete
 lcov --directory src --zerocounters
 
 if ! ./configure --enable-debug CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"; then

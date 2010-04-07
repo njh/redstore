@@ -16,3 +16,5 @@ redstore_SOURCES = \
   images.c
 
 SUBDIRS = redhttp
+
+CLEANFILES = *.gcov *.gcda *.gcno

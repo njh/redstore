@@ -13,3 +13,5 @@ libredhttp_la_SOURCES = \
 noinst_PROGRAMS = test_redhttpd
 test_redhttpd_SOURCES = test_redhttpd.c
 test_redhttpd_LDADD = libredhttp.la
+
+CLEANFILES = *.gcov *.gcda *.gcno
