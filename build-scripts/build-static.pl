@@ -92,9 +92,9 @@ my $packages = [
     {
         'name' => 'redstore',
         'dirpath' => $TOP_DIR,
-        'config' => "./autogen.sh && ./configure $DEFAULT_CONFIGURE_ARGS",
         'test' => 'make check',
         'checkfor' => 'bin/redstore',
+        'alwaysbuild' => 1,
     },
 ];
 
@@ -164,11 +164,11 @@ foreach my $pkg (@$packages) {
         $pkg->{'name'} = $pkg->{'dirname'};
     }
     
-    unless (defined $pkg->{'checkfor'}) {
+    unless ($pkg->{'alwaysbuild'} or defined $pkg->{'checkfor'}) {
         die "Don't know how to check if ".$pkg->{'name'}." is already built.";
     }
     
-    unless (-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
+    if ($pkg->{'alwaysbuild'} or !-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
         download_package($pkg) if (defined $pkg->{'url'});
         extract_package($pkg) if (defined $pkg->{'tarpath'});
         clean_package($pkg);
