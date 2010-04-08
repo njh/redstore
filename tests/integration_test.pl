@@ -4,14 +4,16 @@ use POSIX ":sys_wait_h";
 use File::Basename qw(dirname);
 use LWP::UserAgent;
 use HTTP::Response;
+use Cwd;
 use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 81;
+use Test::More tests => 88;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
+my $FOAF_URI = 'http://www.example.com/joe/foaf.rdf';
 my $ESCAPED_FOAF_URI = 'http%3A%2F%2Fwww.example.com%2Fjoe%2Ffoaf.rdf';
 
 my $REDSTORE = $ENV{REDSTORE};
@@ -195,8 +197,6 @@ is($response->content_type, 'text/html', "PUT with HTML response is of type text
 like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
 is_wellformed_xml($response->content, "HTML Response to PUTing a graph is valid XML");
 
-# FIXME: test 
-
 # Test a head request
 $response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
 is($response->code, 200, "HEAD response for graph we just created is 200");
@@ -209,6 +209,26 @@ is($response->code, 200, "DELETEing a graph is successful");
 # Test a head request on deleted graph
 $response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
 is($response->code, 404, "HEAD response for deleted graph is 404");
+
+# Test dumping the triplestore
+$response = $ua->get($base_url."dump");
+is($response->code, 200, "Triplestore dump successful");
+is($response->content_type, 'text/x-nquads', "Triplestore dump is correct MIME type");
+like(
+    ((split(/[\r\n]+/,$response->content))[-1]),
+    qr[^(\S+) (\S+) (\S+) (\S+) \.$],
+    "Last line of dump looks like a quad."
+);
+
+# Test POSTing a url to be loaded
+$response = $ua->post( $base_url.'load', {'uri' => fixture_url('foaf.ttl'), 'graph' => $FOAF_URI});
+is($response->code, 200, "POSTing URL to load is successful");
+is($response->content_type, 'text/plain', "Non negotiated load response is of type text/plain");
+like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
+
+# Test that the new graph exists
+$response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
+is($response->code, 200, "HEAD response for graph we just created is 200");
 
 
 
@@ -271,10 +291,18 @@ sub is_running {
     ok(kill(0,$pid) > 0, "Process $pid running.");
 }
 
+sub fixture_path {
+    return Cwd::realpath(dirname(__FILE__).'/'.$_[0]);
+}
+
+sub fixture_url {
+    return 'file://'.fixture_path($_[0]);
+}
+
 sub read_fixture {
     my ($filename) = @_;
     my $data = '';
-    open(FILE, dirname(__FILE__).'/'.$_[0]) or die "Failed to open file: $!";
+    open(FILE, fixture_path($filename)) or die "Failed to open file: $!";
     while(<FILE>) { $data .= $_; }
     close(FILE);
     return $data;
