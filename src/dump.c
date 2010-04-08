@@ -29,12 +29,12 @@
 // which is not guaranteed to continue being in the ntriples format
 static int node_write_ntriple(librdf_node * node, raptor_iostream * iostr)
 {
-    static const unsigned char *const null_string = (const unsigned char *) "(null)";
+    static const unsigned char const null_string[] = "(null)";
     const unsigned char *str = NULL;
     size_t len;
 
     if (!node) {
-        raptor_iostream_counted_string_write(null_string, 6, iostr);
+        raptor_iostream_counted_string_write(null_string, sizeof(null_string), iostr);
         return 0;
     }
 
