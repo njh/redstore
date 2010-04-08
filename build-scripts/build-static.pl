@@ -18,9 +18,9 @@ my $packages = [
         'checkfor' => 'bin/pkg-config',
     },
     {
-        'url' => 'http://kent.dl.sourceforge.net/project/check/check/0.9.8/check-0.9.8.tar.gz',
-        'checkfor' => 'include/check.h',
-#        'checkfor' => 'bin/checkmk',
+        'dirname' => 'check-0.9.8',
+        'url' => 'http://www.aelius.com/njh/redstore/check-20100408.tar.gz',
+        'checkfor' => 'bin/checkmk',
     },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.20.0.tar.gz',
@@ -90,7 +90,9 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
     {
-        'url' => 'http://redstore.googlecode.com/files/redstore-0.2.tar.gz',
+        'name' => 'redstore',
+        'dirpath' => $TOP_DIR,
+        'test' => 'make check',
         'checkfor' => 'bin/redstore',
     },
 ];
@@ -144,50 +146,61 @@ gtkdoc_hack($ROOT_DIR);
 
 
 foreach my $pkg (@$packages) {
-    unless (defined $pkg->{'tarname'}) {
+    if (defined $pkg->{'url'} and !defined $pkg->{'tarname'}) {
         ($pkg->{'tarname'}) = ($pkg->{'url'} =~ /([^\/]+)$/);
     }
-    unless (defined $pkg->{'dirname'}) {
+    if (defined $pkg->{'tarname'} and !defined $pkg->{'tarpath'}) {
+        $pkg->{'tarpath'} = $BUILD_DIR.'/'.$pkg->{'tarname'};
+    }
+    if (defined $pkg->{'tarname'} and !defined $pkg->{'dirname'}) {
         ($pkg->{'dirname'}) = ($pkg->{'tarname'} =~ /^([\w\.\-]+[\d\.\-]+\d)/);
         $pkg->{'dirname'} =~ s/_/\-/g;
     }
+    if (defined $pkg->{'dirname'} and !defined $pkg->{'dirpath'}) {
+        $pkg->{'dirpath'} = $BUILD_DIR.'/'.$pkg->{'dirname'};
+    }
+    if (defined $pkg->{'dirname'} and !defined $pkg->{'name'}) {
+        $pkg->{'name'} = $pkg->{'dirname'};
+    }
     
     unless (defined $pkg->{'checkfor'}) {
-        die "Don't know how to check if ".$pkg->{'dirname'}." is installed.";
+        die "Don't know how to check if ".$pkg->{'name'}." is already built.";
     }
     
     unless (-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
-        download_package($pkg);
-        extract_package($pkg);
+        download_package($pkg) if (defined $pkg->{'url'});
+        extract_package($pkg) if (defined $pkg->{'tarpath'});
+        clean_package($pkg);
         config_package($pkg);
         make_package($pkg);
+        test_package($pkg);
         install_package($pkg);
         
         if (defined $pkg->{'checkfor'} && !-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
-            die "Installing $pkg->{'dirname'} failed.";
+            die "Installing $pkg->{'name'} failed.";
         }
     }
 }
 
 print "Finished compiling:\n";
-foreach my $pkg (sort {$a->{'dirname'} cmp $b->{'dirname'}} @$packages) {
-    print " * ".$pkg->{'dirname'}."\n";
+foreach my $pkg (sort {$a->{'name'} cmp $b->{'name'}} @$packages) {
+    print " * ".$pkg->{'name'}."\n";
 }
 
 
 sub extract_package {
     my ($pkg) = @_;
-    if (-e $BUILD_DIR.'/'.$pkg->{'dirname'}) {
-        print "Deleting old: $pkg->{'dirname'}\n";
-        safe_system('rm', '-Rf', $pkg->{'dirname'});
+    if (-e $pkg->{'dirpath'}) {
+        print "Deleting old: $pkg->{'dirpath'}\n";
+        safe_system('rm', '-Rf', $pkg->{'dirpath'});
     }
 
     safe_chdir();
-    print "Extracting: $pkg->{'tarname'} into $pkg->{'dirname'}\n";
+    print "Extracting: $pkg->{'tarname'} into $pkg->{'dirpath'}\n";
     if ($pkg->{'tarname'} =~ /bz2$/) {
-        safe_system('tar', '-jxvf', $BUILD_DIR.'/'.$pkg->{'tarname'});
+        safe_system('tar', '-jxvf', $pkg->{'tarpath'});
     } elsif ($pkg->{'tarname'} =~ /gz$/) {
-        safe_system('tar', '-zxvf', $BUILD_DIR.'/'.$pkg->{'tarname'});
+        safe_system('tar', '-zxvf', $pkg->{'tarpath'});
     } else {
         die "Don't know how to decomress archive.";
     }
@@ -196,20 +209,29 @@ sub extract_package {
 sub download_package {
     my ($pkg) = @_;
     
-    unless (-e $BUILD_DIR.'/'.$pkg->{'tarname'}) {
+    unless (-e $pkg->{'tarpath'}) {
         safe_chdir();
         print "Downloading: ".$pkg->{'tarname'}."\n";
-        safe_system('curl', '-o', $BUILD_DIR.'/'.$pkg->{'tarname'}, $pkg->{'url'});
+        safe_system('curl', '-o', $pkg->{'tarpath'}, $pkg->{'url'});
     }
 
     # FIXME: check md5sum?
 }
 
+sub clean_package {
+    my ($pkg) = @_;
+
+    safe_chdir($pkg->{'dirpath'});
+    if (-e 'Makefile') {
+        safe_system('make', 'clean');
+    }
+}
+
 sub config_package {
     my ($pkg) = @_;
 
-    safe_chdir($pkg->{'dirname'});
-    print "Configuring: ".$pkg->{'dirname'}."\n";
+    safe_chdir($pkg->{'dirpath'});
+    print "Configuring: ".$pkg->{'name'}."\n";
     if ($pkg->{'config'}) {
         safe_system($pkg->{'config'});
     } else {
@@ -220,8 +242,8 @@ sub config_package {
 sub make_package {
     my ($pkg) = @_;
 
-    safe_chdir($pkg->{'dirname'});
-    print "Making: ".$pkg->{'dirname'}."\n";
+    safe_chdir($pkg->{'dirpath'});
+    print "Making: ".$pkg->{'name'}."\n";
     if ($pkg->{'make'}) {
         safe_system($pkg->{'make'});
     } else {
@@ -229,11 +251,21 @@ sub make_package {
     }
 }
 
+sub test_package {
+    my ($pkg) = @_;
+
+    safe_chdir($pkg->{'dirpath'});
+    if ($pkg->{'test'}) {
+        print "Testing: ".$pkg->{'name'}."\n";
+        safe_system($pkg->{'test'});
+    }
+}
+
 sub install_package {
     my ($pkg) = @_;
 
-    safe_chdir($pkg->{'dirname'});
-    print "Installing: ".$pkg->{'dirname'}."\n";
+    safe_chdir($pkg->{'dirpath'});
+    print "Installing: ".$pkg->{'name'}."\n";
     if ($pkg->{'install'}) {
         safe_system($pkg->{'install'});
     } else {
@@ -242,7 +274,8 @@ sub install_package {
 }
 
 sub safe_chdir {
-    my $dir = join('/', $BUILD_DIR, @_);
+    my ($dir) = @_;
+    $dir = $BUILD_DIR unless defined $dir;
     print "Changing to: $dir\n";
     chdir($dir) or die "Failed to change directory: $!";
 }
