@@ -92,6 +92,7 @@ my $packages = [
     {
         'name' => 'redstore',
         'dirpath' => $TOP_DIR,
+        'config' => "./autogen.sh && ./configure $DEFAULT_CONFIGURE_ARGS",
         'test' => 'make check',
         'checkfor' => 'bin/redstore',
     },
@@ -222,9 +223,8 @@ sub clean_package {
     my ($pkg) = @_;
 
     safe_chdir($pkg->{'dirpath'});
-    if (-e 'Makefile') {
-        safe_system('make', 'clean');
-    }
+    # this is allowed to fail
+    system('make', 'clean') if (-e 'Makefile');
 }
 
 sub config_package {
