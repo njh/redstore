@@ -19,7 +19,7 @@ my $packages = [
     },
     {
         'dirname' => 'check-0.9.8',
-        'url' => 'http://www.aelius.com/njh/redstore/check-20100408.tar.gz',
+        'url' => 'http://www.aelius.com/njh/redstore/check-20100409.tar.gz',
         'checkfor' => 'bin/checkmk',
     },
     {
