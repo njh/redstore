@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 92;
+use Test::More tests => 97;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -236,6 +236,22 @@ like($response->content, qr/Added 14 triples to graph/, "Load response message c
 # Test that the new graph exists
 $response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
 is($response->code, 200, "HEAD response for graph we just created is 200");
+
+# Test alternative SPARQL endpoint URLs
+$response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D");
+is($response->code, 200, "GET response for query to /sparql is successful");
+
+$response = $ua->post($base_url."sparql", {'query' => 'ASK {?s ?p ?o}'});
+is($response->code, 200, "POST response for query to /sparql is successful");
+
+$response = $ua->get($base_url."sparql/?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
+is($response->code, 200, "GET response for query to /sparql/ is successful");
+
+$response = $ua->get($base_url."sparql");
+is($response->code, 400, "GET response to /sparql without query is bad request");
+
+$response = $ua->post($base_url."sparql");
+is($response->code, 400, "POST response to /sparql without query is bad request");
 
 
 
