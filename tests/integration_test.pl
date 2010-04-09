@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 88;
+use Test::More tests => 92;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -196,6 +196,13 @@ is($response->code, 200, "Putting Tutle formatted data into a graph");
 is($response->content_type, 'text/html', "PUT with HTML response is of type text/html");
 like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
 is_wellformed_xml($response->content, "HTML Response to PUTing a graph is valid XML");
+
+# Test a SELECT query with a LIMIT and an XML response
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D+LIMIT+2&format=xml");
+is($response->code, 200, "SPARQL SELECT query with LIMIT is successful");
+is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT query with LIMIT Content Type data is correct");
+is(scalar(my @count = split(/<result>/,$response->content))-1, 2, "SPARQL SELECT Query Result count is correct");
+is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # Test a head request
 $response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
