@@ -553,7 +553,7 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
     redstore_page_append_string(response, "</table>\n");
 
     syntax_html_table("Query Languages", service_node, ql_node, response);
-    syntax_html_table("Parser Sytaxes", service_node, pf_node, response);
+    syntax_html_table("Parser Syntaxes", service_node, pf_node, response);
     syntax_html_table("Result Formats", service_node, rf_node, response);
 
     redstore_page_append_string(response,
