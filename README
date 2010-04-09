@@ -43,6 +43,16 @@ You can delete graphs with in the same manner, using the DELETE HTTP verb:
   curl -X DELETE 'http://localhost:8000/data/http://example.com/data'
 
 
+Requirements
+------------
+
+The following versions of Redland are recommend:
+
+  raptor-1.4.21
+  rasqal-0.9.20 (unreleased)
+  redland-1.0.10
+
+
 Installation
 ------------
 RedStore uses a standard automake build process:
