@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 97;
+use Test::More tests => 99;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -166,14 +166,14 @@ $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%
 is($response->code, 200, "SPARQL SELECT query is successful");
 like($response->content_type, qr[^(application|text)/json$], "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[{ "type": "literal", "value": "v" }], "SPARQL SELECT Query contains right content");
-#is_wellformed_json($response->content);
+is_wellformed_json($response->content, "SPARQL SELECT query response is valid JSON");
 
 # Test a ASK query with a JSON response
 $response = $ua->get($base_url."query?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
 is($response->code, 200, "SPARQL ASK query is successful");
 like($response->content_type, qr[^(application|text)/json$], "SPARQL ASK query Content Type data is correct");
 like($response->content, qr["boolean" : true], "SPARQL ASK Query contains right content");
-#is_wellformed_json($response->content);
+is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON");
 
 # Test PUTing some Turtle
 $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
@@ -357,7 +357,7 @@ sub is_wellformed_json {
 		eval { require JSON; };
 		skip("JSON module not installed", 1) if $@;
 
-    	eval { JSON::jsonToObj($json); };
+    	eval { JSON::from_json($json); };
     	if ($@) {
         	$@ =~ s/at \/.*?$//s;
         	print STDERR "$@\n";
