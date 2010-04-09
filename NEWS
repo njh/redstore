@@ -1,6 +1,18 @@
 News about RedStore releases
 ============================
 
+Release 0.3 - 2010-02-14
+------------------------
+
+- Added improved content negotiation support
+- Added HTML entity escaping
+- Created new Service Description page
+- Full format list on query page
+- Added support for selecting query language
+- Added support for ASK queries
+- text/plain load messages unless HTML is requested
+- N-quads dumping support
+
 
 Release 0.2 - 2010-02-14
 ------------------------
