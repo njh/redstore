@@ -192,6 +192,14 @@ int redstore_is_text_format(const char *str)
         return 0;
 }
 
+int redstore_is_nquads_format(const char *str)
+{
+    if (strcmp(str, "nquads") == 0 || strcmp(str, "application/x-nquads") == 0)
+        return 1;
+    else
+        return 0;
+}
+
 
 // Display how to use this program
 static void usage()
@@ -305,16 +313,16 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
     redhttp_server_add_handler(server, "POST", "/sparql", handle_sparql, NULL);
     redhttp_server_add_handler(server, "POST", "/sparql/", handle_sparql, NULL);
-    redhttp_server_add_handler(server, "HEAD", "/data/*", handle_graph_head, NULL);
-    redhttp_server_add_handler(server, "GET", "/data/*", handle_graph_get, NULL);
-    redhttp_server_add_handler(server, "PUT", "/data/*", handle_graph_put, NULL);
-    // redhttp_server_add_handler(server, "POST", "/data/*", handle_graph_post, NULL);
-    redhttp_server_add_handler(server, "DELETE", "/data/*", handle_graph_delete, NULL);
-    redhttp_server_add_handler(server, "GET", "/data", handle_graph_index, NULL);
+    redhttp_server_add_handler(server, "HEAD", "/data/*", handle_data_context_head, NULL);
+    redhttp_server_add_handler(server, "GET", "/data/*", handle_data_context_get, NULL);
+    redhttp_server_add_handler(server, "PUT", "/data/*", handle_data_context_put, NULL);
+    // redhttp_server_add_handler(server, "POST", "/data/*", handle_data_context_post, NULL);
+    redhttp_server_add_handler(server, "DELETE", "/data/*", handle_data_context_delete, NULL);
+    redhttp_server_add_handler(server, "GET", "/data", handle_data_get, NULL);
+    redhttp_server_add_handler(server, "GET", "/graphs", handle_graph_index, NULL);
     redhttp_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
     redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
     redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
-    redhttp_server_add_handler(server, "GET", "/dump", handle_dump_get, NULL);
     redhttp_server_add_handler(server, "GET", "/description", handle_description_get, NULL);
     redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
     redhttp_server_add_handler(server, "GET", "/robots.txt", handle_page_robots_txt, NULL);

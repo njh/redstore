@@ -6,11 +6,11 @@ redstore_LDADD = redhttp/libredhttp.la
 redstore_SOURCES = \
   redstore.c \
   redstore.h \
+  data.c \
   graphs.c \
   description.c \
   formatters.c \
   load.c \
-  dump.c \
   pages.c \
   query.c \
   images.c

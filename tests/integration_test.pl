@@ -84,13 +84,13 @@ is($response->content_type, 'text/plain', "Getting favicon.ico set the content t
 ok($response->content_length > 20, "robots.txt is more than 20 bytes long");
 
 # Test getting empty list of graphs
-$response = $ua->get($base_url.'data');
+$response = $ua->get($base_url.'graphs');
 is($response->code, 200, "Getting empty list of graphs is successful");
 is($response->content_type, 'text/plain', "List of graphs page is of type text/plain");
 is($response->content,'', "Empty list of grpahs returns empty page.");
 
 # Test getting empty list of graphs as HTML
-$response = $ua->get($base_url.'data', 'Accept' => 'text/html');
+$response = $ua->get($base_url.'graphs', 'Accept' => 'text/html');
 is($response->code, 200, "Getting empty list of graphs as HTML is successful");
 is($response->content_type, 'text/html', "List of graphs page is of type text/html");
 like($response->content, qr[<ul>\n</ul>], "List of graphs page contains empty unordered list");
@@ -115,13 +115,13 @@ is($response->content_type, "application/x-turtle", "Content Type data is correc
 like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+\"v\"\s*.\n], "Graph data is correct");
 
 # Test getting list of graphs
-$response = $ua->get($base_url.'data');
+$response = $ua->get($base_url.'graphs');
 is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/plain', "Graph list is of type text/plain");
 is($response->content, "$TEST_CASE_URI\n", "List of graphs page contains graph that was added");
 
 # Test getting list of graphs as HTML
-$response = $ua->get($base_url.'data', 'Accept' => 'text/html');
+$response = $ua->get($base_url.'graphs', 'Accept' => 'text/html');
 is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/html', "Graph list is of type text/html");
 like($response->content, qr[<li><a href="/data/$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");
@@ -217,8 +217,8 @@ is($response->code, 200, "DELETEing a graph is successful");
 $response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
 is($response->code, 404, "HEAD response for deleted graph is 404");
 
-# Test dumping the triplestore
-$response = $ua->get($base_url."dump");
+# Test dumping the triplestore as N-Quads
+$response = $ua->get($base_url."data?format=nquads");
 is($response->code, 200, "Triplestore dump successful");
 is($response->content_type, 'text/x-nquads', "Triplestore dump is correct MIME type");
 like(
