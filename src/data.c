@@ -42,10 +42,48 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
     return response;
 }
 
+
+redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_data)
+{
+    librdf_stream *stream = NULL;
+    int err = 0;
+
+    // FIXME: more efficient way of doing this?
+    // FIXME: re-implement using librdf_model_remove_statements()
+    stream = librdf_model_as_stream(model);
+    if (!stream) {
+        return redstore_error_page(REDSTORE_ERROR,
+                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model.");
+    }
+    
+    while (!librdf_stream_end(stream)) {
+        librdf_statement *statement = (librdf_statement*) librdf_stream_get_object(stream);
+        librdf_node *context = (librdf_node *) librdf_stream_get_context(stream);
+        if (!statement) {
+            redstore_error("librdf_stream_next returned NULL in handle_data_delete()");
+            break;
+        }
+
+        if (librdf_model_context_remove_statement(model, context, statement))
+            err++;
+
+        librdf_stream_next(stream);
+    }
+
+    librdf_free_stream(stream);
+
+    if (err) {
+        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error deleting some statements.");
+    } else {
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_OK, "Successfully deleted all statements.");
+    }
+}
+
+
 static librdf_node *get_graph_context(redhttp_request_t * request)
 {
     const char *uri = redhttp_request_get_path_glob(request);
-    librdf_node *context;
+    librdf_node *context = NULL;
 
     if (!uri || strlen(uri) < 1) {
         return NULL;
@@ -59,7 +97,7 @@ static librdf_node *get_graph_context(redhttp_request_t * request)
     // Check if the graph exists
     if (!librdf_model_contains_context(model, context)) {
         redstore_debug("Graph not found: %s", uri);
-        // FIXME: display a better error message
+        librdf_free_node(context);
         return NULL;
     }
 

@@ -112,7 +112,7 @@ redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
     while (!librdf_stream_end(stream)) {
         librdf_statement *statement = librdf_stream_get_object(stream);
         if (!statement) {
-            fprintf(stderr, "librdf_stream_next returned NULL\n");
+            redstore_error("librdf_stream_next returned NULL");
             break;
         }
 
