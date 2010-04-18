@@ -59,7 +59,7 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/libiodbc.pc',
     },
     {
-        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
+        'url' => 'http://www.mirrorservice.org/sites/ftp.uk.debian.org/debian/pool/main/d/db/db_4.8.26.orig.tar.gz',
         'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
