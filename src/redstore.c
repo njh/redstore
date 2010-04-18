@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "HEAD", "/data/*", handle_data_context_head, NULL);
     redhttp_server_add_handler(server, "GET", "/data/*", handle_data_context_get, NULL);
     redhttp_server_add_handler(server, "PUT", "/data/*", handle_data_context_put, NULL);
-    // redhttp_server_add_handler(server, "POST", "/data/*", handle_data_context_post, NULL);
+    redhttp_server_add_handler(server, "POST", "/data/*", handle_data_context_post, NULL);
     redhttp_server_add_handler(server, "DELETE", "/data/*", handle_data_context_delete, NULL);
     redhttp_server_add_handler(server, "GET", "/data", handle_data_get, NULL);
     redhttp_server_add_handler(server, "DELETE", "/data", handle_data_delete, NULL);

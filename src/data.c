@@ -55,9 +55,9 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
         return redstore_error_page(REDSTORE_ERROR,
                                    REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model.");
     }
-    
+
     while (!librdf_stream_end(stream)) {
-        librdf_statement *statement = (librdf_statement*) librdf_stream_get_object(stream);
+        librdf_statement *statement = (librdf_statement *) librdf_stream_get_object(stream);
         librdf_node *context = (librdf_node *) librdf_stream_get_context(stream);
         if (!statement) {
             redstore_error("librdf_stream_next returned NULL in handle_data_delete()");
@@ -73,9 +73,11 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
     librdf_free_stream(stream);
 
     if (err) {
-        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error deleting some statements.");
+        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                                   "Error deleting some statements.");
     } else {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_OK, "Successfully deleted all statements.");
+        return redstore_error_page(REDSTORE_INFO, REDHTTP_OK,
+                                   "Successfully deleted all statements.");
     }
 }
 
@@ -144,7 +146,7 @@ redhttp_response_t *handle_data_context_get(redhttp_request_t * request, void *u
     return response;
 }
 
-redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *user_data)
+static redhttp_response_t *load_data_from_request(redhttp_request_t * request, int delete_old_data)
 {
     const char *uri = redhttp_request_get_path_glob(request);
     const char *content_length = redhttp_request_get_header(request, "Content-Length");
@@ -211,7 +213,14 @@ redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *u
                                 "Failed to parse data.");
         goto CLEANUP;
     }
-    // FIXME: delete existing statements first
+
+    if (delete_old_data) {
+        librdf_node *context = librdf_new_node_from_uri(world, graph_uri);
+        if (context) {
+            librdf_model_context_remove_statements(model, context);
+            librdf_free_node(context);
+        }
+    }
 
     response = load_stream_into_graph(request, stream, graph_uri);
 
@@ -226,6 +235,16 @@ redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *u
         free(buffer);
 
     return response;
+}
+
+redhttp_response_t *handle_data_context_post(redhttp_request_t * request, void *user_data)
+{
+    return load_data_from_request(request, 0);
+}
+
+redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *user_data)
+{
+    return load_data_from_request(request, 1);
 }
 
 redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void *user_data)

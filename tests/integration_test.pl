@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 99;
+use Test::More tests => 105;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -80,7 +80,7 @@ ok($response->content_length > 100, "favicon.ico is more than 100 bytes long");
 # Test getting robots.txt
 $response = $ua->get($base_url.'robots.txt');
 is($response->code, 200, "Getting robots.txt is successful");
-is($response->content_type, 'text/plain', "Getting favicon.ico set the content type");
+is($response->content_type, 'text/plain', "Getting robots.txt set the content type");
 ok($response->content_length > 20, "robots.txt is more than 20 bytes long");
 
 # Test getting empty list of graphs
@@ -96,23 +96,30 @@ is($response->content_type, 'text/html', "List of graphs page is of type text/ht
 like($response->content, qr[<ul>\n</ul>], "List of graphs page contains empty unordered list");
 is_wellformed_xml($response->content, "Empty list of graphs is valid XML");
 
-# Test PUTing a graph
-$request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
+# Test POSTing a graph
+$request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
 $request->content( read_fixture('test001.rdf') );
 $request->content_length( length($request->content) );
 $request->content_type( 'application/rdf+xml' );
 $response = $ua->request($request);
-is($response->code, 200, "Putting a data into a graph");
-is($response->content_type, 'text/plain', "Non negotiated PUT response is of type text/plain");
+is($response->code, 200, "POSTting a data into a graph is successful");
+is($response->content_type, 'text/plain', "Non negotiated POST response is of type text/plain");
 like($response->content, qr/Added 1 triples to graph/, "Load response message contain triple count");
 
-# Test getting a graph
+# Test getting a graph as Turtle
 $request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
 $request->header('Accept', 'application/x-turtle');
 $response = $ua->request($request);
 is($response->code, 200, "Getting a graph is successful");
 is($response->content_type, "application/x-turtle", "Content Type data is correct");
 like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+\"v\"\s*.\n], "Graph data is correct");
+
+# Test getting a graph as ntriples
+$request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
+$request->header('Accept', 'text/plain');
+$response = $ua->request($request);
+is($response->code, 200, "Getting a graph is successful");
+is(scalar(@_ = split(/[\r\n]+/, $response->content)), 1, "Number of triples is correct");
 
 # Test getting list of graphs
 $response = $ua->get($base_url.'graphs');
@@ -175,33 +182,33 @@ like($response->content_type, qr[^(application|text)/json$], "SPARQL ASK query C
 like($response->content, qr["boolean" : true], "SPARQL ASK Query contains right content");
 is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON");
 
-# Test PUTing some Turtle
-$request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+# Test POSTing some Turtle
+$request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_FOAF_URI );
 $request->content( read_fixture('foaf.ttl') );
 $request->content_length( length($request->content) );
 $request->content_type( 'application/x-turtle' );
 $response = $ua->request($request);
-is($response->code, 200, "Putting Tutle formatted data into a graph");
-is($response->content_type, 'text/plain', "Non negotiated PUT response is of type text/plain");
+is($response->code, 200, "POSTting Tutle formatted data into a graph");
+is($response->content_type, 'text/plain', "Non negotiated POST response is of type text/plain");
 like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
 
-# Test PUTing some Turtle with an HTML response
-$request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+# Test POSTing some Turtle with an HTML response
+$request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_FOAF_URI );
 $request->content( read_fixture('foaf.ttl') );
 $request->content_length( length($request->content) );
 $request->content_type( 'application/x-turtle' );
 $request->header( 'Accept', 'text/html' );
 $response = $ua->request($request);
-is($response->code, 200, "Putting Tutle formatted data into a graph");
-is($response->content_type, 'text/html', "PUT with HTML response is of type text/html");
+is($response->code, 200, "POSTting Tutle formatted data into a graph");
+is($response->content_type, 'text/html', "POST with HTML response is of type text/html");
 like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
-is_wellformed_xml($response->content, "HTML Response to PUTing a graph is valid XML");
+is_wellformed_xml($response->content, "HTML Response to POSTing a graph is valid XML");
 
 # Test a SELECT query with a LIMIT and an XML response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D+LIMIT+2&format=xml");
 is($response->code, 200, "SPARQL SELECT query with LIMIT is successful");
 is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT query with LIMIT Content Type data is correct");
-is(scalar(my @count = split(/<result>/,$response->content))-1, 2, "SPARQL SELECT Query Result count is correct");
+is(scalar(@_ = split(/<result>/,$response->content))-1, 2, "SPARQL SELECT Query Result count is correct");
 is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # Test a head request
@@ -253,6 +260,32 @@ is($response->code, 400, "GET response to /sparql without query is bad request")
 $response = $ua->post($base_url."sparql");
 is($response->code, 400, "POST response to /sparql without query is bad request");
 
+
+# Test replacing data with a PUT request
+{
+    $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+    $request->content( read_fixture('foaf.ttl') );
+    $request->content_length( length($request->content) );
+    $request->content_type( 'application/x-turtle' );
+    $response = $ua->request($request);
+    is($response->code, 200, "Putting a data into a graph");
+    
+    # Count the number of triples
+    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 14, "Number of triples is correct");
+    
+    # Test PUTing data into a graph
+    $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+    $request->content( read_fixture('test001.rdf') );
+    $request->content_length( length($request->content) );
+    $request->content_type( 'application/rdf+xml' );
+    $response = $ua->request($request);
+    is($response->code, 200, "Replacing a data in a graph");
+    
+    # Count the number of triples
+    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 1, "New number of triples is correct");
+};
 
 
 END {
@@ -354,8 +387,9 @@ sub is_wellformed_json {
     my ($json, $name) = @_;
 
 	SKIP: {
-		eval { require JSON; };
+		eval { require JSON ; };
 		skip("JSON module not installed", 1) if $@;
+		skip("JSON module is too old", 1) if (!defined $JSON::VERSION or $JSON::VERSION < 2.0);
 
     	eval { JSON::from_json($json); };
     	if ($@) {
