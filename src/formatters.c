@@ -228,8 +228,10 @@ redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
         node_write_ntriple(librdf_statement_get_predicate(statement), iostream);
         raptor_iostream_write_byte(' ', iostream);
         node_write_ntriple(librdf_statement_get_object(statement), iostream);
-        raptor_iostream_write_byte(' ', iostream);
-        node_write_ntriple(context, iostream);
+        if (context) {
+            raptor_iostream_write_byte(' ', iostream);
+            node_write_ntriple(context, iostream);
+        }
         raptor_iostream_counted_string_write(" .\n", 3, iostream);
 
         librdf_stream_next(stream);

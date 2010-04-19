@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 105;
+use Test::More tests => 107;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -104,7 +104,7 @@ $request->content_type( 'application/rdf+xml' );
 $response = $ua->request($request);
 is($response->code, 200, "POSTting a data into a graph is successful");
 is($response->content_type, 'text/plain', "Non negotiated POST response is of type text/plain");
-like($response->content, qr/Added 1 triples to graph/, "Load response message contain triple count");
+like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
 
 # Test getting a graph as Turtle
 $request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
@@ -190,7 +190,7 @@ $request->content_type( 'application/x-turtle' );
 $response = $ua->request($request);
 is($response->code, 200, "POSTting Tutle formatted data into a graph");
 is($response->content_type, 'text/plain', "Non negotiated POST response is of type text/plain");
-like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
+like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
 
 # Test POSTing some Turtle with an HTML response
 $request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_FOAF_URI );
@@ -201,7 +201,7 @@ $request->header( 'Accept', 'text/html' );
 $response = $ua->request($request);
 is($response->code, 200, "POSTting Tutle formatted data into a graph");
 is($response->content_type, 'text/html', "POST with HTML response is of type text/html");
-like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
+like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
 is_wellformed_xml($response->content, "HTML Response to POSTing a graph is valid XML");
 
 # Test a SELECT query with a LIMIT and an XML response
@@ -238,28 +238,29 @@ like(
 $response = $ua->post( $base_url.'load', {'uri' => fixture_url('foaf.ttl'), 'graph' => $FOAF_URI});
 is($response->code, 200, "POSTing URL to load is successful");
 is($response->content_type, 'text/plain', "Non negotiated load response is of type text/plain");
-like($response->content, qr/Added 14 triples to graph/, "Load response message contain triple count");
+like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
 
 # Test that the new graph exists
 $response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
 is($response->code, 200, "HEAD response for graph we just created is 200");
 
 # Test alternative SPARQL endpoint URLs
-$response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D");
-is($response->code, 200, "GET response for query to /sparql is successful");
-
-$response = $ua->post($base_url."sparql", {'query' => 'ASK {?s ?p ?o}'});
-is($response->code, 200, "POST response for query to /sparql is successful");
-
-$response = $ua->get($base_url."sparql/?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
-is($response->code, 200, "GET response for query to /sparql/ is successful");
-
-$response = $ua->get($base_url."sparql");
-is($response->code, 400, "GET response to /sparql without query is bad request");
-
-$response = $ua->post($base_url."sparql");
-is($response->code, 400, "POST response to /sparql without query is bad request");
-
+{
+    $response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D");
+    is($response->code, 200, "GET response for query to /sparql is successful");
+    
+    $response = $ua->post($base_url."sparql", {'query' => 'ASK {?s ?p ?o}'});
+    is($response->code, 200, "POST response for query to /sparql is successful");
+    
+    $response = $ua->get($base_url."sparql/?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
+    is($response->code, 200, "GET response for query to /sparql/ is successful");
+    
+    $response = $ua->get($base_url."sparql");
+    is($response->code, 400, "GET response to /sparql without query is bad request");
+    
+    $response = $ua->post($base_url."sparql");
+    is($response->code, 400, "POST response to /sparql without query is bad request");
+}
 
 # Test replacing data with a PUT request
 {
@@ -268,7 +269,7 @@ is($response->code, 400, "POST response to /sparql without query is bad request"
     $request->content_length( length($request->content) );
     $request->content_type( 'application/x-turtle' );
     $response = $ua->request($request);
-    is($response->code, 200, "Putting a data into a graph");
+    is($response->code, 200, "Putting data into a graph is successful");
     
     # Count the number of triples
     $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
@@ -280,12 +281,25 @@ is($response->code, 400, "POST response to /sparql without query is bad request"
     $request->content_length( length($request->content) );
     $request->content_type( 'application/rdf+xml' );
     $response = $ua->request($request);
-    is($response->code, 200, "Replacing a data in a graph");
+    is($response->code, 200, "Replacing data in a graph is successful");
     
     # Count the number of triples
     $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
     is(scalar(@_ = split(/[\r\n]+/, $response->content)), 1, "New number of triples is correct");
 };
+
+# Test POSTing data into the default graph
+{
+    $request = HTTP::Request->new( 'POST', $base_url.'data' );
+    $request->content( read_fixture('foaf.nt') );
+    $request->content_length( length($request->content) );
+    $request->content_type( 'text/plain' );
+    $response = $ua->request($request);
+    is($response->code, 200, "POSTing data into the default graph is succcessful");
+    like($response->content, qr/Successfully added triples to the default graph/, "Response messages is correct");
+
+    ## FIXME: check that the number of triples in the store is correct.
+}
 
 
 END {
@@ -314,7 +328,7 @@ sub start_redstore {
             # fork returned undef, so failed
             die "cannot fork: $!";
         } elsif ($pid == 0) {
-            exec("$cmd -q -n -p $port -b localhost -s memory");
+            exec("$cmd -v -n -p $port -b localhost -s memory");
             die "failed to exec redstore: $!";
         } 
 

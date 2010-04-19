@@ -44,63 +44,56 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
                                            librdf_uri * graph_uri)
 {
     redhttp_response_t *response = NULL;
-    const char *graph_str = (char *) librdf_uri_as_string(graph_uri);
     librdf_node *graph = NULL;
-    size_t count = 0;
 
-    graph = librdf_new_node_from_uri(world, graph_uri);
-    if (!graph) {
+    if (graph_uri) {
+        graph = librdf_new_node_from_uri(world, graph_uri);
+        if (!graph) {
+            return redstore_error_page(REDSTORE_ERROR,
+                                       REDHTTP_INTERNAL_SERVER_ERROR,
+                                       "librdf_new_node_from_uri failed for Graph URI.");
+        }
+    }
+    
+    if (librdf_model_context_add_statements(model, graph, stream)) {
+        if (graph)
+            librdf_free_node(graph);
         return redstore_error_page(REDSTORE_ERROR,
                                    REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "librdf_new_node_from_uri failed for Graph URI");
-    }
-
-    while (!librdf_stream_end(stream)) {
-        librdf_statement *statement = librdf_stream_get_object(stream);
-        if (!statement) {
-            response =
-                redstore_error_page(REDSTORE_ERROR,
-                                    REDHTTP_INTERNAL_SERVER_ERROR,
-                                    "Failed to get statement from stream.");
-            break;
-        }
-
-        if (librdf_model_context_add_statement(model, graph, statement)) {
-            response =
-                redstore_error_page(REDSTORE_ERROR,
-                                    REDHTTP_INTERNAL_SERVER_ERROR,
-                                    "Failed to add statement to graph.");
-            break;
-        }
-        count++;
-        librdf_stream_next(stream);
+                                   "Failed to add statements to graph.");
     }
 
     // FIXME: check for parse errors or parse warnings
     if (!response) {
-        const char *format_str;
+        const char *graph_str = NULL;
+        const char *format_str = NULL;
 
-        redstore_info("Added %d triples to graph.", count);
+        if (graph_uri) {
+            graph_str = (char *) librdf_uri_as_string(graph_uri);
+        } else {
+            graph_str = "the default graph";
+        }
+        
+        redstore_info("Successfully added triples to graph.");
         import_count++;
 
         format_str = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
         if (redstore_is_html_format(format_str)) {
             response = redstore_page_new("Success");
-            redstore_page_append_string(response, "<p>Added ");
-            redstore_page_append_decimal(response, count);
-            redstore_page_append_string(response, " triples to graph: ");
+            redstore_page_append_string(response, "<p>Successfully added triples to ");
             redstore_page_append_escaped(response, graph_str, 0);
             redstore_page_append_string(response, "</p>\n");
             redstore_page_end(response);
         } else {
             char *text = calloc(1, BUFSIZ);
             response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
-            snprintf(text, BUFSIZ, "Added %d triples to graph: %s\n", (int) count, graph_str);
+            snprintf(text, BUFSIZ, "Successfully added triples to %s.\n", graph_str);
             redhttp_response_set_content(response, text, BUFSIZ);
         }
     }
 
-    librdf_free_node(graph);
+    if (graph)
+        librdf_free_node(graph);
 
     return response;
 }
