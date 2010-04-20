@@ -86,7 +86,7 @@ static redhttp_response_t *load_data_from_request(redhttp_request_t * request, c
     }
     
     if (base_uri_str) {
-        base_uri = librdf_new_uri(world, base_uri_str);
+        base_uri = librdf_new_uri(world, (unsigned char*)base_uri_str);
         if (!base_uri) {
             response =
                 redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
@@ -319,7 +319,18 @@ redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void
             redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
                                 "Error while trying to delete graph");
     } else {
-        response = redstore_error_page(REDSTORE_INFO, REDHTTP_OK, "Successfully deleted Graph");
+        char *format_str = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
+        if (redstore_is_html_format(format_str)) {
+            response = redstore_page_new("Success");
+            redstore_page_append_string(response, "<p>Successfully deleted graph.</p>");
+            redstore_page_end(response);
+        } else {
+            char *text = calloc(1, BUFSIZ);
+            response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
+            snprintf(text, BUFSIZ, "Successfully deleted graph.\n");
+            redhttp_response_set_content(response, text, BUFSIZ);
+        }
+        free(format_str);
     }
 
     librdf_free_node(context);
