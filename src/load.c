@@ -66,7 +66,7 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
     // FIXME: check for parse errors or parse warnings
     if (!response) {
         const char *graph_str = NULL;
-        const char *format_str = NULL;
+        char *format_str = NULL;
 
         if (graph_uri) {
             graph_str = (char *) librdf_uri_as_string(graph_uri);
@@ -90,6 +90,7 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
             snprintf(text, BUFSIZ, "Successfully added triples to %s.\n", graph_str);
             redhttp_response_set_content(response, text, BUFSIZ);
         }
+        free(format_str);
     }
 
     if (graph)

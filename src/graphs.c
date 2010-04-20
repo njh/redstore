@@ -111,7 +111,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
 {
     redhttp_response_t *response = NULL;
     librdf_iterator *iterator = NULL;
-    char *format = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
+    char *format_str = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
 
     iterator = librdf_storage_get_contexts(storage);
     if (!iterator) {
@@ -119,16 +119,16 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
                                    REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
     }
 
-    if (redstore_is_text_format(format)) {
+    if (redstore_is_text_format(format_str)) {
         response = handle_text_graph_index(request, iterator);
-    } else if (redstore_is_html_format(format)) {
+    } else if (redstore_is_html_format(format_str)) {
         response = handle_html_graph_index(request, iterator);
     } else {
         response = redstore_error_page(REDSTORE_INFO,
                                        REDHTTP_NOT_ACCEPTABLE, "No acceptable format supported.");
     }
 
-    free(format);
+    free(format_str);
     librdf_free_iterator(iterator);
 
     return response;
