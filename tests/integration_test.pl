@@ -328,7 +328,7 @@ sub start_redstore {
             # fork returned undef, so failed
             die "cannot fork: $!";
         } elsif ($pid == 0) {
-            exec("$cmd -v -n -p $port -b localhost -s memory");
+            exec("$cmd -q -n -p $port -b localhost -s memory");
             die "failed to exec redstore: $!";
         } 
 
