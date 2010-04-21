@@ -25,137 +25,6 @@
 #include "redstore.h"
 
 
-static redhttp_response_t *load_data_from_request(redhttp_request_t * request, const char* graph_uri_str, int delete_old_data)
-{
-    const char *content_length_str = redhttp_request_get_header(request, "Content-Length");
-    const char *content_type = redhttp_request_get_header(request, "Content-Type");
-    const char *base_uri_str = redhttp_request_get_argument(request, "base-uri");
-    const char *parser_name = NULL;
-    redhttp_response_t *response = NULL;
-    librdf_stream *stream = NULL;
-    librdf_parser *parser = NULL;
-    librdf_uri *graph_uri = NULL;
-    librdf_uri *base_uri = NULL;
-    unsigned char *buffer = NULL;
-    size_t content_length;
-    size_t data_read;
-    // FIXME: stream the input data, instead of storing it in memory first
-
-    // Check we have a content_length header
-    if (content_length_str) {
-        content_length = atoi(content_length_str);
-        if (content_length <= 0) {
-            response =
-                redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
-                                    "Invalid content length header.");
-            goto CLEANUP;
-        }
-    } else {
-        response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
-                                "Missing content length header.");
-        goto CLEANUP;
-    }
-
-    // Allocate memory and read in the input data
-    buffer = malloc(content_length);
-    if (!buffer) {
-        response =
-            redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                "Failed to allocate memory for input data.");
-        goto CLEANUP;
-    }
-
-    data_read = fread(buffer, 1, content_length, redhttp_request_get_socket(request));
-    if (data_read != content_length) {
-        response =
-            redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                "Error reading content from client.");
-        goto CLEANUP;
-    }
-
-    if (graph_uri_str) {
-        graph_uri = librdf_new_uri(world, (const unsigned char *) graph_uri_str);
-        if (!graph_uri) {
-            response =
-                redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                    "Failed to create graph URI.");
-            goto CLEANUP;
-        }
-        redstore_debug("graph-uri: %s", graph_uri_str);
-    }
-    
-    if (base_uri_str) {
-        base_uri = librdf_new_uri(world, (unsigned char*)base_uri_str);
-        if (!base_uri) {
-            response =
-                redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
-                                    "Failed to create base URI.");
-            goto CLEANUP;
-        }
-        redstore_debug("base-uri: %s", base_uri_str);
-    } else if (graph_uri) {
-        base_uri = librdf_new_uri_from_uri(graph_uri);
-        if (!base_uri) {
-            response =
-                redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
-                                    "Failed to create base URI from graph URI.");
-            goto CLEANUP;
-        }
-    } else {
-        redstore_debug("Warning: base-uri is not set");
-    }
-    
-    parser_name = librdf_parser_guess_name2(world, content_type, buffer, NULL);
-    if (!parser_name) {
-        response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
-                                "Failed to guess parser type.");
-        goto CLEANUP;
-    }
-    redstore_debug("Parsing using: %s", parser_name);
-
-    parser = librdf_new_parser(world, parser_name, NULL, NULL);
-    if (!parser) {
-        response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
-                                "Failed to create parser.");
-        goto CLEANUP;
-    }
-
-    stream = librdf_parser_parse_counted_string_as_stream(parser, buffer, data_read, base_uri);
-    if (!stream) {
-        response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
-                                "Failed to parse data.");
-        goto CLEANUP;
-    }
-
-    if (delete_old_data && graph_uri) {
-        librdf_node *context = librdf_new_node_from_uri(world, graph_uri);
-        if (context) {
-            librdf_model_context_remove_statements(model, context);
-            librdf_free_node(context);
-        }
-    }
-
-    response = load_stream_into_graph(request, stream, graph_uri);
-
-  CLEANUP:
-    if (stream)
-        librdf_free_stream(stream);
-    if (parser)
-        librdf_free_parser(parser);
-    if (graph_uri)
-        librdf_free_uri(graph_uri);
-    if (base_uri)
-        librdf_free_uri(base_uri);
-    if (buffer)
-        free(buffer);
-
-    return response;
-}
-
 redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data)
 {
     librdf_stream *stream = NULL;
@@ -188,14 +57,20 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
 
     while (!librdf_stream_end(stream)) {
         librdf_statement *statement = (librdf_statement *) librdf_stream_get_object(stream);
-        librdf_node *context = (librdf_node *) librdf_stream_get_context(stream);
+        librdf_node *graph = (librdf_node *) librdf_stream_get_context(stream);
         if (!statement) {
             redstore_error("librdf_stream_next returned NULL in handle_data_delete()");
             break;
         }
 
-        if (librdf_model_context_remove_statement(model, context, statement))
-            err++;
+        // FIXME: this is required due to a bug in librdf v1.0.10
+        if (graph) {
+            if (librdf_model_context_remove_statement(model, graph, statement))
+                err++;
+        } else {
+            if (librdf_model_remove_statement(model, statement))
+                err++;
+        }
 
         librdf_stream_next(stream);
     }
@@ -213,7 +88,7 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
 
 redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_data)
 {
-    return load_data_from_request(request, NULL, 0);
+    return parse_data_from_request_body(request, NULL, load_stream_into_graph);
 }
 
 static librdf_node *get_graph_context(redhttp_request_t * request)
@@ -288,7 +163,7 @@ redhttp_response_t *handle_data_context_post(redhttp_request_t * request, void *
         return redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Invalid Graph URI.");
     }
 
-    return load_data_from_request(request, graph_uri, 0);
+    return parse_data_from_request_body(request, graph_uri, load_stream_into_graph);
 }
 
 redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *user_data)
@@ -299,7 +174,7 @@ redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *u
         return redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Invalid Graph URI.");
     }
 
-    return load_data_from_request(request, graph_uri, 1);
+    return parse_data_from_request_body(request, graph_uri, clear_and_load_stream_into_graph);
 }
 
 redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void *user_data)

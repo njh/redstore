@@ -4,16 +4,16 @@ AM_LDFLAGS = @REDLAND_LIBS@
 bin_PROGRAMS = redstore
 redstore_LDADD = redhttp/libredhttp.la
 redstore_SOURCES = \
-  redstore.c \
-  redstore.h \
   data.c \
-  graphs.c \
   description.c \
   formatters.c \
-  load.c \
+  graphs.c \
+  images.c \
   pages.c \
   query.c \
-  images.c
+  redstore.c \
+  redstore.h \
+  update.c
 
 SUBDIRS = redhttp
 

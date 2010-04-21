@@ -39,6 +39,7 @@
 #define DEFAULT_STORAGE_OPTIONS ""
 #define DEFAULT_QUERY_LANGUAGE  "laqrs"
 #define DEFAULT_GRAPH_FORMAT    "rdfxml"
+#define DEFAULT_PARSE_FORMAT    "ntriples"
 #define DEFAULT_RESULTS_FORMAT  "xml"
 
 
@@ -87,6 +88,11 @@ extern char *accepted_serialiser_types;
 extern char *accepted_query_result_types;
 
 
+// ------- Callbacks ---------
+
+typedef redhttp_response_t *(*redstore_stream_processor)(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph);
+
+
 // ------- Prototypes -------
 
 int description_init(void);
@@ -95,6 +101,10 @@ int description_update(void);
 void description_free(void);
 
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_page_load_form(redhttp_request_t * request, void *user_data);
+
 redhttp_response_t *handle_query(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_sparql(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data);
@@ -122,10 +132,15 @@ redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *u
 redhttp_response_t *handle_data_context_post(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void *user_data);
 
+
 redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream,
-                                           librdf_uri * graph_uri);
-redhttp_response_t *handle_load_get(redhttp_request_t * request, void *user_data);
+                                           librdf_node * graph);
+redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph);
+redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned char* buffer, size_t content_length, const char *parser_name, const char* graph_uri_str, redstore_stream_processor stream_proc);
+redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request, const char* graph_uri_str, redstore_stream_processor stream_proc);
 redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_data);
 
 redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
                                                         request,

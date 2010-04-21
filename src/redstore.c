@@ -321,8 +321,12 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "GET", "/data", handle_data_get, NULL);
     redhttp_server_add_handler(server, "POST", "/data", handle_data_post, NULL);
     redhttp_server_add_handler(server, "DELETE", "/data", handle_data_delete, NULL);
+    redhttp_server_add_handler(server, "GET", "/insert", handle_page_update_form, "Insert Triples");
+    redhttp_server_add_handler(server, "POST", "/insert", handle_insert_post, NULL);
+    redhttp_server_add_handler(server, "GET", "/delete", handle_page_update_form, "Delete Triples");
+    redhttp_server_add_handler(server, "POST", "/delete", handle_delete_post, NULL);
     redhttp_server_add_handler(server, "GET", "/graphs", handle_graph_index, NULL);
-    redhttp_server_add_handler(server, "GET", "/load", handle_load_get, NULL);
+    redhttp_server_add_handler(server, "GET", "/load", handle_page_load_form, NULL);
     redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
     redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
     redhttp_server_add_handler(server, "GET", "/description", handle_description_get, NULL);
