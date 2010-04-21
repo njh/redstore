@@ -136,6 +136,7 @@ redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void
 redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream,
                                            librdf_node * graph);
 redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph);
+redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph);
 redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned char* buffer, size_t content_length, const char *parser_name, const char* graph_uri_str, redstore_stream_processor stream_proc);
 redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request, const char* graph_uri_str, redstore_stream_processor stream_proc);
 redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_data);

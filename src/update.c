@@ -115,7 +115,7 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
     } else {
         char *text = calloc(1, BUFSIZ);
         response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
-        snprintf(text, BUFSIZ, message);
+        strncpy(text, message, BUFSIZ);
         redhttp_response_set_content(response, text, BUFSIZ);
     }
     free(format_str);
