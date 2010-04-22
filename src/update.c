@@ -221,13 +221,13 @@ redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request, co
         content_length = atoi(content_length_str);
         if (content_length <= 0) {
             response =
-                redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
+                redstore_error_page(REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
                                     "Invalid content length header.");
             goto CLEANUP;
         }
     } else {
         response =
-            redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST,
+            redstore_error_page(REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
                                 "Missing content length header.");
         goto CLEANUP;
     }
@@ -280,7 +280,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
     librdf_node *graph = NULL;
 
     if (!uri_arg) {
-        response = redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Missing URI to load");
+        response = redstore_error_page(REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing URI to load");
         goto CLEANUP;
     }
 
@@ -374,23 +374,16 @@ redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_d
     const char* content = redhttp_request_get_argument(request, "content");
     const char* content_type = redhttp_request_get_argument(request, "content-type");
     const char* graph_uri_str = redhttp_request_get_argument(request, "graph");
-    size_t content_length = 0;
 
     if (!content) {
-        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        return redstore_error_page(REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
                                 "Missing the 'content' argument.");
-    }
-
-    content_length = strlen(content);
-    if (content_length<=0) {
-        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                "Content argument has no length.");
     }
 
     if (!content_type)
         content_type = DEFAULT_PARSE_FORMAT;
 
-    return parse_data_from_buffer(request, (unsigned char*)content, content_length, content_type, graph_uri_str, load_stream_into_graph);
+    return parse_data_from_buffer(request, (unsigned char*)content, strlen(content), content_type, graph_uri_str, load_stream_into_graph);
 }
 
 redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_data)
@@ -398,21 +391,14 @@ redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_d
     const char* content = redhttp_request_get_argument(request, "content");
     const char* content_type = redhttp_request_get_argument(request, "content-type");
     const char* graph_uri_str = redhttp_request_get_argument(request, "graph");
-    size_t content_length = 0;
 
     if (!content) {
-        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        return redstore_error_page(REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
                                 "Missing the 'content' argument.");
-    }
-
-    content_length = strlen(content);
-    if (content_length<=0) {
-        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                "Content argument has no length.");
     }
 
     if (!content_type)
         content_type = DEFAULT_PARSE_FORMAT;
 
-    return parse_data_from_buffer(request, (unsigned char*)content, content_length, content_type, graph_uri_str, delete_stream_from_graph);
+    return parse_data_from_buffer(request, (unsigned char*)content, strlen(content), content_type, graph_uri_str, delete_stream_from_graph);
 }

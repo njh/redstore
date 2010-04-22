@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 107;
+use Test::More tests => 133;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -29,6 +29,10 @@ $ua->max_redirect(0);
 $ua->default_header('Accept' => "*/*");
 $ua->agent('RedStoreTester/1 ');
 
+# Test the usage message
+my $usage = `$REDSTORE -h`;
+like($usage, qr[Usage: redstore], "The usage message is returned with the -h option");
+like($usage, qr[memory\s+In memory lists], "A list of storage types is shown");
 
 # Start RedStore
 my ($pid, $port) = start_redstore($REDSTORE);
@@ -64,12 +68,26 @@ is($response->code, 200, "Gettting RDF Service Description is successful");
 is($response->content_type, 'application/rdf+xml', "RDF Service Description is of type application/rdf+xml");
 is_wellformed_xml($response->content, "RDF Service Description is valid XML");
 
-# Test getting load page
+# Test getting the load page
 $response = $ua->get($base_url.'load');
 is($response->code, 200, "Getting load page is successful");
 is($response->content_type, 'text/html', "Load page is of type text/html");
 ok($response->content_length > 100, "Load page is more than 100 bytes long");
 is_wellformed_xml($response->content, "Load page is valid XML");
+
+# Test getting the insert page
+$response = $ua->get($base_url.'insert');
+is($response->code, 200, "Getting insert page is successful");
+is($response->content_type, 'text/html', "Insert page is of type text/html");
+ok($response->content_length > 100, "Insert page is more than 100 bytes long");
+is_wellformed_xml($response->content, "Insert page is valid XML");
+
+# Test getting the delete page
+$response = $ua->get($base_url.'delete');
+is($response->code, 200, "Getting delete page is successful");
+is($response->content_type, 'text/html', "Delete page is of type text/html");
+ok($response->content_length > 100, "Delete page is more than 100 bytes long");
+is_wellformed_xml($response->content, "Delete page is valid XML");
 
 # Test getting the favicon
 $response = $ua->get($base_url.'favicon.ico');
@@ -235,14 +253,28 @@ like(
 );
 
 # Test POSTing a url to be loaded
-$response = $ua->post( $base_url.'load', {'uri' => fixture_url('foaf.ttl'), 'graph' => $FOAF_URI});
-is($response->code, 200, "POSTing URL to load is successful");
-is($response->content_type, 'text/plain', "Non negotiated load response is of type text/plain");
-like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
+{
+    $ua->request(HTTP::Request->new( 'DELETE', $base_url.'data/'.$ESCAPED_FOAF_URI ));
+    
+    $response = $ua->post( $base_url.'load', {'uri' => fixture_url('foaf.ttl'), 'graph' => $FOAF_URI});
+    is($response->code, 200, "POSTing URL to load is successful");
+    is($response->content_type, 'text/plain', "Non negotiated load response is of type text/plain");
+    like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
+    
+    # Count the number of triples
+    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 14, "Number of triples in loaded graph is correct");
+}
 
-# Test that the new graph exists
-$response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
-is($response->code, 200, "HEAD response for graph we just created is 200");
+# Test POSTing to /load without a uri
+$response = $ua->post( $base_url.'load');
+is($response->code, 400, "POSTing to /load without a URI should fail");
+like($response->content, qr/Missing URI to load/, "Response mentions missing URI");
+
+# Test POSTing to /load without an empty uri argument
+$response = $ua->post( $base_url.'load', {'uri' => ''});
+is($response->code, 400, "POSTing to /load an empty 'uri' argument should fail");
+like($response->content, qr/Missing URI to load/, "Response mentions missing URI");
 
 # Test alternative SPARQL endpoint URLs
 {
@@ -300,6 +332,49 @@ is($response->code, 200, "HEAD response for graph we just created is 200");
 
     ## FIXME: check that the number of triples in the store is correct.
 }
+
+# Test POSTing triples to /insert
+{
+    $response = $ua->post( $base_url.'insert', {
+        'content' => "<test:s1> <test:p2> <test:o3> .\n<test:s2> <test:p2> <test:o2> .\n",
+        'content-type' => 'ntriples',
+        'graph' => 'test:g'
+    });
+    is($response->code, 200, "POSTing data to /insert is successful");
+    like($response->content, qr/Successfully added triples to test:g/, "Response messages is correct");
+
+    # Count the number of triples
+    $response = $ua->get($base_url.'data/test%3Ag', 'Accept' => 'text/plain');
+    is($response->code, 200, "Getting the number of triples is successful");
+    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 2, "New number of triples is correct");
+}
+
+# Test POSTing to /insert without a content argument
+$response = $ua->post( $base_url.'insert', {'graph' => $FOAF_URI});
+is($response->code, 400, "POSTing to /insert without any content should fail");
+like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument.");
+
+# Test POSTing triples to /delete
+{
+    $response = $ua->post( $base_url.'delete', {
+        'content' => "<test:s1> <test:p2> <test:o3> .\n",
+        'content-type' => 'ntriples',
+        'graph' => 'test:g'
+    });
+    is($response->code, 200, "POSTing data to /delete is successful");
+    like($response->content, qr/Successfully deleted triples./, "Response messages is correct");
+
+    # Count the number of triples
+    $response = $ua->get($base_url.'data/test%3Ag', 'Accept' => 'text/plain');
+    is($response->code, 200, "Getting the number of triples is successful");
+    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 1, "Number of remaining triples is correct");
+}
+
+# Test POSTing to /delete without a content argument
+$response = $ua->post( $base_url.'delete');
+is($response->code, 400, "POSTing to /delete without any content should fail");
+like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument.");
+
 
 
 END {
