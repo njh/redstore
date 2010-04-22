@@ -1,7 +1,15 @@
 News about RedStore releases
 ============================
 
-Release 0.3 - 2010-02-14
+Release 0.4 - 2010-04-22
+------------------------
+
+- Added support for inserting/deleting triples via HTTP POST from a form.
+- Implemented content negotiation for DELETE response.
+- Added support for POSTing triples into the default graph.
+
+
+Release 0.3 - 2010-04-11
 ------------------------
 
 - Added improved content negotiation support
