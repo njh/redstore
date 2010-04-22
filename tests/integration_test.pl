@@ -45,22 +45,22 @@ is_running($pid);
 $response = $ua->get($base_url);
 is($response->code, 200, "Getting homepage is successful");
 is($response->content_type, 'text/html', "Homepage is of type text/html");
-ok($response->content_length > 100, "Homepage is more than 100 bytes long");
-is_wellformed_xml($response->content, "Homepage is valid XML");
+ok($response->content_length > 100, "Homepage should be more than 100 bytes long");
+is_valid_xhtml($response->content, "Homepage should be valid XHTML");
 
 # Test getting the query page
 $response = $ua->get($base_url.'query');
 is($response->code, 200, "Getting query page is successful");
 is($response->content_type, 'text/html', "Query page is of type text/html");
 ok($response->content_length > 100, "Query page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Query page is valid XML");
+is_valid_xhtml($response->content, "Query page should be valid XHTML");
 
 # Test getting Service Description page
 $response = $ua->get($base_url.'description', 'Accept' => 'text/html');
 is($response->code, 200, "Getting Service Description page is successful");
 is($response->content_type, 'text/html', "Service Description page is of type text/html");
 ok($response->content_length > 100, "Service Description page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Service Description page is valid XML");
+is_valid_xhtml($response->content, "Service Description page should be valid XHTML");
 
 # Test getting Service Description as RDF
 $response = $ua->get($base_url.'description?format=rdfxml-abbrev');
@@ -73,21 +73,21 @@ $response = $ua->get($base_url.'load');
 is($response->code, 200, "Getting load page is successful");
 is($response->content_type, 'text/html', "Load page is of type text/html");
 ok($response->content_length > 100, "Load page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Load page is valid XML");
+is_valid_xhtml($response->content, "Load page should be valid XHTML");
 
 # Test getting the insert page
 $response = $ua->get($base_url.'insert');
 is($response->code, 200, "Getting insert page is successful");
 is($response->content_type, 'text/html', "Insert page is of type text/html");
 ok($response->content_length > 100, "Insert page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Insert page is valid XML");
+is_valid_xhtml($response->content, "Insert page should be valid XHTML");
 
 # Test getting the delete page
 $response = $ua->get($base_url.'delete');
 is($response->code, 200, "Getting delete page is successful");
 is($response->content_type, 'text/html', "Delete page is of type text/html");
 ok($response->content_length > 100, "Delete page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Delete page is valid XML");
+is_valid_xhtml($response->content, "Delete page should be valid XHTML");
 
 # Test getting the favicon
 $response = $ua->get($base_url.'favicon.ico');
@@ -111,8 +111,8 @@ is($response->content,'', "Empty list of grpahs returns empty page.");
 $response = $ua->get($base_url.'graphs', 'Accept' => 'text/html');
 is($response->code, 200, "Getting empty list of graphs as HTML is successful");
 is($response->content_type, 'text/html', "List of graphs page is of type text/html");
-like($response->content, qr[<ul>\n</ul>], "List of graphs page contains empty unordered list");
-is_wellformed_xml($response->content, "Empty list of graphs is valid XML");
+like($response->content, qr[No named graphs.], "Page contains No Named Graphs message.");
+is_valid_xhtml($response->content, "No graphs message should be valid XHTML");
 
 # Test POSTing a graph
 $request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
@@ -150,27 +150,27 @@ $response = $ua->get($base_url.'graphs', 'Accept' => 'text/html');
 is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/html', "Graph list is of type text/html");
 like($response->content, qr[<li><a href="/data/$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");
-is_wellformed_xml($response->content, "Graph list is valid XML");
+is_valid_xhtml($response->content, "Graph list should be valid XHTML");
 
 # Test getting a non-existant graph
 $response = $ua->get($base_url."data/http%3A%2F%2Fwww.example.com%2Finvalid");
 is($response->code, 404, "Getting a non-existant graph returns 404");
 is($response->content_type, 'text/html', "Graph not found page is of type text/html");
 ok($response->content_length > 100, "Graph not found page is more than 100 bytes long");
-is_wellformed_xml($response->content, "Graph not found page is valid XML");
+is_valid_xhtml($response->content, "Graph not found page should be valid XHTML");
 
 # Test removing trailing slash
 $response = $ua->get($base_url."query/");
 is($response->code, 301, "Getting a URL with a trailing slash returns 301");
 is($response->header('Location'), "/query", "Getting a URL with a trailing slash returns location without trailing slash");
-is_wellformed_xml($response->content, "Redirect page is valid XML");
+is_valid_xhtml($response->content, "Redirect page should be valid XHTML");
 
 # Test a SELECT query with an HTML response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=html");
 is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "text/html", "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[<td>"?v"?</td>], "SPARQL SELECT Query returned correct value");
-is_wellformed_xml($response->content, "HTML SPARQL response is valid XML");
+is_valid_xhtml($response->content, "HTML SPARQL response should be valid XHTML");
 
 # Test a SELECT query with an XML response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
@@ -220,7 +220,7 @@ $response = $ua->request($request);
 is($response->code, 200, "POSTting Tutle formatted data into a graph");
 is($response->content_type, 'text/html', "POST with HTML response is of type text/html");
 like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
-is_wellformed_xml($response->content, "HTML Response to POSTing a graph is valid XML");
+is_valid_xhtml($response->content, "HTML Response to POSTing a graph should be valid XHTML");
 
 # Test a SELECT query with a LIMIT and an XML response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D+LIMIT+2&format=xml");
@@ -376,7 +376,6 @@ is($response->code, 400, "POSTing to /delete without any content should fail");
 like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument.");
 
 
-
 END {
     stop_redstore($pid);
 }
@@ -451,6 +450,33 @@ sub read_fixture {
     while(<FILE>) { $data .= $_; }
     close(FILE);
     return $data;
+}
+
+sub is_valid_xhtml {
+    my ($xhtml, $name) = @_;
+    
+    is_wellformed_xml($xhtml, $name);
+    
+    # FIXME: don't let xmllint download DTDs
+    # FIXME: hide "- validates" message
+# 	SKIP: {
+#         # Check that xmllint is installed
+#         if (system("which xmllint > /dev/null")) {
+#             skip("xmllint is not available", 1);
+#         }
+#     
+#         # Open a pipe to xmllint
+#         open(LINT, "|xmllint --noout --valid --schema xhtml1-strict.xsd -")
+#             or die "Failed to open pipe to xmllint: $!";
+#         print LINT $xhtml;
+#         close(LINT);
+# 
+#         if ($?) {
+#         	fail($name);
+#         } else {
+#         	pass($name);
+#         }
+#     }
 }
 
 sub is_wellformed_xml {
