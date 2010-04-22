@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 133;
+use Test::More tests => 136;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -18,7 +18,7 @@ my $ESCAPED_FOAF_URI = 'http%3A%2F%2Fwww.example.com%2Fjoe%2Ffoaf.rdf';
 
 my $REDSTORE = $ENV{REDSTORE};
 $REDSTORE = $ARGV[0] if ($ARGV[0]);
-die "Error: REDSTORE environment variable is not set and no argument given." unless ($REDSTORE);
+die "Error: REDSTORE environment variable is not set and no argument given" unless ($REDSTORE);
 die "Error: redstore command not found: $REDSTORE" unless (-e $REDSTORE);
 
 # Create a libwww-perl user agent
@@ -105,13 +105,13 @@ ok($response->content_length > 20, "robots.txt is more than 20 bytes long");
 $response = $ua->get($base_url.'graphs');
 is($response->code, 200, "Getting empty list of graphs is successful");
 is($response->content_type, 'text/plain', "List of graphs page is of type text/plain");
-is($response->content,'', "Empty list of grpahs returns empty page.");
+is($response->content,'', "Empty list of grpahs returns empty page");
 
 # Test getting empty list of graphs as HTML
 $response = $ua->get($base_url.'graphs', 'Accept' => 'text/html');
 is($response->code, 200, "Getting empty list of graphs as HTML is successful");
 is($response->content_type, 'text/html', "List of graphs page is of type text/html");
-like($response->content, qr[No named graphs.], "Page contains No Named Graphs message.");
+like($response->content, qr[No named graphs.], "Page contains No Named Graphs message");
 is_valid_xhtml($response->content, "No graphs message should be valid XHTML");
 
 # Test POSTing a graph
@@ -249,7 +249,7 @@ is($response->content_type, 'text/x-nquads', "Triplestore dump is correct MIME t
 like(
     ((split(/[\r\n]+/,$response->content))[-1]),
     qr[^(\S+) (\S+) (\S+) (\S+) \.$],
-    "Last line of dump looks like a quad."
+    "Last line of dump looks like a quad"
 );
 
 # Test POSTing a url to be loaded
@@ -352,7 +352,7 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
 # Test POSTing to /insert without a content argument
 $response = $ua->post( $base_url.'insert', {'graph' => $FOAF_URI});
 is($response->code, 400, "POSTing to /insert without any content should fail");
-like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument.");
+like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument");
 
 # Test POSTing triples to /delete
 {
@@ -373,7 +373,20 @@ like($response->content, qr/Missing the 'content' argument/, "Response mentions 
 # Test POSTing to /delete without a content argument
 $response = $ua->post( $base_url.'delete');
 is($response->code, 400, "POSTing to /delete without any content should fail");
-like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument.");
+like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument");
+
+# Test DELETEing everything in the triplestore
+{
+    $request = HTTP::Request->new( 'DELETE', $base_url.'data' );
+    $response = $ua->request($request);
+    is($response->code, 200, "DELETEing all the triples is successful");
+
+    # Count the number of triples
+    $response = $ua->get($base_url.'data', 'Accept' => 'text/plain');
+    is($response->code, 200, "Getting all the triples is successful");
+    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 0, "There should be no triples remaining");
+}
+
 
 
 END {
@@ -432,7 +445,7 @@ sub stop_redstore {
 
 sub is_running {
     my ($pid) = @_;
-    ok(kill(0,$pid) > 0, "Process $pid running.");
+    ok(kill(0,$pid) > 0, "Process $pid running");
 }
 
 sub fixture_path {

@@ -44,11 +44,35 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
 
 redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_data)
 {
+    librdf_iterator *iterator = NULL;
     librdf_stream *stream = NULL;
     int err = 0;
 
-    // FIXME: more efficient way of doing this?
     // FIXME: re-implement using librdf_model_remove_statements()
+
+    // First:  delete all the named graphs
+    iterator = librdf_storage_get_contexts(storage);
+    if (!iterator) {
+        return redstore_error_page(REDSTORE_ERROR,
+                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
+    }
+
+    while (!librdf_iterator_end(iterator)) {
+        librdf_node *graph = (librdf_node *) librdf_iterator_get_object(iterator);
+        if (!graph) {
+            redstore_error("librdf_iterator_get_next returned NULL");
+            break;
+        }
+
+        if (librdf_model_context_remove_statements(model, graph))
+            err++;
+
+        librdf_iterator_next(iterator);
+    }
+    librdf_free_iterator(iterator);
+
+
+    // Second: delete the remaining triples
     stream = librdf_model_as_stream(model);
     if (!stream) {
         return redstore_error_page(REDSTORE_ERROR,
@@ -57,24 +81,16 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
 
     while (!librdf_stream_end(stream)) {
         librdf_statement *statement = (librdf_statement *) librdf_stream_get_object(stream);
-        librdf_node *graph = (librdf_node *) librdf_stream_get_context(stream);
         if (!statement) {
             redstore_error("librdf_stream_next returned NULL in handle_data_delete()");
             break;
         }
 
-        // FIXME: this is required due to a bug in librdf v1.0.10
-        if (graph) {
-            if (librdf_model_context_remove_statement(model, graph, statement))
-                err++;
-        } else {
-            if (librdf_model_remove_statement(model, statement))
-                err++;
-        }
+        if (librdf_model_remove_statement(model, statement))
+            err++;
 
         librdf_stream_next(stream);
     }
-
     librdf_free_stream(stream);
 
     if (err) {
