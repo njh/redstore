@@ -128,11 +128,11 @@ redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_dat
     redstore_page_append_string(response, "<ul>\n");
     redstore_page_append_string(response, "  <li><a href=\"/query\">Query Form</a></li>\n");
     redstore_page_append_string(response, "  <li><a href=\"/graphs\">List Named Graphs</a></li>\n");
-    redstore_page_append_string(response, "  <li>Update:</li><ul>");
+    redstore_page_append_string(response, "  <li>Update:<ul>");
     redstore_page_append_string(response, "    <li><a href=\"/load\">Load URI</a></li>");
     redstore_page_append_string(response, "    <li><a href=\"/insert\">Insert Triples</a></li>");
     redstore_page_append_string(response, "    <li><a href=\"/delete\">Delete Triples</a></li>");
-    redstore_page_append_string(response, "  </ul>\n");
+    redstore_page_append_string(response, "  </ul></li>\n");
     redstore_page_append_string(response,
                                 "  <li><a href=\"/data?format=nquads\">Download Dump</a></li>\n");
     redstore_page_append_string(response,

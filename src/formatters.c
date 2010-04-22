@@ -105,7 +105,11 @@ redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
     iostream = raptor_new_iostream_to_file_handle(socket);
 #endif
 
-    raptor_iostream_string_write("<html><head><title>RedStore</title></head><body>", iostream);
+    raptor_iostream_string_write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", iostream);
+    raptor_iostream_string_write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n", iostream);
+    raptor_iostream_string_write("          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n", iostream);
+    raptor_iostream_string_write("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n", iostream);
+    raptor_iostream_string_write("<head><title>RedStore</title></head><body>", iostream);
     raptor_iostream_string_write("<table class=\"triples\" border=\"1\">\n", iostream);
     raptor_iostream_string_write("<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n",
                                  iostream);
@@ -349,7 +353,11 @@ redhttp_response_t *format_bindings_query_result_html(redhttp_request_t *
     iostream = raptor_new_iostream_to_file_handle(socket);
 #endif
 
-    raptor_iostream_string_write("<html><head><title>RedStore</title></head><body>", iostream);
+    raptor_iostream_string_write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", iostream);
+    raptor_iostream_string_write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n", iostream);
+    raptor_iostream_string_write("          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n", iostream);
+    raptor_iostream_string_write("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n", iostream);
+    raptor_iostream_string_write("<head><title>RedStore</title></head><body>", iostream);
 
     count = librdf_query_results_get_bindings_count(results);
     raptor_iostream_string_write("<table class=\"sparql\" border=\"1\">\n<tr>", iostream);
