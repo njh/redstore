@@ -59,8 +59,14 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
         response = format_bindings_query_result(request, results);
     } else if (librdf_query_results_is_graph(results)) {
         librdf_stream *stream = librdf_query_results_as_stream(results);
-        response = format_graph_stream(request, stream);
-        librdf_free_stream(stream);
+        if (stream) {
+            response = format_graph_stream(request, stream);
+            librdf_free_stream(stream);
+        } else {
+            response =
+                redstore_error_page(REDSTORE_DEBUG, REDHTTP_INTERNAL_SERVER_ERROR,
+                                    "Failed to get query results graph.");
+        }
     } else if (librdf_query_results_is_boolean(results)) {
         response = format_bindings_query_result(request, results);
     } else if (librdf_query_results_is_syntax(results)) {

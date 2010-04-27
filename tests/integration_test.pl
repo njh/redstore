@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 136;
+use Test::More tests => 147;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -114,6 +114,24 @@ is($response->content_type, 'text/html', "List of graphs page is of type text/ht
 like($response->content, qr[No named graphs.], "Page contains No Named Graphs message");
 is_valid_xhtml($response->content, "No graphs message should be valid XHTML");
 
+# Test a SELECT query an empty store
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=xml");
+is($response->code, 200, "SPARQL SELECT query on empty store is successful");
+is(scalar(@_ = split(/<result>/,$response->content))-1, 0, "SPARQL SELECT Query Result count on empty store should be 0");
+is_wellformed_xml($response->content, "SPARQL response is valid XML");
+
+# Test a CONSTRUCT query an empty store
+$response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=ntriples");
+is($response->code, 500, "SPARQL CONSTRUCT query on empty store is gives 500 error");
+# FIXME: an empty graph would be better
+
+# Test an ASK query an empty store
+$response = $ua->get($base_url."query?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
+is($response->code, 200, "SPARQL ASK query is successful");
+like($response->content_type, qr[^(application|text)/json$], "SPARQL ASK query Content Type data is correct");
+like($response->content, qr["boolean" : false], "SPARQL ASK Query contains right content");
+is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON");
+
 # Test POSTing a graph
 $request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
 $request->content( read_fixture('test001.rdf') );
@@ -199,6 +217,12 @@ is($response->code, 200, "SPARQL ASK query is successful");
 like($response->content_type, qr[^(application|text)/json$], "SPARQL ASK query Content Type data is correct");
 like($response->content, qr["boolean" : true], "SPARQL ASK Query contains right content");
 is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON");
+
+# Test a CONSTRUCT query with a ntriples response
+$response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=ntriples");
+is($response->code, 200, "SPARQL CONSTRUCT query is successful");
+is($response->content_type, "text/plain", "SPARQL CONSTRUCT query Content Type data is correct");
+like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+"v"\s+.\n], "SPARQL Construct response should be correct");
 
 # Test POSTing some Turtle
 $request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_FOAF_URI );
