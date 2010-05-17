@@ -65,7 +65,7 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
         redstore_page_append_string(response, "</ul>\n");
     
         redstore_page_append_string(response,
-                                    "<p>This document is also available as <a href=\"/data?format=text\">plain text</a>.</p>\n");
+                                    "<p>This document is also available as <a href=\"/graphs?format=text\">plain text</a>.</p>\n");
         
     } else {
         redstore_page_append_string(response, "<p style=\"font-style: italic\">No named graphs.</p>\n");
