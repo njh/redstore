@@ -19,7 +19,7 @@ my $packages = [
     },
     {
         'dirname' => 'check-0.9.8',
-        'url' => 'http://redstore.googlecode.com/files/check-20100409.tar.gz',
+        'url' => 'http://github.com/downloads/njh/redstore/check-20100409.tar.gz',
         'checkfor' => 'bin/checkmk',
     },
     {
@@ -80,7 +80,7 @@ my $packages = [
     },
     {
         'dirname' => 'rasqal-0.9.20',
-        'url' => 'http://redstore.googlecode.com/files/rasqal-20100409.tar.gz',
+        'url' => 'http://github.com/downloads/njh/redstore/rasqal-20100409.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS '--enable-query-languages=sparql rdql laqrs'",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
         
