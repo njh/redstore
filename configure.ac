@@ -64,8 +64,9 @@ AC_FUNC_REALLOC
 
 dnl ############## Check for packages we depend upon
 
+PKG_CHECK_MODULES(RAPTOR, raptor2 >= 1.9.0)
+PKG_CHECK_MODULES(RASQAL, rasqal >= 0.9.20)
 PKG_CHECK_MODULES(REDLAND, redland >= 1.0.10)
-PKG_CHECK_MODULES(RAPTOR, raptor >= 1.4.21)
 
 PKG_CHECK_MODULES(CHECK, check >= 0.9.4, have_check="yes", have_check="no")
 if test x"$have_check" = "xyes"; then

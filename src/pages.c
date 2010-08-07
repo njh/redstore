@@ -42,11 +42,12 @@ redhttp_response_t *redstore_error_page(int level, int code, const char *message
 redhttp_response_t *redstore_page_new(const char *title)
 {
     redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/html");
+    raptor_world *raptor = librdf_world_get_raptor(world);
     redstore_page_t *page = NULL;
 
     // Create the iostream
     page = calloc(1, sizeof(redstore_page_t));
-    page->iostream = raptor_new_iostream_to_string(&page->buffer, &page->buffer_len, NULL);
+    page->iostream = raptor_new_iostream_to_string(raptor, &page->buffer, &page->buffer_len, NULL);
     page->title = title;
     redhttp_response_set_user_data(response, page);
 
@@ -69,14 +70,14 @@ int redstore_page_append_string(redhttp_response_t * response, const char *str)
 {
     redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
 
-    return raptor_iostream_write_string(page->iostream, (unsigned char *) str);
+    return raptor_iostream_string_write((unsigned char *) str, page->iostream);
 }
 
 int redstore_page_append_decimal(redhttp_response_t * response, int decimal)
 {
     redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
 
-    return raptor_iostream_write_decimal(page->iostream, decimal);
+    return raptor_iostream_decimal_write(decimal, page->iostream);
 }
 
 int redstore_page_append_strings(redhttp_response_t * response, ...)
@@ -99,8 +100,7 @@ int redstore_page_append_escaped(redhttp_response_t * response, const char *str,
     redstore_page_t *page = (redstore_page_t *) redhttp_response_get_user_data(response);
     size_t str_len = strlen(str);
 
-    return raptor_iostream_write_xml_escaped_string(page->iostream, (unsigned char *) str, str_len,
-                                                    quote, NULL, NULL);
+    return raptor_xml_escape_string_write((unsigned char *) str, str_len, quote, page->iostream);
 }
 
 void redstore_page_end(redhttp_response_t * response)

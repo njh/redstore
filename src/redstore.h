@@ -176,18 +176,4 @@ int redstore_is_text_format(const char *str);
 int redstore_is_nquads_format(const char *str);
 
 
-
-
-#ifndef RAPTOR_V2_AVAILABLE
-
-#define raptor_iostream_write_bytes(ptr, size, nmemb, iostr) raptor_iostream_write_bytes(iostr, ptr, size, nmemb)
-#define raptor_iostream_write_byte(byte, iostr) raptor_iostream_write_byte(iostr, byte)
-#define raptor_iostream_counted_string_write(string, len, iostr) raptor_iostream_write_counted_string(iostr, string, len)
-#define raptor_iostream_string_write(string, iostr) raptor_iostream_write_string(iostr, string)
-
-#define raptor_string_ntriples_write(str, len, delim, iostr) raptor_iostream_write_string_ntriples(iostr, str, len, delim)
-
-#endif                          /* !RAPTOR_V2_AVAILABLE */
-
-
 #endif

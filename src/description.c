@@ -50,7 +50,7 @@ static int description_add_query_languages()
         if (rasqal_languages_enumerate(rasqal_world, i, &name, &label, &uri))
             break;
 
-        bnode = librdf_new_node_from_blank_identifier(world, NULL);
+        bnode = librdf_new_node(world);
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(service_node),
                          librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
@@ -106,7 +106,7 @@ static int description_add_query_result_formats()
         if (librdf_query_results_formats_enumerate(world, i, &name, &label, &uri, &mime_type))
             break;
 
-        bnode = librdf_new_node_from_blank_identifier(world, NULL);
+        bnode = librdf_new_node(world);
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(service_node),
                          librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
@@ -167,154 +167,141 @@ static int description_add_query_result_formats()
     return 0;
 }
 
+static int add_raptor_syntax_description(const raptor_syntax_description *desc, const char* type)
+{
+    librdf_node *bnode = NULL;
+    unsigned int i = 0;
+
+    bnode = librdf_new_node(world);
+    if (!bnode) {
+        redstore_error("Failed to add syntax description.");
+        return -1;
+    }
+
+    librdf_model_add(sd_model,
+                     librdf_new_node_from_node(service_node),
+                     librdf_new_node_from_uri_local_name(world, saddle_ns_uri, type),
+                     librdf_new_node_from_node(bnode)
+        );
+
+    for(i=0; desc->names[i]; i++) {
+        librdf_model_add(sd_model,
+                         librdf_new_node_from_node(bnode),
+                         LIBRDF_S_label(world),
+                         librdf_new_node_from_literal(world, desc->names[i], NULL, 0)
+            );
+    }
+
+    if (desc->label) {
+        librdf_model_add(sd_model,
+                         librdf_new_node_from_node(bnode),
+                         LIBRDF_S_comment(world),
+                         librdf_new_node_from_literal(world, (unsigned char *) desc->label, NULL, 0)
+            );
+    }
+
+    for(i=0; i < desc->mime_types_count; i++) {
+        const raptor_type_q mime_type = desc->mime_types[i];
+        librdf_model_add(sd_model,
+                         librdf_new_node_from_node(bnode),
+                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
+                                                             (unsigned char *) "mediaType"),
+                         librdf_new_node_from_literal(world, (unsigned char *) mime_type.mime_type, NULL,
+                                                      0)
+            );
+    }
+
+    if (desc->uri_string) {
+        librdf_model_add(sd_model,
+                         librdf_new_node_from_node(bnode),
+                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
+                                                             (unsigned char *) "spec"),
+                         librdf_new_node_from_uri_string(world, desc->uri_string)
+            );
+    }
+
+    librdf_free_node(bnode);
+}
+
 static int description_add_serialisers()
 {
-    raptor_stringbuffer *buffer = raptor_new_stringbuffer();
-    size_t str_len;
-    int i;
+    raptor_world *raptor = librdf_world_get_raptor(world);
+    unsigned int i;
 
     // FIXME: This should use the librdf API
     // FIXME: ignore duplicates
     for (i = 0; 1; i++) {
-        const char *name, *label, *mime_type;
-        const unsigned char *uri;
-        librdf_node *bnode = NULL;
+        const raptor_syntax_description *desc = NULL;
 
-        if (raptor_serializers_enumerate(i, &name, &label, &mime_type, &uri))
+        desc = raptor_world_get_serializer_description(raptor, i);
+        if (!desc)
             break;
 
-        bnode = librdf_new_node_from_blank_identifier(world, NULL);
-        librdf_model_add(sd_model,
-                         librdf_new_node_from_node(service_node),
-                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                             (unsigned char *) "resultFormat"),
-                         librdf_new_node_from_node(bnode)
-            );
-
-        if (name) {
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             LIBRDF_S_label(world),
-                             librdf_new_node_from_literal(world, (unsigned char *) name, NULL, 0)
-                );
-        }
-
-        if (label) {
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             LIBRDF_S_comment(world),
-                             librdf_new_node_from_literal(world, (unsigned char *) label, NULL, 0)
-                );
-        }
-
-        if (mime_type) {
-            if (raptor_stringbuffer_length(buffer))
-                raptor_stringbuffer_append_counted_string(buffer, (unsigned char *) ",", 1, 1);
-
-            raptor_stringbuffer_append_string(buffer, (unsigned char *) mime_type, 1);
-
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                                 (unsigned char *) "mediaType"),
-                             librdf_new_node_from_literal(world, (unsigned char *) mime_type, NULL,
-                                                          0)
-                );
-        }
-
-        if (uri) {
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                                 (unsigned char *) "spec"),
-                             librdf_new_node_from_uri_string(world, uri)
-                );
-        }
-
-        librdf_free_node(bnode);
+        add_raptor_syntax_description(desc, "resultFormat");
     }
-
-    // FIXME: temporary hack until raptor supports HTML
-    raptor_stringbuffer_append_counted_string(buffer,
-                                              (unsigned char *) ",text/html,application/xhtml+xml",
-                                              32, 1);
-
-    // Convert the buffer of accepted mime types into a string
-    str_len = raptor_stringbuffer_length(buffer) + 1;
-    accepted_serialiser_types = calloc(1, str_len);
-    raptor_stringbuffer_copy_to_string(buffer, (unsigned char *) accepted_serialiser_types,
-                                       str_len);
-    raptor_free_stringbuffer(buffer);
 
     return 0;
 }
 
 static int description_add_parsers()
 {
+    raptor_world *raptor = librdf_world_get_raptor(world);
     int i;
 
     // FIXME: This should use the librdf API
     for (i = 0; 1; i++) {
-        const char *name, *label, *mime_type;
-        const unsigned char *uri;
-        librdf_node *bnode = NULL;
+        const raptor_syntax_description *desc = NULL;
 
-        if (raptor_syntaxes_enumerate(i, &name, &label, &mime_type, &uri))
+        desc = raptor_world_get_parser_description(raptor, i);
+        if (!desc)
             break;
 
-        bnode = librdf_new_node_from_blank_identifier(world, NULL);
-        librdf_model_add(sd_model,
-                         librdf_new_node_from_node(service_node),
-                         librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                             (unsigned char *) "parseFormat"),
-                         librdf_new_node_from_node(bnode)
-            );
-
-        if (name) {
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             LIBRDF_S_label(world),
-                             librdf_new_node_from_literal(world, (unsigned char *) name, NULL, 0)
-                );
-        }
-
-        if (label) {
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             LIBRDF_S_comment(world),
-                             librdf_new_node_from_literal(world, (unsigned char *) label, NULL, 0)
-                );
-        }
-
-        if (mime_type) {
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                                 (unsigned char *) "mediaType"),
-                             librdf_new_node_from_literal(world, (unsigned char *) mime_type, NULL,
-                                                          0)
-                );
-        }
-
-        if (uri) {
-            librdf_model_add(sd_model,
-                             librdf_new_node_from_node(bnode),
-                             librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                                 (unsigned char *) "spec"),
-                             librdf_new_node_from_uri_string(world, uri)
-                );
-        }
-
-        librdf_free_node(bnode);
+        add_raptor_syntax_description(desc, "parseFormat");
     }
 
     return 0;
 }
 
+static char * generate_serialiser_types()
+{
+    raptor_world *raptor = librdf_world_get_raptor(world);
+    raptor_stringbuffer *buffer = raptor_new_stringbuffer();
+    char* type_string = NULL;
+    unsigned int i,m;
+    size_t str_len;
+
+    // FIXME: This should use the librdf API
+    // FIXME: ignore duplicates
+    for (i = 0; 1; i++) {
+        const raptor_syntax_description *desc = NULL;
+
+        desc = raptor_world_get_serializer_description(raptor, i);
+        if (!desc)
+            break;
+
+        for(m = 0; m < desc->mime_types_count; m++) {
+            const raptor_type_q mime_type = desc->mime_types[m];
+            if (raptor_stringbuffer_length(buffer))
+                raptor_stringbuffer_append_counted_string(buffer, (unsigned char *) ",", 1, 1);
+
+            // FIXME: add q value
+            raptor_stringbuffer_append_string(buffer, (unsigned char *) mime_type.mime_type, 1);
+        }
+    }
+
+    str_len = raptor_stringbuffer_length(buffer) + 1;
+    type_string = calloc(1, str_len);
+    raptor_stringbuffer_copy_to_string(buffer, (unsigned char *) type_string, str_len);
+    raptor_free_stringbuffer(buffer);
+
+    return type_string;
+}
 
 int description_init(void)
 {
     char *description;
+
+    accepted_serialiser_types = generate_serialiser_types();
 
     // Create namespace URIs
     saddle_ns_uri = librdf_new_uri(world, (unsigned char *) "http://www.w3.org/2005/03/saddle/#");
@@ -329,11 +316,16 @@ int description_init(void)
 
     sd_model = librdf_new_model(world, sd_storage, NULL);
     if (!sd_model) {
-        perror("Failed to create model for service description.");
+        redstore_error("Failed to create model for service description.");
         return -1;
     }
 
-    service_node = librdf_new_node_from_blank_identifier(world, NULL);
+    service_node = librdf_new_node(world);
+    if (!service_node) {
+        redstore_error("Failed to create service description bnode - librdf_new_node returned NULL");
+        return -1;
+    }
+
     librdf_model_add(sd_model,
                      librdf_new_node_from_node(service_node),
                      LIBRDF_MS_type(world),
@@ -376,7 +368,7 @@ static librdf_node *new_node_from_integer(librdf_world * world, int i)
     if (!string)
         return NULL;
 
-    /* snprintf() takes as length the buffer size including NUL */
+    /* snprintf() takes as length the buffer size including NULL */
     snprintf((char *) string, INTEGER_BUFFER_SIZE + 1, "%d", i);
 
     xsd_integer_uri =
