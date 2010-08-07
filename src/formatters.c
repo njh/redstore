@@ -24,14 +24,6 @@
 
 #include "redstore.h"
 
-static void node_print_xml(librdf_node * node, raptor_iostream * iostream)
-{
-    unsigned char *str;
-    size_t str_len;
-    str = librdf_node_to_counted_string(node, &str_len);
-    raptor_xml_escape_string_write(str, str_len, 0, iostream);
-    free(str);
-}
 
 redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
@@ -93,52 +85,6 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
     }
 
     librdf_free_serializer(serialiser);
-
-    return response;
-}
-
-
-redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
-                                             librdf_stream * stream, const char *format_str)
-{
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
-    FILE *socket = redhttp_request_get_socket(request);
-    raptor_iostream *iostream = NULL;
-    raptor_world *raptor = librdf_world_get_raptor(world);
-
-    // Send back the response headers
-    redhttp_response_add_header(response, "Content-Type", "text/html");
-    redhttp_response_send(response, request);
-
-    iostream = raptor_new_iostream_to_file_handle(raptor, socket);
-    raptor_iostream_string_write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", iostream);
-    raptor_iostream_string_write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n", iostream);
-    raptor_iostream_string_write("          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n", iostream);
-    raptor_iostream_string_write("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n", iostream);
-    raptor_iostream_string_write("<head><title>RedStore</title></head><body>", iostream);
-    raptor_iostream_string_write("<table class=\"triples\" border=\"1\">\n", iostream);
-    raptor_iostream_string_write("<tr><th>Subject</th><th>Predicate</th><th>Object</th></tr>\n",
-                                 iostream);
-    while (!librdf_stream_end(stream)) {
-        librdf_statement *statement = librdf_stream_get_object(stream);
-        if (!statement) {
-            redstore_error("librdf_stream_next returned NULL");
-            break;
-        }
-
-        raptor_iostream_string_write("<tr><td>", iostream);
-        node_print_xml(librdf_statement_get_subject(statement), iostream);
-        raptor_iostream_string_write("</td><td>", iostream);
-        node_print_xml(librdf_statement_get_predicate(statement), iostream);
-        raptor_iostream_string_write("</td><td>", iostream);
-        node_print_xml(librdf_statement_get_object(statement), iostream);
-        raptor_iostream_string_write("</td></tr>\n", iostream);
-
-        librdf_stream_next(stream);
-    }
-
-    raptor_iostream_string_write("</table></body></html>\n", iostream);
-    raptor_free_iostream(iostream);
 
     return response;
 }
@@ -213,9 +159,7 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
     if (format_str == NULL)
         format_str = DEFAULT_GRAPH_FORMAT;
 
-    if (redstore_is_html_format(format_str)) {
-        response = format_graph_stream_html(request, stream, format_str);
-    } else if (redstore_is_nquads_format(format_str)) {
+    if (redstore_is_nquads_format(format_str)) {
         response = format_graph_stream_nquads(request, stream, format_str);
     } else {
         response = format_graph_stream_librdf(request, stream, format_str);
@@ -227,10 +171,8 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
 }
 
 
-redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
-                                                        request,
-                                                        librdf_query_results *
-                                                        results, const char *format_str)
+redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
+                                                 librdf_query_results * results)
 {
     raptor_world *raptor = librdf_world_get_raptor(world);
     FILE *socket = redhttp_request_get_socket(request);
@@ -238,7 +180,12 @@ redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
     redhttp_response_t *response = NULL;
     librdf_query_results_formatter *formatter = NULL;
     const char *mime_type = NULL;
+    char *format_str = NULL;
     unsigned int i;
+
+    format_str = redstore_get_format(request, accepted_query_result_types);
+    if (format_str == NULL)
+        format_str = DEFAULT_RESULTS_FORMAT;
 
     for (i = 0; 1; i++) {
         const char *name, *mime;
@@ -278,134 +225,10 @@ redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
         // FIXME: send something to the browser?
     }
 
+    redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
+
     raptor_free_iostream(iostream);
     librdf_free_query_results_formatter(formatter);
-
-    return response;
-}
-
-redhttp_response_t *format_bindings_query_result_html(redhttp_request_t *
-                                                      request,
-                                                      librdf_query_results *
-                                                      results, const char *format_str)
-{
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
-    raptor_world *raptor = librdf_world_get_raptor(world);
-    raptor_iostream *iostream = NULL;
-    FILE *socket = redhttp_request_get_socket(request);
-    int i, count;
-
-    // Send back the response headers
-    redhttp_response_add_header(response, "Content-Type", "text/html");
-    redhttp_response_send(response, request);
-
-    iostream = raptor_new_iostream_to_file_handle(raptor, socket);
-    raptor_iostream_string_write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", iostream);
-    raptor_iostream_string_write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n", iostream);
-    raptor_iostream_string_write("          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n", iostream);
-    raptor_iostream_string_write("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n", iostream);
-    raptor_iostream_string_write("<head><title>RedStore</title></head><body>", iostream);
-
-    count = librdf_query_results_get_bindings_count(results);
-    raptor_iostream_string_write("<table class=\"sparql\" border=\"1\">\n<tr>", iostream);
-    for (i = 0; i < count; i++) {
-        const char *name = librdf_query_results_get_binding_name(results, i);
-        // FIXME: this should be escaped
-        raptor_iostream_string_write("<th>", iostream);
-        raptor_iostream_string_write(name, iostream);
-        raptor_iostream_string_write("</th>", iostream);
-    }
-    raptor_iostream_string_write("</tr>\n", iostream);
-
-    while (!librdf_query_results_finished(results)) {
-        raptor_iostream_string_write("<tr>", iostream);
-        for (i = 0; i < count; i++) {
-            librdf_node *value = librdf_query_results_get_binding_value(results, i);
-            raptor_iostream_string_write("<td>", iostream);
-            if (value) {
-                node_print_xml(value, iostream);
-                librdf_free_node(value);
-            } else {
-                raptor_iostream_string_write("NULL", iostream);
-            }
-            raptor_iostream_string_write("</td>", iostream);
-        }
-        raptor_iostream_string_write("</tr>\n", iostream);
-        librdf_query_results_next(results);
-    }
-
-    raptor_iostream_string_write("</table></body></html>\n", iostream);
-
-    raptor_free_iostream(iostream);
-
-    return response;
-}
-
-redhttp_response_t *format_bindings_query_result_text(redhttp_request_t *
-                                                      request,
-                                                      librdf_query_results *
-                                                      results, const char *format_str)
-{
-    redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
-    FILE *socket = redhttp_request_get_socket(request);
-    int i, count;
-
-    // Send back the response headers
-    redhttp_response_add_header(response, "Content-Type", "text/plain");
-    redhttp_response_send(response, request);
-
-    count = librdf_query_results_get_bindings_count(results);
-    for (i = 0; i < count; i++) {
-        const char *name = librdf_query_results_get_binding_name(results, i);
-        fprintf(socket, "?%s", name);
-        if (i != count - 1)
-            fprintf(socket, "\t");
-    }
-    fprintf(socket, "\n");
-
-    while (!librdf_query_results_finished(results)) {
-        for (i = 0; i < count; i++) {
-            librdf_node *value = librdf_query_results_get_binding_value(results, i);
-            if (value) {
-                char *str = (char *) librdf_node_to_string(value);
-                if (str) {
-                    fputs(str, socket);
-                    free(str);
-                }
-                librdf_free_node(value);
-            } else {
-                fputs("NULL", socket);
-            }
-            if (i != count - 1)
-                fprintf(socket, "\t");
-        }
-        fprintf(socket, "\n");
-        librdf_query_results_next(results);
-    }
-
-    return response;
-}
-
-redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
-                                                 librdf_query_results * results)
-{
-    redhttp_response_t *response;
-    char *format_str;
-
-    format_str = redstore_get_format(request, accepted_query_result_types);
-    if (format_str == NULL)
-        format_str = DEFAULT_RESULTS_FORMAT;
-
-    if (redstore_is_html_format(format_str)) {
-        response = format_bindings_query_result_html(request, results, format_str);
-    } else if (redstore_is_text_format(format_str)) {
-        response = format_bindings_query_result_text(request, results, format_str);
-    } else {
-        response = format_bindings_query_result_librdf(request, results, format_str);
-    }
-    free(format_str);
-
-    redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
 
     return response;
 }
