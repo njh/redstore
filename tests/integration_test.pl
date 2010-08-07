@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 147;
+use Test::More tests => 149;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -122,8 +122,9 @@ is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # Test a CONSTRUCT query an empty store
 $response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=ntriples");
-is($response->code, 500, "SPARQL CONSTRUCT query on empty store is gives 500 error");
-# FIXME: an empty graph would be better
+is($response->code, 200, "SPARQL CONSTRUCT query on empty store does not give an error");
+is($response->content_type, 'text/plain', "SPARQL CONSTRUCT query gives the right response type");
+is($response->content, '', "SPARQL CONSTRUCT query on empty store returns empty N-Triples data");
 
 # Test an ASK query an empty store
 $response = $ua->get($base_url."query?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
@@ -186,8 +187,8 @@ is_valid_xhtml($response->content, "Redirect page should be valid XHTML");
 # Test a SELECT query with an HTML response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=html");
 is($response->code, 200, "SPARQL SELECT query is successful");
-is($response->content_type, "text/html", "SPARQL SELECT query Content Type data is correct");
-like($response->content, qr[<td>"?v"?</td>], "SPARQL SELECT Query returned correct value");
+is($response->content_type, "application/xhtml+xml", "SPARQL SELECT query Content Type data is correct");
+like($response->content, qr[<td><span class="literal"><span class="value">v</span></span></td>], "SPARQL SELECT Query returned correct value");
 is_valid_xhtml($response->content, "HTML SPARQL response should be valid XHTML");
 
 # Test a SELECT query with an XML response
