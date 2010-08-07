@@ -143,61 +143,11 @@ redhttp_response_t *format_graph_stream_html(redhttp_request_t * request,
     return response;
 }
 
-// This method is a copy of librdf_node_write()
-// which is not guaranteed to continue being in the ntriples format
-static int node_write_ntriple(librdf_node * node, raptor_iostream * iostr)
-{
-    static const unsigned char const null_string[] = "(null)";
-    const unsigned char *str = NULL;
-    size_t len;
 
-    if (!node) {
-        raptor_iostream_counted_string_write(null_string, sizeof(null_string), iostr);
-        return 0;
-    }
-
-    switch (librdf_node_get_type(node)) {
-    case LIBRDF_NODE_TYPE_LITERAL:
-        raptor_iostream_write_byte('"', iostr);
-        str = librdf_node_get_literal_value_as_counted_string(node, &len);
-        raptor_string_ntriples_write(str, len, '"', iostr);
-        raptor_iostream_write_byte('"', iostr);
-        if (librdf_node_get_literal_value_language(node)) {
-            raptor_iostream_write_byte('@', iostr);
-            raptor_iostream_string_write(librdf_node_get_literal_value_language(node), iostr);
-        }
-        if (librdf_node_get_literal_value_datatype_uri(node)) {
-            raptor_iostream_counted_string_write("^^<", 3, iostr);
-            str = librdf_uri_as_counted_string(librdf_node_get_literal_value_datatype_uri(node),
-                                               &len);
-            raptor_string_ntriples_write(str, len, '>', iostr);
-            raptor_iostream_write_byte('>', iostr);
-        }
-        break;
-
-    case LIBRDF_NODE_TYPE_BLANK:
-        raptor_iostream_counted_string_write("_:", 2, iostr);
-        str = librdf_node_get_blank_identifier(node);
-        len = strlen((char *) str);
-        raptor_iostream_counted_string_write(str, len, iostr);
-        break;
-
-    case LIBRDF_NODE_TYPE_RESOURCE:
-        raptor_iostream_write_byte('<', iostr);
-        str = librdf_uri_as_counted_string(librdf_node_get_uri(node), &len);
-        raptor_string_ntriples_write(str, len, '>', iostr);
-        raptor_iostream_write_byte('>', iostr);
-        break;
-
-    case LIBRDF_NODE_TYPE_UNKNOWN:
-    default:
-        redstore_error("Unknown node type during dump");
-        return 1;
-    }
-
-    return 0;
-}
-
+// We need to be able to cast librdf_node to raptor_term
+#ifndef LIBRDF_USE_RAPTOR_TERM
+#error LIBRDF_USE_RAPTOR_TERM must be set to be able to cast librdf_node to raptor_term
+#endif
 
 redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
@@ -224,18 +174,24 @@ redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
 
     while (!librdf_stream_end(stream)) {
         librdf_statement *statement = librdf_stream_get_object(stream);
-        librdf_node *context = (librdf_node *) librdf_stream_get_context(stream);
+        const raptor_term *subject, *predicate, *object, *context;
+
         if (!statement)
             break;
 
-        node_write_ntriple(librdf_statement_get_subject(statement), iostream);
+        subject = (const raptor_term*)librdf_statement_get_subject(statement);
+        predicate = (const raptor_term*)librdf_statement_get_predicate(statement);
+        object = (const raptor_term *)librdf_statement_get_object(statement);
+        context = (const raptor_term *)librdf_stream_get_context(stream);
+
+        raptor_term_ntriples_write(subject, iostream);
         raptor_iostream_write_byte(' ', iostream);
-        node_write_ntriple(librdf_statement_get_predicate(statement), iostream);
+        raptor_term_ntriples_write(predicate, iostream);
         raptor_iostream_write_byte(' ', iostream);
-        node_write_ntriple(librdf_statement_get_object(statement), iostream);
+        raptor_term_ntriples_write(object, iostream);
         if (context) {
             raptor_iostream_write_byte(' ', iostream);
-            node_write_ntriple(context, iostream);
+            raptor_term_ntriples_write(context, iostream);
         }
         raptor_iostream_counted_string_write(" .\n", 3, iostream);
 
@@ -246,7 +202,6 @@ redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
 
     return response;
 }
-
 
 
 redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stream * stream)
