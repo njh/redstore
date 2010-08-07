@@ -157,7 +157,7 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
 
     format_str = redstore_get_format(request, accepted_serialiser_types);
     if (format_str == NULL)
-        format_str = DEFAULT_GRAPH_FORMAT;
+        format_str = DEFAULT_GRAPH_FORMAT;    // FIXME: this later gets freed
 
     if (redstore_is_nquads_format(format_str)) {
         response = format_graph_stream_nquads(request, stream, format_str);
@@ -185,7 +185,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
 
     format_str = redstore_get_format(request, accepted_query_result_types);
     if (format_str == NULL)
-        format_str = DEFAULT_RESULTS_FORMAT;
+        format_str = DEFAULT_RESULTS_FORMAT;    // FIXME: this later gets freed
 
     for (i = 0; 1; i++) {
         const char *name, *mime;
@@ -200,6 +200,8 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
             break;
         }
     }
+
+    free(format_str);
 
     if (!formatter) {
         return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,

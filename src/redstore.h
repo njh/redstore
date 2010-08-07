@@ -78,14 +78,14 @@ extern const char *storage_type;
 extern librdf_world *world;
 extern librdf_storage *storage;
 extern librdf_model *model;
+extern redhttp_negotiate_t *accepted_serialiser_types;
+extern redhttp_negotiate_t *accepted_query_result_types;
 
 extern librdf_storage *sd_storage;
 extern librdf_model *sd_model;
 extern librdf_node *service_node;
 extern librdf_uri *saddle_ns_uri;
 extern librdf_uri *sd_ns_uri;
-extern char *accepted_serialiser_types;
-extern char *accepted_query_result_types;
 
 
 // ------- Callbacks ---------
@@ -170,7 +170,7 @@ redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user
 
 void redstore_log(RedstoreLogLevel level, const char *fmt, ...);
 
-char *redstore_get_format(redhttp_request_t * request, const char *supported);
+char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t *supported);
 int redstore_is_html_format(const char *str);
 int redstore_is_text_format(const char *str);
 int redstore_is_nquads_format(const char *str);

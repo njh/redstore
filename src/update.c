@@ -28,7 +28,7 @@
 redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph)
 {
     redhttp_response_t *response = NULL;
-    
+
     if (librdf_model_context_add_statements(model, graph, stream)) {
         return redstore_error_page(REDSTORE_ERROR,
                                    REDHTTP_INTERNAL_SERVER_ERROR,
@@ -37,8 +37,9 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
 
     // FIXME: check for parse errors or parse warnings
     if (!response) {
+        redhttp_negotiate_t *accept = redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
+        char *format_str = redstore_get_format(request, accept);
         const char *graph_str = NULL;
-        char *format_str = NULL;
 
         if (graph) {
             librdf_uri *graph_uri = librdf_node_get_uri(graph);
@@ -47,11 +48,10 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
         } else {
             graph_str = "the default graph";
         }
-        
+
         redstore_info("Successfully added triples to graph.");
         import_count++;
 
-        format_str = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
         if (redstore_is_html_format(format_str)) {
             response = redstore_page_new("OK");
             redstore_page_append_string(response, "<p>Successfully added triples to ");
@@ -65,6 +65,7 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
             redhttp_response_set_content(response, text, BUFSIZ);
         }
         free(format_str);
+        redhttp_negotiate_free(&accept);
     }
 
     return response;
@@ -81,8 +82,9 @@ redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request
 
 redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph)
 {
+    redhttp_negotiate_t *accept = redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
+    char *format_str = redstore_get_format(request, accept);
     redhttp_response_t *response = NULL;
-    char *format_str = NULL;
     const char *message = NULL;
     int count = 0;
 
@@ -107,7 +109,6 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
     }
 
     // Send the response
-    format_str = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
     if (redstore_is_html_format(format_str)) {
         response = redstore_page_new("OK");
         redstore_page_append_strings(response, "<p>", message, "</p>\n", NULL);
@@ -119,6 +120,7 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
         redhttp_response_set_content(response, text, BUFSIZ);
     }
     free(format_str);
+    redhttp_negotiate_free(&accept);
 
     return response;
 }
@@ -143,7 +145,7 @@ redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned
         }
         redstore_debug("graph-uri: %s", graph_uri_str);
     }
-    
+
     if (base_uri_str) {
         base_uri = librdf_new_uri(world, (unsigned char*)base_uri_str);
         if (!base_uri) {
@@ -315,11 +317,11 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
                                 "librdf_new_uri failed for Graph URI");
         goto CLEANUP;
     }
-    
+
     redstore_info("Loading URI: %s", librdf_uri_as_string(uri));
     redstore_debug("Base URI: %s", librdf_uri_as_string(base_uri));
     redstore_debug("Graph URI: %s", librdf_uri_as_string(graph_uri));
-    
+
     if (parser_arg) {
         redstore_info("Parsing using: %s", parser_arg);
     } else {
@@ -348,7 +350,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
                                    REDHTTP_INTERNAL_SERVER_ERROR,
                                    "librdf_new_node_from_uri failed for graph-uri.");
     }
-  
+
     response = load_stream_into_graph(request, stream, graph);
 
   CLEANUP:

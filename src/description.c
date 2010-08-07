@@ -32,8 +32,6 @@ librdf_model *sd_model = NULL;
 librdf_node *service_node = NULL;
 librdf_uri *saddle_ns_uri = NULL;
 librdf_uri *sd_ns_uri = NULL;
-char *accepted_serialiser_types = NULL;
-char *accepted_query_result_types = NULL;
 
 
 static int description_add_query_languages()
@@ -94,8 +92,6 @@ static int description_add_query_languages()
 
 static int description_add_query_result_formats()
 {
-    raptor_stringbuffer *buffer = raptor_new_stringbuffer();
-    size_t str_len;
     int i;
 
     for (i = 0; 1; i++) {
@@ -131,11 +127,6 @@ static int description_add_query_result_formats()
         }
 
         if (mime_type) {
-            if (raptor_stringbuffer_length(buffer))
-                raptor_stringbuffer_append_counted_string(buffer, (unsigned char *) ",", 1, 1);
-
-            raptor_stringbuffer_append_string(buffer, (unsigned char *) mime_type, 1);
-
             librdf_model_add(sd_model,
                              librdf_new_node_from_node(bnode),
                              librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
@@ -157,13 +148,6 @@ static int description_add_query_result_formats()
         librdf_free_node(bnode);
     }
 
-    // Convert the buffer of accepted mime types into a string
-    str_len = raptor_stringbuffer_length(buffer) + 1;
-    accepted_query_result_types = calloc(1, str_len);
-    raptor_stringbuffer_copy_to_string(buffer, (unsigned char *) accepted_query_result_types,
-                                       str_len);
-    raptor_free_stringbuffer(buffer);
-
     return 0;
 }
 
@@ -180,7 +164,7 @@ static int add_raptor_syntax_description(const raptor_syntax_description *desc, 
 
     librdf_model_add(sd_model,
                      librdf_new_node_from_node(service_node),
-                     librdf_new_node_from_uri_local_name(world, saddle_ns_uri, type),
+                     librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (const unsigned char *) type),
                      librdf_new_node_from_node(bnode)
         );
 
@@ -188,7 +172,7 @@ static int add_raptor_syntax_description(const raptor_syntax_description *desc, 
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(bnode),
                          LIBRDF_S_label(world),
-                         librdf_new_node_from_literal(world, desc->names[i], NULL, 0)
+                         librdf_new_node_from_literal(world, (const unsigned char *) desc->names[i], NULL, 0)
             );
     }
 
@@ -196,7 +180,7 @@ static int add_raptor_syntax_description(const raptor_syntax_description *desc, 
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(bnode),
                          LIBRDF_S_comment(world),
-                         librdf_new_node_from_literal(world, (unsigned char *) desc->label, NULL, 0)
+                         librdf_new_node_from_literal(world, (const unsigned char *) desc->label, NULL, 0)
             );
     }
 
@@ -205,7 +189,7 @@ static int add_raptor_syntax_description(const raptor_syntax_description *desc, 
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(bnode),
                          librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                             (unsigned char *) "mediaType"),
+                                                             (const unsigned char *) "mediaType"),
                          librdf_new_node_from_literal(world, (unsigned char *) mime_type.mime_type, NULL,
                                                       0)
             );
@@ -215,12 +199,14 @@ static int add_raptor_syntax_description(const raptor_syntax_description *desc, 
         librdf_model_add(sd_model,
                          librdf_new_node_from_node(bnode),
                          librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                             (unsigned char *) "spec"),
-                         librdf_new_node_from_uri_string(world, desc->uri_string)
+                                                             (const unsigned char *) "spec"),
+                         librdf_new_node_from_uri_string(world, (const unsigned char *) desc->uri_string)
             );
     }
 
     librdf_free_node(bnode);
+
+    return 0;
 }
 
 static int description_add_serialisers()
@@ -262,46 +248,9 @@ static int description_add_parsers()
     return 0;
 }
 
-static char * generate_serialiser_types()
-{
-    raptor_world *raptor = librdf_world_get_raptor(world);
-    raptor_stringbuffer *buffer = raptor_new_stringbuffer();
-    char* type_string = NULL;
-    unsigned int i,m;
-    size_t str_len;
-
-    // FIXME: This should use the librdf API
-    // FIXME: ignore duplicates
-    for (i = 0; 1; i++) {
-        const raptor_syntax_description *desc = NULL;
-
-        desc = raptor_world_get_serializer_description(raptor, i);
-        if (!desc)
-            break;
-
-        for(m = 0; m < desc->mime_types_count; m++) {
-            const raptor_type_q mime_type = desc->mime_types[m];
-            if (raptor_stringbuffer_length(buffer))
-                raptor_stringbuffer_append_counted_string(buffer, (unsigned char *) ",", 1, 1);
-
-            // FIXME: add q value
-            raptor_stringbuffer_append_string(buffer, (unsigned char *) mime_type.mime_type, 1);
-        }
-    }
-
-    str_len = raptor_stringbuffer_length(buffer) + 1;
-    type_string = calloc(1, str_len);
-    raptor_stringbuffer_copy_to_string(buffer, (unsigned char *) type_string, str_len);
-    raptor_free_stringbuffer(buffer);
-
-    return type_string;
-}
-
 int description_init(void)
 {
     char *description;
-
-    accepted_serialiser_types = generate_serialiser_types();
 
     // Create namespace URIs
     saddle_ns_uri = librdf_new_uri(world, (unsigned char *) "http://www.w3.org/2005/03/saddle/#");
@@ -583,14 +532,7 @@ redhttp_response_t *handle_description_get(redhttp_request_t * request, void *us
 
 void description_free(void)
 {
-    if (accepted_serialiser_types)
-        free(accepted_serialiser_types);
-
-    if (accepted_query_result_types)
-        free(accepted_query_result_types);
-
     librdf_free_storage(sd_storage);
-
     librdf_free_uri(saddle_ns_uri);
     librdf_free_uri(sd_ns_uri);
 }

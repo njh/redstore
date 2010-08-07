@@ -43,6 +43,10 @@ librdf_world *world = NULL;
 librdf_model *model = NULL;
 librdf_storage *storage = NULL;
 
+redhttp_negotiate_t *accepted_serialiser_types = NULL;
+redhttp_negotiate_t *accepted_query_result_types = NULL;
+
+
 
 static void termination_handler(int signum)
 {
@@ -154,7 +158,46 @@ static int redland_log_handler(void *user, librdf_log_message * msg)
     return 0;
 }
 
-char *redstore_get_format(redhttp_request_t * request, const char *supported)
+static void redstore_build_accepted_type_list()
+{
+    raptor_world *raptor = librdf_world_get_raptor(world);
+    unsigned int i,m;
+
+    // FIXME: This should use the librdf API
+    for (i = 0; 1; i++) {
+        const raptor_syntax_description *desc = NULL;
+
+        desc = raptor_world_get_serializer_description(raptor, i);
+        if (!desc)
+            break;
+
+        for(m = 0; m < desc->mime_types_count; m++) {
+            redhttp_negotiate_add(
+                &accepted_serialiser_types,
+                desc->mime_types[m].mime_type,
+                desc->mime_types[m].mime_type_len,
+                desc->mime_types[m].q
+            );
+        }
+    }
+
+
+    for (i = 0; 1; i++) {
+        const char *mime_type;
+        if (librdf_query_results_formats_enumerate(world, i, NULL, NULL, NULL, &mime_type))
+            break;
+
+        redhttp_negotiate_add(
+            &accepted_query_result_types,
+            mime_type,
+            strlen(mime_type),
+            10
+        );
+    }
+}
+
+
+char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t *supported)
 {
     const char *format_arg;
     char *format_str = NULL;
@@ -166,10 +209,13 @@ char *redstore_get_format(redhttp_request_t * request, const char *supported)
         redstore_debug("format_arg: %s", format_str);
     } else if (!format_str) {
         const char *accept_str = redhttp_request_get_header(request, "Accept");
-        format_str = redhttp_negotiate_choose(supported, accept_str);
+        redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
+        format_str = redhttp_negotiate_choose(&supported, &accept);
         redstore_debug("accept: %s", accept_str);
-        redstore_debug("supported: %s", supported);
+        // FIXME: display list of supported formats
+        redstore_debug("supported: %d", redhttp_negotiate_count(&supported));
         redstore_debug("chosen: %s", format_str);
+        redhttp_negotiate_free(&accept);
     }
 
     return format_str;
@@ -249,6 +295,9 @@ int main(int argc, char *argv[])
     }
     librdf_world_open(world);
     librdf_world_set_logger(world, NULL, redland_log_handler);
+
+    // Build list of accepted mime types
+    redstore_build_accepted_type_list();
 
     // Parse Switches
     while ((opt = getopt(argc, argv, "p:b:s:t:nvqh")) != -1) {
@@ -358,7 +407,7 @@ int main(int argc, char *argv[])
         redstore_fatal("Failed to open %s storage '%s'", storage_type, storage_name);
         return -1;
     }
-    // Create model object 
+    // Create model object
     model = librdf_new_model(world, storage, NULL);
     if (!model) {
         redstore_fatal("Failed to create model for storage.");
@@ -386,6 +435,8 @@ int main(int argc, char *argv[])
     librdf_free_hash(storage_options);
     librdf_free_world(world);
 
+    redhttp_negotiate_free(&accepted_serialiser_types);
+    redhttp_negotiate_free(&accepted_query_result_types);
     redhttp_server_free(server);
 
     return 0;                   // FIXME: should return non-zero if there was a fatal error

@@ -34,24 +34,24 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
 
     if (!librdf_iterator_end(iterator)) {
         redstore_page_append_string(response, "<ul>\n");
-    
+
         while (!librdf_iterator_end(iterator)) {
             librdf_uri *uri;
             librdf_node *node;
             char *escaped;
-    
+
             node = (librdf_node *) librdf_iterator_get_object(iterator);
             if (!node) {
                 redstore_error("librdf_iterator_get_next returned NULL");
                 break;
             }
-    
+
             uri = librdf_node_get_uri(node);
             if (!uri) {
                 redstore_error("Failed to get URI for context node");
                 break;
             }
-    
+
             escaped = redhttp_url_escape((char *) librdf_uri_as_string(uri));
             redstore_page_append_string(response, "<li><a href=\"/data/");
             redstore_page_append_escaped(response, escaped, 0);
@@ -59,14 +59,14 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
             redstore_page_append_escaped(response, (char *) librdf_uri_as_string(uri), 0);
             redstore_page_append_string(response, "</a></li>\n");
             free(escaped);
-    
+
             librdf_iterator_next(iterator);
         }
         redstore_page_append_string(response, "</ul>\n");
-    
+
         redstore_page_append_string(response,
                                     "<p>This document is also available as <a href=\"/graphs?format=text\">plain text</a>.</p>\n");
-        
+
     } else {
         redstore_page_append_string(response, "<p style=\"font-style: italic\">No named graphs.</p>\n");
     }
@@ -114,9 +114,10 @@ static redhttp_response_t *handle_text_graph_index(redhttp_request_t * request,
 
 redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_data)
 {
+    redhttp_negotiate_t *accept = redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
+    char *format_str = redstore_get_format(request, accept);
     redhttp_response_t *response = NULL;
     librdf_iterator *iterator = NULL;
-    char *format_str = redstore_get_format(request, "text/plain,text/html,application/xhtml+xml");
 
     iterator = librdf_storage_get_contexts(storage);
     if (!iterator) {
@@ -134,6 +135,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
     }
 
     free(format_str);
+    redhttp_negotiate_free(&accept);
     librdf_free_iterator(iterator);
 
     return response;
