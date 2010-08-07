@@ -54,7 +54,7 @@ static struct redhttp_message_s {
     REDHTTP_INTERNAL_SERVER_ERROR, "Internal Server Error"}, {
     REDHTTP_NOT_IMPLEMENTED, "Not Implemented"}, {
     REDHTTP_BAD_GATEWAY, "Bad Gateway"}, {
-REDHTTP_SERVICE_UNAVAILABLE, "Service Unavailable"},};
+REDHTTP_SERVICE_UNAVAILABLE, "Service Unavailable"},{0,NULL}};
 
 redhttp_response_t *redhttp_response_new(int code, const char *message)
 {
@@ -70,7 +70,7 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
     } else {
         response->status_code = code;
         if (message == NULL) {
-            for (i = 0; i < sizeof(redhttp_status_messages); i++) {
+            for (i = 0; redhttp_status_messages[i].message; i++) {
                 if (redhttp_status_messages[i].code == code) {
                     message = redhttp_status_messages[i].message;
                     break;
