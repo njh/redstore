@@ -42,16 +42,16 @@ static int compare_types(const char *server_type, const char *client_type)
     }
 }
 
-char *redhttp_negotiate_choose(const char *server, const char *client)
+char *redhttp_negotiate_choose(redhttp_negotiate_t **server,
+                               redhttp_negotiate_t **client)
 {
-    redhttp_negotiate_t *s, *s_list = redhttp_negotiate_parse(server);
-    redhttp_negotiate_t *c, *c_list = redhttp_negotiate_parse(client);
     const char *best_type = NULL;
+    redhttp_negotiate_t *s, *c;
     int best_score = -1;
     char *result = NULL;
 
-    for (s = s_list; s; s = s->next) {
-        for (c = c_list; c; c = c->next) {
+    for (s = *server; s; s = s->next) {
+        for (c = *client; c; c = c->next) {
             if (compare_types(s->type, c->type)) {
                 int score = s->q * c->q;
                 if (score > best_score) {
@@ -70,9 +70,6 @@ char *redhttp_negotiate_choose(const char *server, const char *client)
             strcpy(result, best_type);
         }
     }
-
-    redhttp_negotiate_free(&s_list);
-    redhttp_negotiate_free(&c_list);
 
     return result;
 }

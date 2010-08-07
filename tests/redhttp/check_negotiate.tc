@@ -77,21 +77,37 @@ ck_assert_int_eq(redhttp_negotiate_count(&neg), 0);
 redhttp_negotiate_free(&neg);
 
 #test negotiate_choose_simple
-char* chosen = redhttp_negotiate_choose("text/plain,text/html", "text/html");
+redhttp_negotiate_t *server = redhttp_negotiate_parse("text/plain,text/html");
+redhttp_negotiate_t *client = redhttp_negotiate_parse("text/html");
+char* chosen = redhttp_negotiate_choose(&server, &client);
 ck_assert_str_eq(chosen, "text/html");
-if (chosen) free(chosen);
+free(chosen);
+redhttp_negotiate_free(&server);
+redhttp_negotiate_free(&client);
 
 #test negotiate_choose_with_scores
-char* chosen = redhttp_negotiate_choose("text/html;q=0.6,text/plain;q=0.4", "text/plain;q=0.8,text/html;q=0.2");
+redhttp_negotiate_t *server = redhttp_negotiate_parse("text/html;q=0.6,text/plain;q=0.4");
+redhttp_negotiate_t *client = redhttp_negotiate_parse("text/plain;q=0.8,text/html;q=0.2");
+char* chosen = redhttp_negotiate_choose(&server, &client);
 ck_assert_str_eq(chosen, "text/plain");
-if (chosen) free(chosen);
+free(chosen);
+redhttp_negotiate_free(&server);
+redhttp_negotiate_free(&client);
 
 #test negotiate_choose_wildcard
-char* chosen = redhttp_negotiate_choose("text/plain;q=0.9,text/html;q=0.8", "*/*");
+redhttp_negotiate_t *server = redhttp_negotiate_parse("text/plain;q=0.9,text/html;q=0.8");
+redhttp_negotiate_t *client = redhttp_negotiate_parse("*/*");
+char* chosen = redhttp_negotiate_choose(&server, &client);
 ck_assert_str_eq(chosen, "text/plain");
-if (chosen) free(chosen);
+free(chosen);
+redhttp_negotiate_free(&server);
+redhttp_negotiate_free(&client);
 
 #test negotiate_choose_wildcard2
-char* chosen = redhttp_negotiate_choose("text/plain;q=0.9,text/html;q=0.8", "text/html");
+redhttp_negotiate_t *server = redhttp_negotiate_parse("text/plain;q=0.9,text/html;q=0.8");
+redhttp_negotiate_t *client = redhttp_negotiate_parse("text/html");
+char* chosen = redhttp_negotiate_choose(&server, &client);
 ck_assert_str_eq(chosen, "text/html");
-if (chosen) free(chosen);
+free(chosen);
+redhttp_negotiate_free(&server);
+redhttp_negotiate_free(&client);
