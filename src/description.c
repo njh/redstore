@@ -389,31 +389,38 @@ static int context_count(librdf_storage * storage)
 static int model_write_target_cell(librdf_node * source, librdf_node * arc,
                                    redhttp_response_t * response)
 {
-    librdf_node *node = librdf_model_get_target(sd_model, source, arc);
+    librdf_iterator *iterator;
     char *str;
 
-    if (node) {
-        if (librdf_node_is_literal(node)) {
-            str = (char *) librdf_node_get_literal_value(node);
-            redstore_page_append_string(response, "<td>");
-            redstore_page_append_escaped(response, str, 0);
-            redstore_page_append_string(response, "</td>");
-        } else if (librdf_node_is_resource(node)) {
-            str = (char *) librdf_uri_as_string(librdf_node_get_uri(node));
-            redstore_page_append_string(response, "<td><a href=\"");
-            redstore_page_append_escaped(response, str, '"');
-            redstore_page_append_string(response, "\">");
-            redstore_page_append_escaped(response, str, 0);
-            redstore_page_append_string(response, "</a></td>");
-        } else if (librdf_node_is_blank(node)) {
-            str = (char *) librdf_node_get_blank_identifier(node);
-            redstore_page_append_string(response, "<td>_:");
-            redstore_page_append_escaped(response, str, 0);
-            redstore_page_append_string(response, "</td>");
+    redstore_page_append_string(response, "<td>");
+
+    iterator = librdf_model_get_targets(sd_model, source, arc);
+    while (!librdf_iterator_end(iterator)) {
+        librdf_node *node = librdf_iterator_get_object(iterator);
+        redstore_page_append_string(response, "<div>");
+        if (node) {
+            if (librdf_node_is_literal(node)) {
+                str = (char *) librdf_node_get_literal_value(node);
+                redstore_page_append_escaped(response, str, 0);
+            } else if (librdf_node_is_resource(node)) {
+                str = (char *) librdf_uri_as_string(librdf_node_get_uri(node));
+                redstore_page_append_string(response, "<a href=\"");
+                redstore_page_append_escaped(response, str, '"');
+                redstore_page_append_string(response, "\">");
+                redstore_page_append_escaped(response, str, 0);
+                redstore_page_append_string(response, "</a>");
+            } else if (librdf_node_is_blank(node)) {
+                str = (char *) librdf_node_get_blank_identifier(node);
+                redstore_page_append_string(response, "_:");
+                redstore_page_append_escaped(response, str, 0);
+            }
+        } else {
+            redstore_page_append_string(response, "&nbsp;");
         }
-    } else {
-        redstore_page_append_string(response, "<td>&nbsp;</td>");
+        redstore_page_append_string(response, "</div>");
+        librdf_iterator_next(iterator);
     }
+    redstore_page_append_string(response, "</td>");
 
     return 0;
 }
@@ -518,14 +525,15 @@ redhttp_response_t *handle_description_get(redhttp_request_t * request, void *us
 
     description_update();
 
-    if (redstore_is_html_format(format_str)) {
+    if (format_str == NULL || redstore_is_html_format(format_str)) {
         response = handle_html_description(request, user_data);
     } else {
         response =
             format_graph_stream_librdf(request, librdf_model_as_stream(sd_model), format_str);
     }
 
-    free(format_str);
+    if (format_str)
+        free(format_str);
 
     return response;
 }
