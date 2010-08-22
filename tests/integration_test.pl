@@ -22,7 +22,7 @@ die "Error: REDSTORE environment variable is not set and no argument given" unle
 die "Error: redstore command not found: $REDSTORE" unless (-e $REDSTORE);
 
 # Create a libwww-perl user agent
-my ($request, $response);
+my ($request, $response, @lines);
 my $ua = LWP::UserAgent->new;
 $ua->timeout(30);
 $ua->max_redirect(0);
@@ -156,7 +156,8 @@ $request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI )
 $request->header('Accept', 'text/plain');
 $response = $ua->request($request);
 is($response->code, 200, "Getting a graph is successful");
-is(scalar(@_ = split(/[\r\n]+/, $response->content)), 1, "Number of triples is correct");
+@lines = split(/[\r\n]+/, $response->content);
+is(scalar(@lines), 1, "Number of triples is correct");
 
 # Test getting list of graphs
 $response = $ua->get($base_url.'graphs');
@@ -271,11 +272,8 @@ is($response->code, 404, "HEAD response for deleted graph is 404");
 $response = $ua->get($base_url."data?format=nquads");
 is($response->code, 200, "Triplestore dump successful");
 is($response->content_type, 'text/x-nquads', "Triplestore dump is correct MIME type");
-like(
-    ((split(/[\r\n]+/,$response->content))[-1]),
-    qr[^(\S+) (\S+) (\S+) (\S+) \.$],
-    "Last line of dump looks like a quad"
-);
+@lines = split(/[\r\n]+/, $response->content);
+like($lines[-1], qr[^(\S+) (\S+) (\S+) (\S+) \.$], "Last line of dump looks like a quad");
 
 # Test POSTing a url to be loaded
 {
@@ -288,7 +286,8 @@ like(
     
     # Count the number of triples
     $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
-    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 14, "Number of triples in loaded graph is correct");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 14, "Number of triples in loaded graph is correct");
 }
 
 # Test POSTing to /load without a uri
@@ -330,7 +329,8 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     
     # Count the number of triples
     $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
-    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 14, "Number of triples is correct");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 14, "Number of triples is correct");
     
     # Test PUTing data into a graph
     $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
@@ -342,7 +342,8 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     
     # Count the number of triples
     $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
-    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 1, "New number of triples is correct");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 1, "New number of triples is correct");
 };
 
 # Test POSTing data into the default graph
@@ -371,7 +372,8 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     # Count the number of triples
     $response = $ua->get($base_url.'data/test%3Ag', 'Accept' => 'text/plain');
     is($response->code, 200, "Getting the number of triples is successful");
-    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 2, "New number of triples is correct");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 2, "New number of triples is correct");
 }
 
 # Test POSTing to /insert without a content argument
@@ -392,7 +394,8 @@ like($response->content, qr/Missing the 'content' argument/, "Response mentions 
     # Count the number of triples
     $response = $ua->get($base_url.'data/test%3Ag', 'Accept' => 'text/plain');
     is($response->code, 200, "Getting the number of triples is successful");
-    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 1, "Number of remaining triples is correct");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 1, "Number of remaining triples is correct");
 }
 
 # Test POSTing to /delete without a content argument
@@ -409,7 +412,8 @@ like($response->content, qr/Missing the 'content' argument/, "Response mentions 
     # Count the number of triples
     $response = $ua->get($base_url.'data', 'Accept' => 'text/plain');
     is($response->code, 200, "Getting all the triples is successful");
-    is(scalar(@_ = split(/[\r\n]+/, $response->content)), 0, "There should be no triples remaining");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 0, "There should be no triples remaining");
 }
 
 
