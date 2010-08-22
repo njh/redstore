@@ -19,7 +19,7 @@ my $packages = [
     },
     {
         'dirname' => 'check-0.9.8',
-        'url' => 'http://github.com/downloads/njh/redstore/check-20100409.tar.gz',
+        'url' => 'http://www.aelius.com/njh/redstore/check-20100409.tar.gz',
         'checkfor' => 'bin/checkmk',
     },
     {
@@ -75,19 +75,19 @@ my $packages = [
 #        'url' => 'http://www.mirrorservice.org/sites/ftp.postgresql.org/source/v8.4.2/postgresql-8.4.2.tar.gz',
 #    },
     {
-        'url' => 'http://download.librdf.org/source/raptor-1.4.21.tar.gz',
-        'checkfor' => 'lib/pkgconfig/raptor.pc',
+        'url' => 'http://download.librdf.org/source/raptor2-1.9.0.tar.gz',
+        'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
-        'dirname' => 'rasqal-0.9.20',
-        'url' => 'http://github.com/downloads/njh/redstore/rasqal-20100409.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS '--enable-query-languages=sparql rdql laqrs'",
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.20.tar.gz',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 '--enable-query-languages=sparql rdql laqrs'",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
         
     },
     {
-        'url' => 'http://download.librdf.org/source/redland-1.0.10.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --disable-modular --with-bdb=$ROOT_DIR",
+        'dirname' => 'redland-1.0.11',
+        'url' => 'http://www.aelius.com/njh/redstore/redland-20100822.tar.gz',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=$ROOT_DIR",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
     {
@@ -104,7 +104,6 @@ $ENV{'CFLAGS'} = "-O2 -I${ROOT_DIR}/include";
 $ENV{'CPPFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'ASFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'LDFLAGS'} = "-L${ROOT_DIR}/lib";
-$ENV{'ASFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'INFOPATH'} = "${ROOT_DIR}/share/info";
 $ENV{'MANPATH'} = "${ROOT_DIR}/share/man";
 $ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin";
@@ -216,8 +215,6 @@ sub download_package {
         print "Downloading: ".$pkg->{'tarname'}."\n";
         safe_system('curl', '-o', $pkg->{'tarpath'}, $pkg->{'url'});
     }
-
-    # FIXME: check md5sum?
 }
 
 sub clean_package {
