@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 149;
+use Test::More tests => 154;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -171,6 +171,15 @@ is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/html', "Graph list is of type text/html");
 like($response->content, qr[<li><a href="/data/$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");
 is_valid_xhtml($response->content, "Graph list should be valid XHTML");
+
+# Test getting list of graphs using SPARQL
+$response = $ua->get($base_url."query?query=SELECT+DISTINCT+%3Fg+WHERE+%7BGRAPH+%3Fg+%7B+%3Fs+%3Fp+%3Fo+%7D%7D&format=csv");
+is($response->code, 200, "Getting list of graphs using SPARQL is successful");
+is($response->content_type, 'text/csv', "Graph list is of type text/csv");
+@lines = split(/[\r\n]+/,$response->content);
+is(scalar(@lines), 2, "SPARQL response contains two lines");
+is($lines[0], "Result,g", "First line of SPARQL response contains CSV header");
+is($lines[1], "1,uri($TEST_CASE_URI)", "Second line of SPARQL response contains graph URI");
 
 # Test getting a non-existant graph
 $response = $ua->get($base_url."data/http%3A%2F%2Fwww.example.com%2Finvalid");
