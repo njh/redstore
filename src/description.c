@@ -36,7 +36,7 @@ librdf_uri *sd_ns_uri = NULL;
 
 static int description_add_query_languages()
 {
-    rasqal_world *rasqal_world = rasqal_new_world();
+    rasqal_world *rasqal = librdf_world_get_rasqal(world);
     int i;
 
     // FIXME: This should use the librdf API
@@ -45,7 +45,7 @@ static int description_add_query_languages()
         const unsigned char *uri;
         librdf_node *bnode = NULL;
 
-        if (rasqal_languages_enumerate(rasqal_world, i, &name, &label, &uri))
+        if (rasqal_languages_enumerate(rasqal, i, &name, &label, &uri))
             break;
 
         bnode = librdf_new_node(world);
@@ -83,8 +83,6 @@ static int description_add_query_languages()
 
         librdf_free_node(bnode);
     }
-
-    rasqal_free_world(rasqal_world);
 
     return 0;
 }
