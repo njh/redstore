@@ -86,7 +86,7 @@ my $packages = [
     },
     {
         'dirname' => 'redland-1.0.11',
-        'url' => 'http://www.aelius.com/njh/redstore/redland-20100822.tar.gz',
+        'url' => 'http://www.aelius.com/njh/redstore/redland-20100831.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=$ROOT_DIR",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
@@ -135,6 +135,9 @@ if (`uname` =~ /^Darwin/) {
 }
 
 $ENV{'CXXFLAGS'} = $ENV{'CFLAGS'};
+
+print "Build directory: $BUILD_DIR\n";
+mkdir($BUILD_DIR);
 
 print "Root directory: $ROOT_DIR\n";
 mkdir($ROOT_DIR);
