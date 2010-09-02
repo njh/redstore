@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 154;
+use Test::More tests => 157;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -231,9 +231,16 @@ is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON"
 
 # Test a CONSTRUCT query with a ntriples response
 $response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=ntriples");
-is($response->code, 200, "SPARQL CONSTRUCT query is successful");
-is($response->content_type, "text/plain", "SPARQL CONSTRUCT query Content Type data is correct");
-like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+"v"\s+.\n], "SPARQL Construct response should be correct");
+is($response->code, 200, "SPARQL CONSTRUCT query for ntriples is successful");
+is($response->content_type, "text/plain", "SPARQL CONSTRUCT query Content Type for ntriples is correct");
+like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+"v"\s+.\n], "SPARQL Construct response for ntriples should be correct");
+
+# Test a CONSTRUCT query with a JSON response
+$response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
+is($response->code, 200, "SPARQL CONSTRUCT query for JSON is successful");
+is($response->content_type, qr[^(application|text)/json$], "SPARQL CONSTRUCT query Content Type for JSON is correct");
+# FIXME: check that JSON contains right data
+is_wellformed_json($response->content, "SPARQL CONSTRUCT query response is valid JSON");
 
 # Test POSTing some Turtle
 $request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_FOAF_URI );
