@@ -238,7 +238,7 @@ like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example
 # Test a CONSTRUCT query with a JSON response
 $response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
 is($response->code, 200, "SPARQL CONSTRUCT query for JSON is successful");
-is($response->content_type, qr[^(application|text)/json$], "SPARQL CONSTRUCT query Content Type for JSON is correct");
+like($response->content_type, qr[^(application|text)/json$], "SPARQL CONSTRUCT query Content Type for JSON is correct");
 # FIXME: check that JSON contains right data
 is_wellformed_json($response->content, "SPARQL CONSTRUCT query response is valid JSON");
 
