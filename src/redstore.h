@@ -45,10 +45,10 @@
 
 // ------- Logging ---------
 typedef enum {
-    REDSTORE_DEBUG = 1,         // Only display debug if verbose
-    REDSTORE_INFO,              // Don't show info when quiet
-    REDSTORE_ERROR,             // Always display
-    REDSTORE_FATAL              // Quit if fatal
+  REDSTORE_DEBUG = 1,           // Only display debug if verbose
+  REDSTORE_INFO,  // Don't show info when quiet
+  REDSTORE_ERROR, // Always display
+  REDSTORE_FATAL  // Quit if fatal
 } RedstoreLogLevel;
 
 
@@ -90,7 +90,9 @@ extern librdf_uri *sd_ns_uri;
 
 // ------- Callbacks ---------
 
-typedef redhttp_response_t *(*redstore_stream_processor)(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph);
+typedef redhttp_response_t *(*redstore_stream_processor) (redhttp_request_t * request,
+                                                          librdf_stream * stream,
+                                                          librdf_node * graph);
 
 
 // ------- Prototypes -------
@@ -135,10 +137,17 @@ redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void
 
 redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream,
                                            librdf_node * graph);
-redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph);
-redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf_stream * stream, librdf_node * graph);
-redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned char* buffer, size_t content_length, const char *parser_name, const char* graph_uri_str, redstore_stream_processor stream_proc);
-redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request, const char* graph_uri_str, redstore_stream_processor stream_proc);
+redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request,
+                                                     librdf_stream * stream, librdf_node * graph);
+redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf_stream * stream,
+                                             librdf_node * graph);
+redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned char *buffer,
+                                           size_t content_length, const char *parser_name,
+                                           const char *graph_uri_str,
+                                           redstore_stream_processor stream_proc);
+redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request,
+                                                 const char *graph_uri_str,
+                                                 redstore_stream_processor stream_proc);
 redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_data);
@@ -170,7 +179,7 @@ redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user
 
 void redstore_log(RedstoreLogLevel level, const char *fmt, ...);
 
-char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t *supported);
+char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported);
 int redstore_is_html_format(const char *str);
 int redstore_is_text_format(const char *str);
 int redstore_is_nquads_format(const char *str);

@@ -7,7 +7,7 @@ endif
 
 test: check
 
-INDENT = indent -npro -kr -nsob -fca -blf -ip1 -hnl -l100 -lc100 -nut -ts4 -v
+INDENT = indent -npro -kr -fca -blf -ip1 -l100 -lc100 -nut -ts2 -i2 -c0 -nfca -nsob -hnl -v
 indent:
 	find $(top_srcdir)/src -type f -name "*.[ch]" -print -exec $(INDENT) {} ';'
 

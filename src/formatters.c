@@ -28,65 +28,65 @@
 redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
 {
-    FILE *socket = redhttp_request_get_socket(request);
-    raptor_world *raptor_world = librdf_world_get_raptor(world);
-    redhttp_response_t *response;
-    librdf_serializer *serialiser;
-    const char *format_name = NULL;
-    const char *mime_type = NULL;
-    unsigned int i,j;
+  FILE *socket = redhttp_request_get_socket(request);
+  raptor_world *raptor_world = librdf_world_get_raptor(world);
+  redhttp_response_t *response;
+  librdf_serializer *serialiser;
+  const char *format_name = NULL;
+  const char *mime_type = NULL;
+  unsigned int i, j;
 
-    for (i = 0; format_name == NULL; i++) {
-        const raptor_syntax_description *desc = NULL;
-        desc = raptor_world_get_serializer_description(raptor_world, i);
-        if (desc == NULL)
-            break;
+  for (i = 0; format_name == NULL; i++) {
+    const raptor_syntax_description *desc = NULL;
+    desc = raptor_world_get_serializer_description(raptor_world, i);
+    if (desc == NULL)
+      break;
 
-        // Does it match a format name?
-        for(j=0; desc->names[j]; j++) {
-            if (strcmp(format_str, desc->names[j]) == 0) {
-                format_name = desc->names[j];
-                if (desc->mime_types_count)
-                    mime_type = desc->mime_types[0].mime_type;
-                break;
-            }
-        }
-
-        // Does it match a MIME type?
-        for(j=0; j < desc->mime_types_count; j++) {
-            raptor_type_q mt = desc->mime_types[j];
-            if (strcmp(format_str, mt.mime_type) == 0) {
-                format_name = desc->names[0];
-                mime_type = mt.mime_type;
-                break;
-            }
-        }
+    // Does it match a format name?
+    for (j = 0; desc->names[j]; j++) {
+      if (strcmp(format_str, desc->names[j]) == 0) {
+        format_name = desc->names[j];
+        if (desc->mime_types_count)
+          mime_type = desc->mime_types[0].mime_type;
+        break;
+      }
     }
 
-    if (!format_name) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
-                                   "Result format not supported for graph query type.");
+    // Does it match a MIME type?
+    for (j = 0; j < desc->mime_types_count; j++) {
+      raptor_type_q mt = desc->mime_types[j];
+      if (strcmp(format_str, mt.mime_type) == 0) {
+        format_name = desc->names[0];
+        mime_type = mt.mime_type;
+        break;
+      }
     }
+  }
 
-    serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
-    if (!serialiser) {
-        return redstore_error_page(REDSTORE_ERROR,
-                                   REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser.");
-    }
-    // Send back the response headers
-    response = redhttp_response_new(REDHTTP_OK, NULL);
-    if (mime_type)
-        redhttp_response_add_header(response, "Content-Type", mime_type);
-    redhttp_response_send(response, request);
+  if (!format_name) {
+    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+                               "Result format not supported for graph query type.");
+  }
 
-    if (librdf_serializer_serialize_stream_to_file_handle(serialiser, socket, NULL, stream)) {
-        redstore_error("Failed to serialize graph");
-        // FIXME: send error message to client?
-    }
+  serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
+  if (!serialiser) {
+    return redstore_error_page(REDSTORE_ERROR,
+                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser.");
+  }
+  // Send back the response headers
+  response = redhttp_response_new(REDHTTP_OK, NULL);
+  if (mime_type)
+    redhttp_response_add_header(response, "Content-Type", mime_type);
+  redhttp_response_send(response, request);
 
-    librdf_free_serializer(serialiser);
+  if (librdf_serializer_serialize_stream_to_file_handle(serialiser, socket, NULL, stream)) {
+    redstore_error("Failed to serialize graph");
+    // FIXME: send error message to client?
+  }
 
-    return response;
+  librdf_free_serializer(serialiser);
+
+  return response;
 }
 
 
@@ -98,139 +98,137 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
 redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
 {
-    raptor_world *raptor = librdf_world_get_raptor(world);
-    FILE *socket = redhttp_request_get_socket(request);
-    redhttp_response_t *response = NULL;
-    raptor_iostream *iostream = NULL;
+  raptor_world *raptor = librdf_world_get_raptor(world);
+  FILE *socket = redhttp_request_get_socket(request);
+  redhttp_response_t *response = NULL;
+  raptor_iostream *iostream = NULL;
 
-    // Create an iostream
-    iostream = raptor_new_iostream_to_file_handle(raptor, socket);
-    if (!iostream) {
-        return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "Failed to create raptor_iostream when serialising nquads.");
+  // Create an iostream
+  iostream = raptor_new_iostream_to_file_handle(raptor, socket);
+  if (!iostream) {
+    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                               "Failed to create raptor_iostream when serialising nquads.");
+  }
+  // Send back the response headers
+  response = redhttp_response_new(REDHTTP_OK, NULL);
+  redhttp_response_add_header(response, "Content-Type", "text/x-nquads");
+  redhttp_response_send(response, request);
+  raptor_iostream_string_write("# This data is in the N-Quads format\n", iostream);
+  raptor_iostream_string_write("# http://sw.deri.org/2008/07/n-quads/\n", iostream);
+  raptor_iostream_string_write("#\n", iostream);
+
+  while (!librdf_stream_end(stream)) {
+    librdf_statement *statement = librdf_stream_get_object(stream);
+    const raptor_term *subject, *predicate, *object, *context;
+
+    if (!statement)
+      break;
+
+    subject = (const raptor_term *) librdf_statement_get_subject(statement);
+    predicate = (const raptor_term *) librdf_statement_get_predicate(statement);
+    object = (const raptor_term *) librdf_statement_get_object(statement);
+    context = (const raptor_term *) librdf_stream_get_context(stream);
+
+    raptor_term_ntriples_write(subject, iostream);
+    raptor_iostream_write_byte(' ', iostream);
+    raptor_term_ntriples_write(predicate, iostream);
+    raptor_iostream_write_byte(' ', iostream);
+    raptor_term_ntriples_write(object, iostream);
+    if (context) {
+      raptor_iostream_write_byte(' ', iostream);
+      raptor_term_ntriples_write(context, iostream);
     }
+    raptor_iostream_counted_string_write(" .\n", 3, iostream);
 
-    // Send back the response headers
-    response = redhttp_response_new(REDHTTP_OK, NULL);
-    redhttp_response_add_header(response, "Content-Type", "text/x-nquads");
-    redhttp_response_send(response, request);
-    raptor_iostream_string_write("# This data is in the N-Quads format\n", iostream);
-    raptor_iostream_string_write("# http://sw.deri.org/2008/07/n-quads/\n", iostream);
-    raptor_iostream_string_write("#\n", iostream);
+    librdf_stream_next(stream);
+  }
 
-    while (!librdf_stream_end(stream)) {
-        librdf_statement *statement = librdf_stream_get_object(stream);
-        const raptor_term *subject, *predicate, *object, *context;
+  raptor_free_iostream(iostream);
 
-        if (!statement)
-            break;
-
-        subject = (const raptor_term*)librdf_statement_get_subject(statement);
-        predicate = (const raptor_term*)librdf_statement_get_predicate(statement);
-        object = (const raptor_term *)librdf_statement_get_object(statement);
-        context = (const raptor_term *)librdf_stream_get_context(stream);
-
-        raptor_term_ntriples_write(subject, iostream);
-        raptor_iostream_write_byte(' ', iostream);
-        raptor_term_ntriples_write(predicate, iostream);
-        raptor_iostream_write_byte(' ', iostream);
-        raptor_term_ntriples_write(object, iostream);
-        if (context) {
-            raptor_iostream_write_byte(' ', iostream);
-            raptor_term_ntriples_write(context, iostream);
-        }
-        raptor_iostream_counted_string_write(" .\n", 3, iostream);
-
-        librdf_stream_next(stream);
-    }
-
-    raptor_free_iostream(iostream);
-
-    return response;
+  return response;
 }
 
 
 redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stream * stream)
 {
-    redhttp_response_t *response;
-    char *format_str;
+  redhttp_response_t *response;
+  char *format_str;
 
-    format_str = redstore_get_format(request, accepted_serialiser_types);
-    if (format_str == NULL)
-        format_str = DEFAULT_GRAPH_FORMAT;    // FIXME: this later gets freed
+  format_str = redstore_get_format(request, accepted_serialiser_types);
+  if (format_str == NULL)
+    format_str = DEFAULT_GRAPH_FORMAT;  // FIXME: this later gets freed
 
-    if (redstore_is_nquads_format(format_str)) {
-        response = format_graph_stream_nquads(request, stream, format_str);
-    } else {
-        response = format_graph_stream_librdf(request, stream, format_str);
-    }
+  if (redstore_is_nquads_format(format_str)) {
+    response = format_graph_stream_nquads(request, stream, format_str);
+  } else {
+    response = format_graph_stream_librdf(request, stream, format_str);
+  }
 
-    free(format_str);
+  free(format_str);
 
-    return response;
+  return response;
 }
 
 
 redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
                                                  librdf_query_results * results)
 {
-    raptor_world *raptor = librdf_world_get_raptor(world);
-    FILE *socket = redhttp_request_get_socket(request);
-    raptor_iostream *iostream = NULL;
-    redhttp_response_t *response = NULL;
-    librdf_query_results_formatter *formatter = NULL;
-    const char *mime_type = NULL;
-    char *format_str = NULL;
-    unsigned int i;
+  raptor_world *raptor = librdf_world_get_raptor(world);
+  FILE *socket = redhttp_request_get_socket(request);
+  raptor_iostream *iostream = NULL;
+  redhttp_response_t *response = NULL;
+  librdf_query_results_formatter *formatter = NULL;
+  const char *mime_type = NULL;
+  char *format_str = NULL;
+  unsigned int i;
 
-    format_str = redstore_get_format(request, accepted_query_result_types);
-    if (format_str == NULL)
-        format_str = DEFAULT_RESULTS_FORMAT;    // FIXME: this later gets freed
+  format_str = redstore_get_format(request, accepted_query_result_types);
+  if (format_str == NULL)
+    format_str = DEFAULT_RESULTS_FORMAT;  // FIXME: this later gets freed
 
-    for (i = 0; 1; i++) {
-        const char *name, *mime;
-        const unsigned char *uri;
-        if (librdf_query_results_formats_enumerate(world, i, &name, NULL, &uri, &mime))
-            break;
-        if ((name && strcmp(format_str, name) == 0) ||
-            (uri && strcmp(format_str, (char *) uri) == 0) ||
-            (mime && strcmp(format_str, mime) == 0)) {
-            formatter = librdf_new_query_results_formatter(results, name, NULL);
-            mime_type = mime;
-            break;
-        }
+  for (i = 0; 1; i++) {
+    const char *name, *mime;
+    const unsigned char *uri;
+    if (librdf_query_results_formats_enumerate(world, i, &name, NULL, &uri, &mime))
+      break;
+    if ((name && strcmp(format_str, name) == 0) ||
+        (uri && strcmp(format_str, (char *) uri) == 0) || (mime && strcmp(format_str, mime) == 0)) {
+      formatter = librdf_new_query_results_formatter(results, name, NULL);
+      mime_type = mime;
+      break;
     }
+  }
 
-    free(format_str);
+  free(format_str);
 
-    if (!formatter) {
-        return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
-                                   "Result format not supported for bindings query type.");
-    }
+  if (!formatter) {
+    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+                               "Result format not supported for bindings query type.");
+  }
 
-    iostream = raptor_new_iostream_to_file_handle(raptor, socket);
-    if (!iostream) {
-        librdf_free_query_results_formatter(formatter);
-        return redstore_error_page(REDSTORE_ERROR,
-                                   REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "Failed to create raptor_iostream for results output.");
-    }
-    // Send back the response headers
-    response = redhttp_response_new(REDHTTP_OK, NULL);
-    if (mime_type)
-        redhttp_response_add_header(response, "Content-Type", mime_type);
-    redhttp_response_send(response, request);
-
-    // Stream results back to client
-    if (librdf_query_results_formatter_write(iostream, formatter, results, NULL)) {
-        redstore_error("Failed to serialise query results");
-        // FIXME: send something to the browser?
-    }
-
-    redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
-
-    raptor_free_iostream(iostream);
+  iostream = raptor_new_iostream_to_file_handle(raptor, socket);
+  if (!iostream) {
     librdf_free_query_results_formatter(formatter);
+    return redstore_error_page(REDSTORE_ERROR,
+                               REDHTTP_INTERNAL_SERVER_ERROR,
+                               "Failed to create raptor_iostream for results output.");
+  }
+  // Send back the response headers
+  response = redhttp_response_new(REDHTTP_OK, NULL);
+  if (mime_type)
+    redhttp_response_add_header(response, "Content-Type", mime_type);
+  redhttp_response_send(response, request);
 
-    return response;
+  // Stream results back to client
+  if (librdf_query_results_formatter_write(iostream, formatter, results, NULL)) {
+    redstore_error("Failed to serialise query results");
+    // FIXME: send something to the browser?
+  }
+
+  redstore_debug("Query returned %d results", librdf_query_results_get_count(results));
+
+  raptor_free_iostream(iostream);
+  librdf_free_query_results_formatter(formatter);
+
+  return response;
 }

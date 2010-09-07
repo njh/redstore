@@ -38,71 +38,71 @@
 
 
 struct redhttp_header_s {
-    char *key;
-    char *value;
-    struct redhttp_header_s *next;
+  char *key;
+  char *value;
+  struct redhttp_header_s *next;
 };
 
 struct redhttp_request_s {
-    struct redhttp_header_s *headers;
-    struct redhttp_header_s *arguments;
-    struct redhttp_server_s *server;
+  struct redhttp_header_s *headers;
+  struct redhttp_header_s *arguments;
+  struct redhttp_server_s *server;
 
-    FILE *socket;
-    char remote_addr[NI_MAXHOST];
-    char remote_port[NI_MAXSERV];
+  FILE *socket;
+  char remote_addr[NI_MAXHOST];
+  char remote_port[NI_MAXSERV];
 
-    char *url;
-    char *method;
-    char *version;
-    void *user_data;
+  char *url;
+  char *method;
+  char *version;
+  void *user_data;
 
-    char *path;
-    char *path_glob;
-    char *query_string;
+  char *path;
+  char *path_glob;
+  char *query_string;
 
-    char *content_buffer;
-    size_t content_length;
+  char *content_buffer;
+  size_t content_length;
 
-    struct redhttp_type_q_s *accept;
+  struct redhttp_type_q_s *accept;
 };
 
 struct redhttp_response_s {
-    struct redhttp_header_s *headers;
+  struct redhttp_header_s *headers;
 
-    unsigned int status_code;
-    char *status_message;
-    char *content_buffer;
-    size_t content_length;
+  unsigned int status_code;
+  char *status_message;
+  char *content_buffer;
+  size_t content_length;
 
-    void *user_data;
+  void *user_data;
 
-    int headers_sent;
+  int headers_sent;
 };
 
 struct redhttp_handler_s {
-    char *method;
-    char *path;
-    struct redhttp_response_s *(*func) (struct redhttp_request_s * request, void *user_data);
-    void *user_data;
-    struct redhttp_handler_s *next;
+  char *method;
+  char *path;
+  struct redhttp_response_s *(*func) (struct redhttp_request_s * request, void *user_data);
+  void *user_data;
+  struct redhttp_handler_s *next;
 };
 
 struct redhttp_negotiate_s {
-    char *type;
-    unsigned char q;
-    struct redhttp_negotiate_s *next;
+  char *type;
+  unsigned char q;
+  struct redhttp_negotiate_s *next;
 };
 
 struct redhttp_server_s {
-    int sockets[FD_SETSIZE];
-    int socket_count;
-    int socket_max;
+  int sockets[FD_SETSIZE];
+  int socket_count;
+  int socket_max;
 
-    int backlog_size;
-    char *signature;
+  int backlog_size;
+  char *signature;
 
-    struct redhttp_handler_s *handlers;
+  struct redhttp_handler_s *handlers;
 };
 
 #endif

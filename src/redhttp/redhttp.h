@@ -30,27 +30,27 @@
 #define DEFAUT_HTTP_SERVER_BACKLOG_SIZE  (16)
 
 enum redhttp_status_code {
-    REDHTTP_OK = 200,
-    REDHTTP_CREATED = 201,
-    REDHTTP_ACCEPTED = 202,
-    REDHTTP_NO_CONTENT = 204,
+  REDHTTP_OK = 200,
+  REDHTTP_CREATED = 201,
+  REDHTTP_ACCEPTED = 202,
+  REDHTTP_NO_CONTENT = 204,
 
-    REDHTTP_MOVED_PERMANENTLY = 301,
-    REDHTTP_MOVED_TEMPORARILY = 302,
-    REDHTTP_SEE_OTHER = 303,
-    REDHTTP_NOT_MODIFIED = 304,
+  REDHTTP_MOVED_PERMANENTLY = 301,
+  REDHTTP_MOVED_TEMPORARILY = 302,
+  REDHTTP_SEE_OTHER = 303,
+  REDHTTP_NOT_MODIFIED = 304,
 
-    REDHTTP_BAD_REQUEST = 400,
-    REDHTTP_UNAUTHORIZED = 401,
-    REDHTTP_FORBIDDEN = 403,
-    REDHTTP_NOT_FOUND = 404,
-    REDHTTP_METHOD_NOT_ALLOWED = 405,
-    REDHTTP_NOT_ACCEPTABLE = 406,
+  REDHTTP_BAD_REQUEST = 400,
+  REDHTTP_UNAUTHORIZED = 401,
+  REDHTTP_FORBIDDEN = 403,
+  REDHTTP_NOT_FOUND = 404,
+  REDHTTP_METHOD_NOT_ALLOWED = 405,
+  REDHTTP_NOT_ACCEPTABLE = 406,
 
-    REDHTTP_INTERNAL_SERVER_ERROR = 500,
-    REDHTTP_NOT_IMPLEMENTED = 501,
-    REDHTTP_BAD_GATEWAY = 502,
-    REDHTTP_SERVICE_UNAVAILABLE = 503
+  REDHTTP_INTERNAL_SERVER_ERROR = 500,
+  REDHTTP_NOT_IMPLEMENTED = 501,
+  REDHTTP_BAD_GATEWAY = 502,
+  REDHTTP_SERVICE_UNAVAILABLE = 503
 };
 
 
@@ -144,7 +144,7 @@ void redhttp_server_set_backlog_size(redhttp_server_t * server, int backlog_size
 int redhttp_server_get_backlog_size(redhttp_server_t * server);
 void redhttp_server_free(redhttp_server_t * server);
 
-char *redhttp_negotiate_choose(redhttp_negotiate_t **server, redhttp_negotiate_t **client);
+char *redhttp_negotiate_choose(redhttp_negotiate_t ** server, redhttp_negotiate_t ** client);
 redhttp_negotiate_t *redhttp_negotiate_parse(const char *str);
 int redhttp_negotiate_get(redhttp_negotiate_t ** first, int i, const char **type, int *q);
 int redhttp_negotiate_count(redhttp_negotiate_t ** first);
