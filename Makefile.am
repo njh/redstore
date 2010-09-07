@@ -15,6 +15,6 @@ dist_noinst_SCRIPTS = todo.pl
 
 dist-hook:
 	perl $(top_srcdir)/todo.pl > $(distdir)/TODO
-	if test -e $(top_srcdir)/.svn; then \
-		svn log --stop-on-copy $(top_srcdir) > $(distdir)/ChangeLog; \
+	if test -e $(top_srcdir)/.git; then \
+	  git log --date-order $(top_srcdir) > $(distdir)/ChangeLog; \
 	fi
