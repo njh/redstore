@@ -246,6 +246,45 @@ int redstore_is_nquads_format(const char *str)
         return 0;
 }
 
+static librdf_storage* redstore_setup_storage(const char* name, const char* type, const char *options, int new)
+{
+    librdf_storage *storage = NULL;
+    librdf_hash *hash = NULL;
+    const char * key_filter[] = {"password", NULL};
+    char* debug_str = NULL;
+
+    // Create hash
+    hash = librdf_new_hash_from_string(world, NULL, options);
+    if (!hash) {
+        redstore_fatal("Failed to create storage options hash");
+        return NULL;
+    }
+
+    librdf_hash_put_strings(hash, "contexts", "yes");
+    librdf_hash_put_strings(hash, "write", "yes");
+    if (new)
+        librdf_hash_put_strings(hash, "new", "yes");
+
+    redstore_info("Storage name: %s", name);
+    redstore_info("Storage type: %s", type);
+
+    debug_str = librdf_hash_to_string(hash, key_filter);
+    if (debug_str) {
+        redstore_info("Storage options: %s", debug_str);
+    }
+
+    storage = librdf_new_storage_with_options(world, type, name, hash);
+    if (!storage) {
+        redstore_fatal("Failed to open %s storage '%s'", type, name);
+    }
+
+    if (hash)
+        librdf_free_hash(hash);
+    if (debug_str)
+        free(debug_str);
+
+    return storage;
+}
 
 // Display how to use this program
 static void usage()
@@ -273,14 +312,12 @@ static void usage()
     exit(1);
 }
 
-
 int main(int argc, char *argv[])
 {
     redhttp_server_t *server = NULL;
-    librdf_hash *storage_options = NULL;
     char *address = DEFAULT_ADDRESS;
     char *port = DEFAULT_PORT;
-    const char *storage_options_str = DEFAULT_STORAGE_OPTIONS;
+    const char *storage_options = DEFAULT_STORAGE_OPTIONS;
     int storage_new = 0;
     int opt = -1;
 
@@ -312,7 +349,7 @@ int main(int argc, char *argv[])
             storage_type = optarg;
             break;
         case 't':
-            storage_options_str = optarg;
+            storage_options = optarg;
             break;
         case 'n':
             storage_new = 1;
@@ -384,29 +421,15 @@ int main(int argc, char *argv[])
     redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);
 
     // Set the server signature
-    // FIXME: add Redland libraries to this?
     redhttp_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);
 
-    // Setup Redland storage
-    redstore_info("Storage type: %s", storage_type);
-    redstore_info("Storage name: %s", storage_name);
-    storage_options = librdf_new_hash_from_string(world, NULL, storage_options_str);
-    if (!storage_options) {
-        redstore_fatal("Failed to create storage options hash");
+    // Create storgae
+    storage = redstore_setup_storage(storage_name, storage_type, storage_options, storage_new);
+    if (!storage) {
+        redstore_fatal("Failed to create storage.");
         return -1;
     }
 
-    librdf_hash_put_strings(storage_options, "contexts", "yes");
-    librdf_hash_put_strings(storage_options, "write", "yes");
-    if (storage_new)
-        librdf_hash_put_strings(storage_options, "new", "yes");
-    // FIXME: display all storage options
-    // This doesn't print properly: librdf_hash_print(storage_options, stdout);
-    storage = librdf_new_storage_with_options(world, storage_type, storage_name, storage_options);
-    if (!storage) {
-        redstore_fatal("Failed to open %s storage '%s'", storage_type, storage_name);
-        return -1;
-    }
     // Create model object
     model = librdf_new_model(world, storage, NULL);
     if (!model) {
@@ -432,7 +455,6 @@ int main(int argc, char *argv[])
     description_free();
 
     librdf_free_storage(storage);
-    librdf_free_hash(storage_options);
     librdf_free_world(world);
 
     redhttp_negotiate_free(&accepted_serialiser_types);
