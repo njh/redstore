@@ -286,6 +286,50 @@ static librdf_storage* redstore_setup_storage(const char* name, const char* type
     return storage;
 }
 
+static redhttp_server_t* redstore_setup_http_server()
+{
+    redhttp_server_t* server = NULL;
+
+    server = redhttp_server_new();
+    if (!server)
+        return server;
+
+    // Configure routing
+    redhttp_server_add_handler(server, NULL, NULL, request_counter, &request_count);
+    redhttp_server_add_handler(server, NULL, NULL, request_log, NULL);
+    redhttp_server_add_handler(server, "GET", "/query", handle_query, NULL);
+    redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql, NULL);
+    redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql, NULL);
+    redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
+    redhttp_server_add_handler(server, "POST", "/sparql", handle_sparql, NULL);
+    redhttp_server_add_handler(server, "POST", "/sparql/", handle_sparql, NULL);
+    redhttp_server_add_handler(server, "HEAD", "/data/*", handle_data_context_head, NULL);
+    redhttp_server_add_handler(server, "GET", "/data/*", handle_data_context_get, NULL);
+    redhttp_server_add_handler(server, "PUT", "/data/*", handle_data_context_put, NULL);
+    redhttp_server_add_handler(server, "POST", "/data/*", handle_data_context_post, NULL);
+    redhttp_server_add_handler(server, "DELETE", "/data/*", handle_data_context_delete, NULL);
+    redhttp_server_add_handler(server, "GET", "/data", handle_data_get, NULL);
+    redhttp_server_add_handler(server, "POST", "/data", handle_data_post, NULL);
+    redhttp_server_add_handler(server, "DELETE", "/data", handle_data_delete, NULL);
+    redhttp_server_add_handler(server, "GET", "/insert", handle_page_update_form, "Insert Triples");
+    redhttp_server_add_handler(server, "POST", "/insert", handle_insert_post, NULL);
+    redhttp_server_add_handler(server, "GET", "/delete", handle_page_update_form, "Delete Triples");
+    redhttp_server_add_handler(server, "POST", "/delete", handle_delete_post, NULL);
+    redhttp_server_add_handler(server, "GET", "/graphs", handle_graph_index, NULL);
+    redhttp_server_add_handler(server, "GET", "/load", handle_page_load_form, NULL);
+    redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
+    redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
+    redhttp_server_add_handler(server, "GET", "/description", handle_description_get, NULL);
+    redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
+    redhttp_server_add_handler(server, "GET", "/robots.txt", handle_page_robots_txt, NULL);
+    redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);
+
+    // Set the server signature
+    redhttp_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);
+
+    return server;
+}
+
 // Display how to use this program
 static void usage()
 {
@@ -385,43 +429,11 @@ int main(int argc, char *argv[])
     signal(SIGHUP, termination_handler);
 
     // Create HTTP server
-    server = redhttp_server_new();
+    server = redstore_setup_http_server();
     if (!server) {
-        fprintf(stderr, "Failed to initialise HTTP server.\n");
-        exit(EXIT_FAILURE);
+        redstore_fatal("Failed to initialise HTTP server.\n");
+        return -1;
     }
-    // Configure routing
-    redhttp_server_add_handler(server, NULL, NULL, request_counter, &request_count);
-    redhttp_server_add_handler(server, NULL, NULL, request_log, NULL);
-    redhttp_server_add_handler(server, "GET", "/query", handle_query, NULL);
-    redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql, NULL);
-    redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql, NULL);
-    redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
-    redhttp_server_add_handler(server, "POST", "/sparql", handle_sparql, NULL);
-    redhttp_server_add_handler(server, "POST", "/sparql/", handle_sparql, NULL);
-    redhttp_server_add_handler(server, "HEAD", "/data/*", handle_data_context_head, NULL);
-    redhttp_server_add_handler(server, "GET", "/data/*", handle_data_context_get, NULL);
-    redhttp_server_add_handler(server, "PUT", "/data/*", handle_data_context_put, NULL);
-    redhttp_server_add_handler(server, "POST", "/data/*", handle_data_context_post, NULL);
-    redhttp_server_add_handler(server, "DELETE", "/data/*", handle_data_context_delete, NULL);
-    redhttp_server_add_handler(server, "GET", "/data", handle_data_get, NULL);
-    redhttp_server_add_handler(server, "POST", "/data", handle_data_post, NULL);
-    redhttp_server_add_handler(server, "DELETE", "/data", handle_data_delete, NULL);
-    redhttp_server_add_handler(server, "GET", "/insert", handle_page_update_form, "Insert Triples");
-    redhttp_server_add_handler(server, "POST", "/insert", handle_insert_post, NULL);
-    redhttp_server_add_handler(server, "GET", "/delete", handle_page_update_form, "Delete Triples");
-    redhttp_server_add_handler(server, "POST", "/delete", handle_delete_post, NULL);
-    redhttp_server_add_handler(server, "GET", "/graphs", handle_graph_index, NULL);
-    redhttp_server_add_handler(server, "GET", "/load", handle_page_load_form, NULL);
-    redhttp_server_add_handler(server, "POST", "/load", handle_load_post, NULL);
-    redhttp_server_add_handler(server, "GET", "/", handle_page_home, NULL);
-    redhttp_server_add_handler(server, "GET", "/description", handle_description_get, NULL);
-    redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
-    redhttp_server_add_handler(server, "GET", "/robots.txt", handle_page_robots_txt, NULL);
-    redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);
-
-    // Set the server signature
-    redhttp_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);
 
     // Create storgae
     storage = redstore_setup_storage(storage_name, storage_type, storage_options, storage_new);
