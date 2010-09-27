@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 161;
+use Test::More tests => 163;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -366,6 +366,21 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 1, "New number of triples is correct");
+};
+
+# Test PUTing JSON
+{
+    $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+    $request->content( read_fixture('foaf.json') );
+    $request->content_length( length($request->content) );
+    $request->content_type( 'application/json' );
+    $response = $ua->request($request);
+    is($response->code, 200, "Putting JSON data into a graph is successful");
+
+    # Count the number of triples
+    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 14, "Number of triples after PUTing JSON is correct");
 };
 
 # Test POSTing data into the default graph
