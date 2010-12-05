@@ -87,6 +87,7 @@ my $packages = [
 #    },
     {
         'url' => 'http://download.librdf.org/source/raptor2-1.9.1.tar.gz',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=$ROOT_DIR",
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
