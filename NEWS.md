@@ -1,6 +1,17 @@
 News about RedStore releases
 ============================
 
+Release 0.5.0 - 2010-12-05
+--------------------------
+
+- Redstore now depends upon Raptor 2.
+- Displays storage options configuration at startup
+- Enabled support for parsing of JSON (using Raptor 2)
+- Changes so that content negotation takes account of the q values from raptor.
+- Removed Redstore's built-in HTML serialiser in favour of using Rasqal/Raptor.
+
+
+
 Release 0.4 - 2010-04-22
 ------------------------
 
