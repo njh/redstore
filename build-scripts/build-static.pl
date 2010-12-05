@@ -13,7 +13,7 @@ my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DI
 
 my $packages = [
     {
-        'url' => 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.23.tar.gz',
+        'url' => 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.25.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-pc-path=${ROOT_DIR}/lib/pkgconfig",
         'checkfor' => 'bin/pkg-config',
     },
@@ -23,7 +23,7 @@ my $packages = [
         'checkfor' => 'bin/checkmk',
     },
     {
-        'url' => 'http://curl.haxx.se/download/curl-7.20.0.tar.gz',
+        'url' => 'http://curl.haxx.se/download/curl-7.21.2.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp --disable-dict ".
                     "--disable-telnet --disable-pop3 --disable-imap --disable-smtp ".
@@ -49,8 +49,19 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/libxslt.pc',
     },
     {
-        'dirname' => 'sqlite-3.6.22',
-        'url' => 'http://www.sqlite.org/sqlite-amalgamation-3.6.22.tar.gz',
+        'url' => 'http://github.com/lloyd/yajl/tarball/1.0.11',
+        'dirname' => 'lloyd-yajl-f4baae0',
+        'tarname' => 'yajl-1.0.11.tar.gz',
+        'config' => "mkdir build && cd build && cmake ..",
+        'make' => 'cd build && make yajl_s',
+        'install' => "cd build/yajl-1.0.11 && ".
+                     "cp -Rfv include/yajl $ROOT_DIR/include/ && ".
+                     "cp -fv lib/libyajl_s.a $ROOT_DIR/lib/libyajl.a",
+        'checkfor' => 'lib/libyajl.a',
+    },
+    {
+        'dirname' => 'sqlite-3.7.3',
+        'url' => 'http://www.sqlite.org/sqlite-amalgamation-3.7.3.tar.gz',
         'checkfor' => 'lib/pkgconfig/sqlite3.pc',
     },
     {
@@ -66,7 +77,7 @@ my $packages = [
         'checkfor' => 'lib/libdb.a',
     },
     {
-        'url' => 'http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.44.tar.gz',
+        'url' => 'http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.53.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
         'checkfor' => 'lib/mysql/libmysqlclient.la',
     },
@@ -75,18 +86,17 @@ my $packages = [
 #        'url' => 'http://www.mirrorservice.org/sites/ftp.postgresql.org/source/v8.4.2/postgresql-8.4.2.tar.gz',
 #    },
     {
-        'url' => 'http://download.librdf.org/source/raptor2-1.9.0.tar.gz',
+        'url' => 'http://download.librdf.org/source/raptor2-1.9.1.tar.gz',
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.20.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 '--enable-query-languages=sparql rdql laqrs'",
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.21.tar.gz',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
         
     },
     {
-        'dirname' => 'redland-1.0.11',
-        'url' => 'http://www.aelius.com/njh/redstore/redland-20100831.tar.gz',
+        'url' => 'http://download.librdf.org/source/redland-1.0.12.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=$ROOT_DIR",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
@@ -117,11 +127,13 @@ if (`uname` =~ /^Darwin/) {
     my $ARCHES = '-arch i386 -arch ppc';
     my $MINVER = '-mmacosx-version-min=10.4';
     die "Mac OS X SDK is not available." unless (-e $SDK);
+
     $ENV{'CFLAGS'} .= " -isysroot $SDK $ARCHES $MINVER";
     $ENV{'LDFLAGS'} .= " -Wl,-syslibroot,$SDK $ARCHES $MINVER";
     $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
     $ENV{'LDFLAGS'} .= " -Wl,-headerpad_max_install_names";
     $ENV{'MACOSX_DEPLOYMENT_TARGET'} = '10.4';
+    $ENV{'CMAKE_OSX_ARCHITECTURES'} = 'ppc;i386';
 
     my $GCC_VER = '4.0';
     $ENV{'CC'} = "/usr/bin/gcc-$GCC_VER";
@@ -216,7 +228,7 @@ sub download_package {
     unless (-e $pkg->{'tarpath'}) {
         safe_chdir();
         print "Downloading: ".$pkg->{'tarname'}."\n";
-        safe_system('curl', '-o', $pkg->{'tarpath'}, $pkg->{'url'});
+        safe_system('curl', '-L', '-k', '-o', $pkg->{'tarpath'}, $pkg->{'url'});
     }
 }
 
