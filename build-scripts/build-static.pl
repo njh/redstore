@@ -53,10 +53,10 @@ my $packages = [
         'dirname' => 'lloyd-yajl-f4baae0',
         'tarname' => 'yajl-1.0.11.tar.gz',
         'config' => "mkdir build && cd build && cmake ..",
-        'make' => 'cd build && make yajl_s',
+        'make' => "cd build && make yajl_s",
         'install' => "cd build/yajl-1.0.11 && ".
-                     "cp -Rfv include/yajl $ROOT_DIR/include/ && ".
-                     "cp -fv lib/libyajl_s.a $ROOT_DIR/lib/libyajl.a",
+                     "cp -Rfv include/yajl ${ROOT_DIR}/include/ && ".
+                     "cp -fv lib/libyajl_s.a ${ROOT_DIR}/lib/libyajl.a",
         'checkfor' => 'lib/libyajl.a',
     },
     {
@@ -97,7 +97,7 @@ my $packages = [
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.12.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=$ROOT_DIR",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
     {
