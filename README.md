@@ -52,9 +52,9 @@ Requirements
 
 The following versions of Redland are recommend:
 
-- [raptor-1.4.21]
-- [rasqal-0.9.20] (unreleased)
-- [redland-1.0.10]
+- [raptor2-1.9.1]
+- [rasqal-0.9.21]
+- [redland-1.0.12]
 
 
 Installation
@@ -98,9 +98,9 @@ GNU General Public License for more details.
 [SPARQL Query Tool]:           http://github.com/tialaramex/sparql-query
 [GNU General Public License]:  http://www.gnu.org/licenses/gpl.html
 
-[raptor-1.4.21]:               http://download.librdf.org/source/raptor-1.4.21.tar.gz
-[rasqal-0.9.20]:               http://github.com/downloads/njh/redstore/rasqal-20100409.tar.gz
-[redland-1.0.10]:              http://download.librdf.org/source/redland-1.0.10.tar.gz
+[raptor2-1.9.1]:               http://download.librdf.org/source/raptor2-1.9.1.tar.gz
+[rasqal-0.9.21]:               http://download.librdf.org/source/rasqal-0.9.21.tar.gz
+[redland-1.0.12]:              http://download.librdf.org/source/redland-1.0.12.tar.gz
 
 [hashes]:                      http://librdf.org/docs/api/redland-storage-module-hashes.html
 [mysql]:                       http://librdf.org/docs/api/redland-storage-module-mysql.html
