@@ -64,8 +64,8 @@ AC_FUNC_REALLOC
 
 dnl ############## Check for packages we depend upon
 
-PKG_CHECK_MODULES(RAPTOR, raptor2 >= 1.9.1)
-PKG_CHECK_MODULES(RASQAL, rasqal >= 0.9.21)
+PKG_CHECK_MODULES(RAPTOR, raptor2 >= 2.0.0)
+PKG_CHECK_MODULES(RASQAL, rasqal >= 0.9.22)
 PKG_CHECK_MODULES(REDLAND, redland >= 1.0.12)
 
 PKG_CHECK_MODULES(CHECK, check >= 0.9.4, have_check="yes", have_check="no")
