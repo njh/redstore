@@ -522,7 +522,7 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
 
 redhttp_response_t *handle_description_get(redhttp_request_t * request, void *user_data)
 {
-  char *format_str = redstore_get_format(request, accepted_serialiser_types);
+  char *format_str = redstore_get_format(request, accepted_serialiser_types, "text/html");
   redhttp_response_t *response = NULL;
 
   description_update();

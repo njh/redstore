@@ -38,7 +38,7 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
   if (!response) {
     redhttp_negotiate_t *accept =
         redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-    char *format_str = redstore_get_format(request, accept);
+    char *format_str = redstore_get_format(request, accept, "text/plain");
     const char *graph_str = NULL;
 
     if (graph) {
@@ -86,7 +86,7 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
 {
   redhttp_negotiate_t *accept =
       redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-  char *format_str = redstore_get_format(request, accept);
+  char *format_str = redstore_get_format(request, accept, "text/plain");
   redhttp_response_t *response = NULL;
   const char *message = NULL;
   int count = 0;

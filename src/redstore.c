@@ -189,7 +189,7 @@ static void redstore_build_accepted_type_list()
 }
 
 
-char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported)
+char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported, const char* default_format)
 {
   const char *format_arg;
   char *format_str = NULL;
@@ -197,9 +197,12 @@ char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * sup
   format_arg = redhttp_request_get_argument(request, "format");
   if (format_arg) {
     format_str = calloc(1, strlen(format_arg) + 1);
-    strcpy(format_str, format_arg);
+    if (format_str)
+      strcpy(format_str, format_arg);
     redstore_debug("format_arg: %s", format_str);
-  } else if (!format_str) {
+  }
+  
+  if (!format_str) {
     const char *accept_str = redhttp_request_get_header(request, "Accept");
     redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
     format_str = redhttp_negotiate_choose(&supported, &accept);
@@ -208,6 +211,13 @@ char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * sup
     redstore_debug("supported: %d", redhttp_negotiate_count(&supported));
     redstore_debug("chosen: %s", format_str);
     redhttp_negotiate_free(&accept);
+  }
+
+  if (!format_str) {
+    format_str = calloc(1, strlen(default_format) + 1);
+    if (format_str)
+      strcpy(format_str, default_format);
+    redstore_debug("Using default format: %s", default_format);
   }
 
   return format_str;

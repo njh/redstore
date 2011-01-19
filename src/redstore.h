@@ -179,7 +179,7 @@ redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user
 
 void redstore_log(RedstoreLogLevel level, const char *fmt, ...);
 
-char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported);
+char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported, const char* default_format);
 int redstore_is_html_format(const char *str);
 int redstore_is_text_format(const char *str);
 int redstore_is_nquads_format(const char *str);

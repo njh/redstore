@@ -116,7 +116,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
 {
   redhttp_negotiate_t *accept =
       redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-  char *format_str = redstore_get_format(request, accept);
+  char *format_str = redstore_get_format(request, accept, "text/plain");
   redhttp_response_t *response = NULL;
   librdf_iterator *iterator = NULL;
 

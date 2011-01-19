@@ -211,7 +211,7 @@ redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void
   } else {
     redhttp_negotiate_t *accept =
         redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-    char *format_str = redstore_get_format(request, accept);
+    char *format_str = redstore_get_format(request, accept, "text/plain");
     if (redstore_is_html_format(format_str)) {
       response = redstore_page_new("Success");
       redstore_page_append_string(response, "<p>Successfully deleted graph.</p>");
