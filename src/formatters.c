@@ -90,11 +90,6 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
 }
 
 
-// We need to be able to cast librdf_node to raptor_term
-#ifndef LIBRDF_USE_RAPTOR_TERM
-#error LIBRDF_USE_RAPTOR_TERM must be set to be able to cast librdf_node to raptor_term
-#endif
-
 redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
 {
@@ -127,7 +122,7 @@ redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
     subject = (const raptor_term *) librdf_statement_get_subject(statement);
     predicate = (const raptor_term *) librdf_statement_get_predicate(statement);
     object = (const raptor_term *) librdf_statement_get_object(statement);
-    context = (const raptor_term *) librdf_stream_get_context(stream);
+    context = (const raptor_term *) librdf_stream_get_context2(stream);
 
     raptor_term_ntriples_write(subject, iostream);
     raptor_iostream_write_byte(' ', iostream);
@@ -193,7 +188,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
       break;
     if ((name && strcmp(format_str, name) == 0) ||
         (uri && strcmp(format_str, (char *) uri) == 0) || (mime && strcmp(format_str, mime) == 0)) {
-      formatter = librdf_new_query_results_formatter(results, name, NULL);
+      formatter = librdf_new_query_results_formatter2(results, name, NULL, NULL);
       mime_type = mime;
       break;
     }
