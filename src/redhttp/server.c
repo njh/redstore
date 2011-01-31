@@ -137,18 +137,8 @@ void redhttp_server_add_handler(redhttp_server_t * server, const char *method,
   if (!handler)
     return;
 
-  if (method) {
-    handler->method = calloc(1, strlen(method) + 1);
-    strcpy(handler->method, method);
-  } else {
-    handler->method = NULL;
-  }
-  if (path) {
-    handler->path = calloc(1, strlen(path) + 1);
-    strcpy(handler->path, path);
-  } else {
-    handler->path = NULL;
-  }
+  handler->method = redhttp_strdup(method);
+  handler->path = redhttp_strdup(path);
   handler->func = func;
   handler->user_data = user_data;
   handler->next = NULL;
@@ -324,12 +314,7 @@ void redhttp_server_set_signature(redhttp_server_t * server, const char *signatu
   if (server->signature)
     free(server->signature);
 
-  if (signature) {
-    server->signature = calloc(1, strlen(signature) + 1);
-    strcpy(server->signature, signature);
-  } else {
-    server->signature = NULL;
-  }
+  server->signature = redhttp_strdup(signature);
 }
 
 
