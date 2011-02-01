@@ -1,3 +1,4 @@
+AM_CFLAGS = $(WARNING_CFLAGS)
 
 noinst_LTLIBRARIES = libredhttp.la
 libredhttp_la_SOURCES = \

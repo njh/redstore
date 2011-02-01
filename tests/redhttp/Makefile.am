@@ -1,5 +1,5 @@
-AM_CFLAGS = @CHECK_CFLAGS@ -DFIXTURE_DIR=\"$(top_srcdir)/tests/redhttp/\" -I$(top_srcdir)/src
-AM_LDFLAGS = @CHECK_LIBS@
+AM_CFLAGS = $(CHECK_CFLAGS) -DFIXTURE_DIR=\"$(top_srcdir)/tests/redhttp/\" -I$(top_srcdir)/src $(WARNING_CFLAGS)
+AM_LDFLAGS = $(CHECK_LIBS)
 
 check_PROGRAMS = check_headers check_negotiate check_request check_response check_server check_url
 TESTS = $(check_PROGRAMS)

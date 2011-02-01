@@ -1,3 +1,4 @@
+AM_CFLAGS = $(WARNING_CFLAGS)
 SUBDIRS = redhttp .
 
 dist_check_SCRIPTS = integration_test.pl
