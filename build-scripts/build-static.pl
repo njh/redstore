@@ -70,7 +70,7 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/libiodbc.pc',
     },
     {
-        'url' => 'http://www.mirrorservice.org/sites/ftp.uk.debian.org/debian/pool/main/d/db/db_4.8.26.orig.tar.gz',
+        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
         'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
@@ -86,18 +86,18 @@ my $packages = [
 #        'url' => 'http://www.mirrorservice.org/sites/ftp.postgresql.org/source/v8.4.2/postgresql-8.4.2.tar.gz',
 #    },
     {
-        'url' => 'http://download.librdf.org/source/raptor2-1.9.1.tar.gz',
+        'url' => 'http://download.librdf.org/source/raptor2-2.0.0.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=$ROOT_DIR",
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.21.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.24.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
         
     },
     {
-        'url' => 'http://download.librdf.org/source/redland-1.0.12.tar.gz',
+        'url' => 'http://download.librdf.org/source/redland-1.0.13.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },

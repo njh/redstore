@@ -144,16 +144,12 @@ const char *redhttp_request_get_argument(redhttp_request_t * request, const char
 void redhttp_request_set_path_glob(redhttp_request_t * request, const char *path_glob)
 {
   // Free the old glob
-  if (request->path_glob) {
+  if (request->path_glob)
     free(request->path_glob);
-  }
+
   // Store the new glob
   if (path_glob && strlen(path_glob)) {
-    request->path_glob = calloc(1, strlen(path_glob) + 1);
-    if (request->path_glob)
-      strcpy(request->path_glob, path_glob);
-  } else {
-    request->path_glob = NULL;
+    request->path_glob = redhttp_strdup(path_glob);
   }
 }
 
@@ -169,10 +165,10 @@ void redhttp_request_parse_arguments(redhttp_request_t * request, const char *in
   assert(request != NULL);
   if (!input)
     return;
-  args = calloc(1, strlen(input) + 1);
+
+  args = redhttp_strdup(input);
   if (!args)
     return;
-  strcpy(args, input);
 
   for (ptr = args; ptr && *ptr;) {
     key = ptr;
@@ -237,10 +233,9 @@ void redhttp_request_set_url(redhttp_request_t * request, const char *url)
     size_t path_len = 0;
 
     // Store a copy of the URL
-    request->url = calloc(1, strlen(url) + 1);
+    request->url = redhttp_strdup(url);
     if (!request->url)
       return;
-    strcpy(request->url, url);
 
     // Check for query string
     ptr = strchr(url, '?');
@@ -274,17 +269,10 @@ void redhttp_request_set_path(redhttp_request_t * request, const char *path)
 {
   assert(request != NULL);
 
-  // FIXME: repeated code
   if (request->path)
     free(request->path);
 
-  if (path) {
-    request->path = calloc(1, strlen(path) + 1);
-    if (request->path)
-      strcpy(request->path, path);
-  } else {
-    request->path = NULL;
-  }
+  request->path = redhttp_strdup(path);
 }
 
 const char *redhttp_request_get_path(redhttp_request_t * request)
@@ -296,17 +284,10 @@ void redhttp_request_set_version(redhttp_request_t * request, const char *versio
 {
   assert(request != NULL);
 
-  // FIXME: repeated code
   if (request->version)
     free(request->version);
 
-  if (version) {
-    request->version = calloc(1, strlen(version) + 1);
-    if (request->version)
-      strcpy(request->version, version);
-  } else {
-    request->version = NULL;
-  }
+  request->version = redhttp_strdup(version);
 }
 
 const char *redhttp_request_get_version(redhttp_request_t * request)
@@ -318,17 +299,10 @@ void redhttp_request_set_query_string(redhttp_request_t * request, const char *q
 {
   assert(request != NULL);
 
-  // FIXME: repeated code
   if (request->query_string)
     free(request->query_string);
 
-  if (query_string) {
-    request->query_string = calloc(1, strlen(query_string) + 1);
-    if (request->query_string)
-      strcpy(request->query_string, query_string);
-  } else {
-    request->query_string = NULL;
-  }
+  request->query_string = redhttp_strdup(query_string);
 }
 
 const char *redhttp_request_get_query_string(redhttp_request_t * request)

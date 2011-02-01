@@ -80,8 +80,7 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
       if (message == NULL)
         message = "Unknown";
     }
-    response->status_message = calloc(1, strlen(message) + 1);
-    strcpy(response->status_message, message);
+    response->status_message = redhttp_strdup(message);
   }
 
   return response;

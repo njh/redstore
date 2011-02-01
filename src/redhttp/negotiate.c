@@ -64,10 +64,7 @@ char *redhttp_negotiate_choose(redhttp_negotiate_t ** server, redhttp_negotiate_
 
   // Copy best match into the result buffer
   if (best_type) {
-    result = calloc(1, strlen(best_type) + 1);
-    if (result) {
-      strcpy(result, best_type);
-    }
+    result = redhttp_strdup(best_type);
   }
 
   return result;
@@ -220,8 +217,7 @@ void redhttp_negotiate_add(redhttp_negotiate_t ** first, const char *type, size_
 
   // Create new MIME Type stucture
   new = calloc(1, sizeof(redhttp_negotiate_t));
-  new->type = calloc(1, type_len + 1);
-  strncpy(new->type, type, type_len);
+  new->type = redhttp_strndup(type, type_len);
   new->q = q;
   new->next = NULL;
 

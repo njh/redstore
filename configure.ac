@@ -1,44 +1,27 @@
-dnl Require autoconf version >= 2.59
-AC_PREREQ(2.59)
+dnl Require autoconf version >= 2.60
+AC_PREREQ(2.60)
 
 
 dnl ############# Initialization
 
 AC_INIT([RedStore], [0.5.1], [njh@aelius.com], redstore)
+
 AC_CONFIG_SRCDIR([src/redstore.c])
-AC_CONFIG_AUX_DIR([build-scripts])
-AC_CONFIG_MACRO_DIR([build-scripts])
-AM_INIT_AUTOMAKE
+AC_CONFIG_AUX_DIR(build-scripts)
+AC_CONFIG_MACRO_DIR(build-scripts)
+AM_INIT_AUTOMAKE([1.10])
+
+LT_PREREQ([2.2])
 LT_INIT
 
-dnl ############# Configure Arguments
+AM_MAINTAINER_MODE
 
-AC_ARG_ENABLE(debug,
-	  [  --enable-debug=[no/yes]   turn on debugging],
-	  [ Debugging="Enabled" 
-		AC_DEFINE(DEBUG, 1, [ Define if debugging is enabled. ]) ],
-	  [ Debugging="Disabled" ]
-)
-
-
-dnl ############## Compiler and Linker Flags
-
-# FIXME: use AC PROG CC C99
-CFLAGS="$CFLAGS -std=c99"
-
-# If debugging is enabled then make warnings errors
-if test "$Debugging" = "Enabled"; then
-	CFLAGS="$CFLAGS -g -O0 -Wall -Werror -pedantic"
-	CFLAGS="$CFLAGS -Wunused -Wmissing-prototypes -Wmissing-declarations"
-else
-	# Optimize flag. 3 is about as high as you can sanely go with GCC3.2.
-	CFLAGS="$CFLAGS -O3"
-fi
 
 
 dnl ############# Compiler and tools Checks
 
 AC_PROG_CC
+AC_PROG_CC_C99
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
@@ -70,16 +53,27 @@ PKG_CHECK_MODULES(REDLAND, redland >= 1.0.12)
 
 PKG_CHECK_MODULES(CHECK, check >= 0.9.4, have_check="yes", have_check="no")
 if test x"$have_check" = "xyes"; then
-	AC_CHECK_PROG(have_checkmk, [checkmk], [yes], [no])
-	if test x"$have_checkmk" = "xyes"; then
-		AC_DEFINE([HAVE_CHECK], 1, [Define to 1 if check library is available])
+  AC_CHECK_PROG(have_checkmk, [checkmk], [yes], [no])
+  if test x"$have_checkmk" = "xyes"; then
+    AC_DEFINE([HAVE_CHECK], 1, [Define to 1 if check library is available])
 	else
-		AC_MSG_WARN([Command 'checkmk' not found.])
-		AC_MSG_WARN([Download it here: http://micah.cowan.name/projects/checkmk/])
-	fi
+    AC_MSG_WARN([Command 'checkmk' not found.])
+    AC_MSG_WARN([Download it here: http://micah.cowan.name/projects/checkmk/])
+  fi
 fi
 AM_CONDITIONAL(HAVE_CHECK, test x"$have_check" = "xyes" &&
                            test x"$have_checkmk" = "xyes")
+
+
+dnl ############## Compiler and Linker Flags
+
+# If maintainer mode is enabled then make warnings errors
+if test "$USE_MAINTAINER_MODE" = yes; then
+  WARNING_CFLAGS="-Wall -Werror -pedantic -Wunused"
+  WARNING_CFLAGS="$WARNING_CFLAGS -Wmissing-prototypes -Wmissing-declarations"
+  AC_SUBST(WARNING_CFLAGS)
+fi
+
 
 
 dnl ############## Output files
@@ -87,11 +81,11 @@ dnl ############## Output files
 AC_CONFIG_HEADERS([src/redstore_config.h])
 
 AC_CONFIG_FILES([
-	Makefile
-	src/Makefile
-	src/redhttp/Makefile
-	tests/Makefile
-	tests/redhttp/Makefile
+  Makefile
+  src/Makefile
+  src/redhttp/Makefile
+  tests/Makefile
+  tests/redhttp/Makefile
 ])
 
 AC_OUTPUT
