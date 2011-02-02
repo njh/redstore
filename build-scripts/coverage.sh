@@ -26,7 +26,7 @@ fi
 
 lcov --directory src --zerocounters
 
-if ! ./configure --enable-debug CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"; then
+if ! ./configure --enable-maintainer-mode CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"; then
     echo "Failed to configure project; aborting."
     exit -1
 fi
