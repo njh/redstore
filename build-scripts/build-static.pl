@@ -23,11 +23,11 @@ my $packages = [
         'checkfor' => 'bin/checkmk',
     },
     {
-        'url' => 'http://curl.haxx.se/download/curl-7.21.2.tar.gz',
+        'url' => 'http://curl.haxx.se/download/curl-7.21.3.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
-                    "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp --disable-dict ".
-                    "--disable-telnet --disable-pop3 --disable-imap --disable-smtp ".
-                    "--disable-manual --without-libssh2",
+                    "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp ".
+                    "--without-librtmp --disable-dict --disable-telnet --disable-pop3 ".
+                    "--disable-imap --disable-smtp --disable-manual --without-libssh2",
         'checkfor' => 'lib/pkgconfig/libcurl.pc',
     },
     {
@@ -41,6 +41,7 @@ my $packages = [
 #         'checkfor' => 'lib/libgmp.la',
 #     },
     {
+        # NOTE: libxml2-2.7.8 doesn't seem to work with Mac OS 10.6 zlib
         'url' => 'http://xmlsoft.org/sources/libxml2-2.7.6.tar.gz',
         'checkfor' => 'lib/pkgconfig/libxml-2.0.pc',
     },
@@ -81,13 +82,19 @@ my $packages = [
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
         'checkfor' => 'lib/mysql/libmysqlclient.la',
     },
-# FIXME: add support for Postgres
-#    {
-#        'url' => 'http://www.mirrorservice.org/sites/ftp.postgresql.org/source/v8.4.2/postgresql-8.4.2.tar.gz',
-#    },
+    {
+        'url' => 'http://ftp2.uk.postgresql.org/sites/ftp.postgresql.org/source/v9.0.3/postgresql-9.0.3.tar.gz',
+        'config' => "./configure --prefix=${ROOT_DIR}",
+        'make' => 'make -C src/interfaces/libpq && '.
+                  'make -C src/bin/pg_config',
+        'install' => 'make -C src/interfaces/libpq install && '.
+                     'make -C src/bin/pg_config install && '.
+                     "cp -fv src/include/postgres_ext.h ${ROOT_DIR}/include/",
+        'checkfor' => 'lib/libpq.a',
+    },
     {
         'url' => 'http://download.librdf.org/source/raptor2-2.0.0.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=$ROOT_DIR",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
