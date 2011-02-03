@@ -42,6 +42,8 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
     if (desc == NULL)
       break;
 
+    // FIXME: duplicated code
+
     // Does it match a format name?
     for (j = 0; desc->names[j]; j++) {
       if (strcmp(format_str, desc->names[j]) == 0) {
@@ -170,30 +172,53 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
   raptor_iostream *iostream = NULL;
   redhttp_response_t *response = NULL;
   librdf_query_results_formatter *formatter = NULL;
+  const char *format_name = NULL;
   const char *mime_type = NULL;
   char *format_str = NULL;
-  unsigned int i;
+  unsigned int i, j;
 
   format_str = redstore_get_format(request, accepted_query_result_types, DEFAULT_RESULTS_FORMAT);
 
   for (i = 0; 1; i++) {
-    const char *name, *mime;
-    const unsigned char *uri;
-    if (librdf_query_results_formats_enumerate(world, i, &name, NULL, &uri, &mime))
+    const raptor_syntax_description* desc = NULL;
+    desc = librdf_query_results_formats_get_description(world, i);
+    if (desc == NULL)
       break;
-    if ((name && strcmp(format_str, name) == 0) ||
-        (uri && strcmp(format_str, (char *) uri) == 0) || (mime && strcmp(format_str, mime) == 0)) {
-      formatter = librdf_new_query_results_formatter2(results, name, NULL, NULL);
-      mime_type = mime;
-      break;
+
+    // FIXME: duplicated code
+
+    // Does it match a format name?
+    for (j = 0; desc->names[j]; j++) {
+      if (strcmp(format_str, desc->names[j]) == 0) {
+        format_name = desc->names[j];
+        if (desc->mime_types_count)
+          mime_type = desc->mime_types[0].mime_type;
+        break;
+      }
+    }
+
+    // Does it match a MIME type?
+    for (j = 0; j < desc->mime_types_count; j++) {
+      raptor_type_q mt = desc->mime_types[j];
+      if (strcmp(format_str, mt.mime_type) == 0) {
+        format_name = desc->names[0];
+        mime_type = mt.mime_type;
+        break;
+      }
     }
   }
 
   free(format_str);
 
-  if (!formatter) {
+  if (!format_name) {
     return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
                                "Result format not supported for bindings query type.");
+  }
+
+  formatter = librdf_new_query_results_formatter2(results, format_name, NULL, NULL);
+  if (!formatter) {
+    return redstore_error_page(REDSTORE_ERROR,
+                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create results formatter.");
   }
 
   iostream = raptor_new_iostream_to_file_handle(raptor, socket);

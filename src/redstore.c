@@ -171,6 +171,7 @@ static void redstore_build_accepted_type_list()
     if (!desc)
       break;
 
+    // FIXME: duplicated code
     for (m = 0; m < desc->mime_types_count; m++) {
       redhttp_negotiate_add(&accepted_serialiser_types,
                             desc->mime_types[m].mime_type,
@@ -180,11 +181,19 @@ static void redstore_build_accepted_type_list()
 
 
   for (i = 0; 1; i++) {
-    const char *mime_type;
-    if (librdf_query_results_formats_enumerate(world, i, NULL, NULL, NULL, &mime_type))
+    const raptor_syntax_description* desc = NULL;
+
+    desc = librdf_query_results_formats_get_description(world, i);
+    if (!desc)
       break;
 
-    redhttp_negotiate_add(&accepted_query_result_types, mime_type, strlen(mime_type), 10);
+
+    // FIXME: duplicated code
+    for (m = 0; m < desc->mime_types_count; m++) {
+      redhttp_negotiate_add(&accepted_serialiser_types,
+                            desc->mime_types[m].mime_type,
+                            desc->mime_types[m].mime_type_len, desc->mime_types[m].q);
+    }
   }
 }
 

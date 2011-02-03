@@ -88,66 +88,6 @@ static int description_add_query_languages()
 }
 
 
-static int description_add_query_result_formats()
-{
-  int i;
-
-  for (i = 0; 1; i++) {
-    const char *name, *label, *mime_type;
-    const unsigned char *uri;
-    librdf_node *bnode = NULL;
-
-    if (librdf_query_results_formats_enumerate(world, i, &name, &label, &uri, &mime_type))
-      break;
-
-    bnode = librdf_new_node(world);
-    librdf_model_add(sd_model,
-                     librdf_new_node_from_node(service_node),
-                     librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                         (unsigned char *) "resultFormat"),
-                     librdf_new_node_from_node(bnode)
-        );
-
-    if (name) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       LIBRDF_S_label(world),
-                       librdf_new_node_from_literal(world, (unsigned char *) name, NULL, 0)
-          );
-    }
-
-    if (label) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       LIBRDF_S_comment(world),
-                       librdf_new_node_from_literal(world, (unsigned char *) label, NULL, 0)
-          );
-    }
-
-    if (mime_type) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                           (unsigned char *) "mediaType"),
-                       librdf_new_node_from_literal(world, (unsigned char *) mime_type, NULL, 0)
-          );
-    }
-
-    if (uri) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                           (unsigned char *) "spec"),
-                       librdf_new_node_from_uri_string(world, uri)
-          );
-    }
-
-    librdf_free_node(bnode);
-  }
-
-  return 0;
-}
-
 static int add_raptor_syntax_description(const raptor_syntax_description * desc, const char *type)
 {
   librdf_node *bnode = NULL;
@@ -210,6 +150,25 @@ static int add_raptor_syntax_description(const raptor_syntax_description * desc,
 
   return 0;
 }
+
+
+static int description_add_query_result_formats()
+{
+  int i;
+
+  for (i = 0; 1; i++) {
+    const raptor_syntax_description* desc = NULL;
+
+    desc = librdf_query_results_formats_get_description(world, i);
+    if (!desc)
+      break;
+
+    add_raptor_syntax_description(desc, "resultFormat");
+  }
+
+  return 0;
+}
+
 
 static int description_add_serialisers()
 {
