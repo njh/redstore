@@ -29,7 +29,6 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
                                                librdf_stream * stream, const char *format_str)
 {
   FILE *socket = redhttp_request_get_socket(request);
-  raptor_world *raptor_world = librdf_world_get_raptor(world);
   redhttp_response_t *response;
   librdf_serializer *serialiser;
   const char *format_name = NULL;
@@ -38,7 +37,7 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
 
   for (i = 0; format_name == NULL; i++) {
     const raptor_syntax_description *desc = NULL;
-    desc = raptor_world_get_serializer_description(raptor_world, i);
+    desc = librdf_serializer_get_description(world, i);
     if (desc == NULL)
       break;
 

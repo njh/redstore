@@ -172,15 +172,13 @@ static int description_add_query_result_formats()
 
 static int description_add_serialisers()
 {
-  raptor_world *raptor = librdf_world_get_raptor(world);
   unsigned int i;
 
-  // FIXME: This should use the librdf API
   // FIXME: ignore duplicates
   for (i = 0; 1; i++) {
     const raptor_syntax_description *desc = NULL;
 
-    desc = raptor_world_get_serializer_description(raptor, i);
+    desc = librdf_serializer_get_description(world, i);
     if (!desc)
       break;
 
@@ -192,14 +190,12 @@ static int description_add_serialisers()
 
 static int description_add_parsers()
 {
-  raptor_world *raptor = librdf_world_get_raptor(world);
   int i;
 
-  // FIXME: This should use the librdf API
   for (i = 0; 1; i++) {
     const raptor_syntax_description *desc = NULL;
 
-    desc = raptor_world_get_parser_description(raptor, i);
+    desc = librdf_parser_get_description(world, i);
     if (!desc)
       break;
 

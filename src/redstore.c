@@ -160,14 +160,13 @@ static int redland_log_handler(void *user, librdf_log_message * msg)
 
 static void redstore_build_accepted_type_list()
 {
-  raptor_world *raptor = librdf_world_get_raptor(world);
   unsigned int i, m;
 
   // FIXME: This should use the librdf API
   for (i = 0; 1; i++) {
     const raptor_syntax_description *desc = NULL;
 
-    desc = raptor_world_get_serializer_description(raptor, i);
+    desc = librdf_serializer_get_description(world, i);
     if (!desc)
       break;
 
