@@ -97,6 +97,9 @@ void redhttp_request_set_query_string(redhttp_request_t * request, const char *q
 const char *redhttp_request_get_query_string(redhttp_request_t * request);
 const char *redhttp_request_get_remote_addr(redhttp_request_t * request);
 const char *redhttp_request_get_remote_port(redhttp_request_t * request);
+const char *redhttp_request_get_server_name(redhttp_request_t * request);
+const char *redhttp_request_get_server_addr(redhttp_request_t * request);
+const char *redhttp_request_get_server_port(redhttp_request_t * request);
 void redhttp_request_set_socket(redhttp_request_t * request, FILE * socket);
 FILE *redhttp_request_get_socket(redhttp_request_t * request);
 void redhttp_request_set_socket(redhttp_request_t * request, FILE * socket);

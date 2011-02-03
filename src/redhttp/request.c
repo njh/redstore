@@ -320,6 +320,28 @@ const char *redhttp_request_get_remote_port(redhttp_request_t * request)
   return request->remote_port;
 }
 
+const char *redhttp_request_get_server_name(redhttp_request_t * request)
+{
+  const char* host = redhttp_request_get_header(request, "Host");
+
+  // FIXME: make default hostname configurable
+  if (host) {
+    return host;
+  } else {
+    return request->server_addr;
+  }
+}
+
+const char *redhttp_request_get_server_addr(redhttp_request_t * request)
+{
+  return request->server_addr;
+}
+
+const char *redhttp_request_get_server_port(redhttp_request_t * request)
+{
+  return request->server_port;
+}
+
 void redhttp_request_set_socket(redhttp_request_t * request, FILE * socket)
 {
   request->socket = socket;

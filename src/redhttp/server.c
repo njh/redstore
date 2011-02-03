@@ -28,6 +28,7 @@
 
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 
 #include "redhttp_private.h"
 #include "redhttp.h"
@@ -218,6 +219,27 @@ static int match_route(redhttp_handler_t * handler, redhttp_request_t * request)
   return 0;
 }
 
+static int get_server_addr(redhttp_request_t * request, int socket)
+{
+  struct sockaddr_storage ss;
+  struct sockaddr *sa = (struct sockaddr *) &ss;
+  socklen_t sa_len = sizeof(ss);
+
+  if (getsockname(socket, sa, &sa_len)) {
+    return -1;
+  }
+
+  if (getnameinfo(sa, sa_len,
+                  request->server_addr, sizeof(request->server_addr),
+                  request->server_port, sizeof(request->server_port),
+                  NI_NUMERICHOST | NI_NUMERICSERV)) {
+    return -1;
+  }
+
+  // Success
+  return 0;
+}
+
 int redhttp_server_handle_request(redhttp_server_t * server, int socket,
                                   struct sockaddr *sa, size_t sa_len)
 {
@@ -237,6 +259,12 @@ int redhttp_server_handle_request(redhttp_server_t * server, int socket,
                   request->remote_port, sizeof(request->remote_port),
                   NI_NUMERICHOST | NI_NUMERICSERV)) {
     perror("could not get numeric hostname of client");
+    redhttp_request_free(request);
+    return -1;
+  }
+
+  if (get_server_addr(request, socket)) {
+    perror("could not get numeric hostname of server");
     redhttp_request_free(request);
     return -1;
   }

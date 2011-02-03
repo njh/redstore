@@ -78,6 +78,9 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
   fprintf(socket, "Path: %s\n", redhttp_request_get_path(request));
   fprintf(socket, "Path Glob: %s\n", redhttp_request_get_path_glob(request));
   fprintf(socket, "Query: %s\n", redhttp_request_get_query_string(request));
+  fprintf(socket, "Server Name: %s\n", redhttp_request_get_server_name(request));
+  fprintf(socket, "Server Address: %s\n", redhttp_request_get_server_addr(request));
+  fprintf(socket, "Server Port: %s\n", redhttp_request_get_server_port(request));
   fprintf(socket, "Remote Address: %s\n", redhttp_request_get_remote_addr(request));
   fprintf(socket, "Remote Port: %s\n", redhttp_request_get_remote_port(request));
   fprintf(socket, "</pre>\n");
