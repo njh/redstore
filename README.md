@@ -35,16 +35,16 @@ Add a URI to the triplestore:
     curl --data uri=http://example.com/file.rdf http://localhost:8080/load
 
 Add a file to the triplestore:
-    curl -T file.rdf 'http://localhost:8000/data/http://example.com/data'
+    curl -T file.rdf 'http://localhost:8080/data/http://example.com/data'
 
 Add a file to the triplestore with type specified:
-    curl -T file.rdf -H 'Content-Type: application/x-turtle' 'http://localhost:8000/data/data.rdf'
+    curl -T file.rdf -H 'Content-Type: application/x-turtle' 'http://localhost:8080/data/data.rdf'
  
 You can delete graphs with in the same manner, using the DELETE HTTP verb:
-    curl -X DELETE 'http://localhost:8000/data/http://example.com/data'
+    curl -X DELETE 'http://localhost:8080/data/http://example.com/data'
 
 Query using the [SPARQL Query Tool]:
-    sparql-query http://localhost:8000/sparql 'SELECT * WHERE { ?s ?p ?o } LIMIT 10'
+    sparql-query http://localhost:8080/sparql 'SELECT * WHERE { ?s ?p ?o } LIMIT 10'
 
 
 Requirements
