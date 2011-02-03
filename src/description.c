@@ -135,15 +135,18 @@ static int add_raptor_syntax_description(const raptor_syntax_description * desc,
         );
   }
 
-  for (i = 0; i < desc->uri_strings_count; i++) {
-    const char *uri_string = desc->uri_strings[i];
-    librdf_model_add(sd_model,
-                     librdf_new_node_from_node(bnode),
-                     librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                         (const unsigned char *) "spec"),
-                     librdf_new_node_from_uri_string(world,
-                                                     (const unsigned char *) uri_string)
-        );
+  // FIXME: this should use uri_strings_count, when it is working with rasqal again
+  if (desc->uri_strings) {
+    for (i = 0; desc->uri_strings[i]; i++) {
+      const char *uri_string = desc->uri_strings[i];
+      librdf_model_add(sd_model,
+                       librdf_new_node_from_node(bnode),
+                       librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
+                                                           (const unsigned char *) "spec"),
+                       librdf_new_node_from_uri_string(world,
+                                                       (const unsigned char *) uri_string)
+          );
+    }
   }
 
   librdf_free_node(bnode);
