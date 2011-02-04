@@ -1,6 +1,6 @@
 /*
     RedStore - a lightweight RDF triplestore powered by Redland
-    Copyright (C) 2010 Nicholas J Humfrey <njh@aelius.com>
+    Copyright (C) 2010-2011 Nicholas J Humfrey <njh@aelius.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
