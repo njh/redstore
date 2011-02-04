@@ -85,11 +85,12 @@ my $packages = [
     {
         'url' => 'http://ftp2.uk.postgresql.org/sites/ftp.postgresql.org/source/v9.0.3/postgresql-9.0.3.tar.gz',
         'config' => "./configure --prefix=${ROOT_DIR}",
-        'make' => 'make -C src/interfaces/libpq all-static-lib && '.
-                  'make -C src/bin/pg_config',
-        'install' => 'make -C src/interfaces/libpq install-lib-static && '.
-                     'make -C src/bin/pg_config install && '.
-                     "cp -fv src/include/postgres_ext.h ${ROOT_DIR}/include/",
+        'make' => 'make -C src/bin/pg_config && '.
+                  'make -C src/interfaces/libpq all-static-lib',
+        'install' => 'make -C src/bin/pg_config install && '.
+                     "cp -fv src/include/postgres_ext.h ${ROOT_DIR}/include/ && ".
+                     "cp -fv src/interfaces/libpq/libpq-fe.h ${ROOT_DIR}/include/ && ".
+                     'make -C src/interfaces/libpq install-lib-static',
         'checkfor' => 'lib/libpq.a',
     },
     {
