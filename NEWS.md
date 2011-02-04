@@ -1,6 +1,15 @@
 News about RedStore releases
 ============================
 
+Release 0.5.2 - 2011-02-04
+--------------------------
+
+- Updated minimum dependent versions to raptor2-2.0.0, rasqal-0.9.24, redland-1.0.13
+- Changed over some deprecated librdf API calls to new equivalents.
+- Converted some direct calls to raptor to calls to librdf instead.
+- Added postgres support to the static binary build
+
+
 Release 0.5.1 - 2010-12-05
 --------------------------
 
