@@ -16,7 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "redhttp/redhttp.h"
+#include <stdlib.h>
+#include <unistd.h>
+ #include "redhttp/redhttp.h"
 
 #suite redhttp_headers
 
