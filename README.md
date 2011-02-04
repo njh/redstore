@@ -15,7 +15,7 @@ Features:
 * SPARQL over HTTP support
 * Compatible with rdfproc command line tool for offline operations
 * An HTTP interface that is compatible with 4store.
-* Only build dependancy is Redland.
+* Only runtime dependancy is Redland.
 * Unit tests for most of the HTTP server code.
 
 
@@ -38,7 +38,7 @@ Add a file to the triplestore:
     curl -T file.rdf 'http://localhost:8080/data/http://example.com/data'
 
 Add a file to the triplestore with type specified:
-    curl -T file.rdf -H 'Content-Type: application/x-turtle' 'http://localhost:8080/data/data.rdf'
+    curl -T file.ttl -H 'Content-Type: application/x-turtle' 'http://localhost:8080/data/data.ttl'
  
 You can delete graphs with in the same manner, using the DELETE HTTP verb:
     curl -X DELETE 'http://localhost:8080/data/http://example.com/data'
