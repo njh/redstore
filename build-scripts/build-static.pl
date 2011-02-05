@@ -78,7 +78,7 @@ my $packages = [
         'checkfor' => 'lib/libdb.a',
     },
     {
-        'url' => 'http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.53.tar.gz',
+        'url' => 'http://ftp.heanet.ie/mirrors/www.mysql.com/Downloads/MySQL-5.1/mysql-5.1.55.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
         'checkfor' => 'lib/mysql/libmysqlclient.la',
     },
