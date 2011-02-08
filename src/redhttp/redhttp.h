@@ -68,6 +68,7 @@ void redhttp_headers_print(redhttp_header_t ** first, FILE * socket);
 void redhttp_headers_add(redhttp_header_t ** first, const char *key, const char *value);
 int redhttp_headers_count(redhttp_header_t ** first);
 const char *redhttp_headers_get(redhttp_header_t ** first, const char *key);
+int redhttp_headers_get_index(redhttp_header_t ** first, unsigned int index, const char**key, const char** value);
 void redhttp_headers_parse_line(redhttp_header_t ** first, const char *line);
 void redhttp_headers_free(redhttp_header_t ** first);
 
@@ -82,6 +83,7 @@ void redhttp_request_add_header(redhttp_request_t * request, const char *key, co
 int redhttp_request_count_arguments(redhttp_request_t * request);
 void redhttp_request_print_arguments(redhttp_request_t * request, FILE * socket);
 const char *redhttp_request_get_argument(redhttp_request_t * request, const char *key);
+int redhttp_request_get_argument_index(redhttp_request_t * request, unsigned int index, const char**key, const char** value);
 void redhttp_request_set_path_glob(redhttp_request_t * request, const char *path_glob);
 const char *redhttp_request_get_path_glob(redhttp_request_t * request);
 void redhttp_request_parse_arguments(redhttp_request_t * request, const char *input);

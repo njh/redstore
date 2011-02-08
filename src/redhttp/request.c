@@ -141,6 +141,11 @@ const char *redhttp_request_get_argument(redhttp_request_t * request, const char
   return redhttp_headers_get(&request->arguments, key);
 }
 
+int redhttp_request_get_argument_index(redhttp_request_t * request, unsigned int index, const char**key, const char** value)
+{
+  return redhttp_headers_get_index(&request->arguments, index, key, value);
+}
+
 void redhttp_request_set_path_glob(redhttp_request_t * request, const char *path_glob)
 {
   // Free the old glob

@@ -62,6 +62,24 @@ ck_assert_str_eq(redhttp_headers_get(&first, "key1"), "value1");
 ck_assert_str_eq(redhttp_headers_get(&first, "key2"), "value2");
 redhttp_headers_free(&first);
 
+#test add_and_get_index
+redhttp_header_t *first = NULL;
+const char *key, *value;
+redhttp_headers_add(&first, "key1", "value1");
+redhttp_headers_add(&first, "key2", "value2");
+ck_assert_int_eq(redhttp_headers_get_index(&first, 0, NULL, NULL), 1);
+ck_assert_int_eq(redhttp_headers_get_index(&first, 0, &key, &value), 1);
+ck_assert_str_eq(key, "key1");
+ck_assert_str_eq(value, "value1");
+ck_assert_int_eq(redhttp_headers_get_index(&first, 1, &key, &value), 1);
+ck_assert_str_eq(key, "key2");
+ck_assert_str_eq(value, "value2");
+ck_assert_int_eq(redhttp_headers_get_index(&first, 2, &key, &value), 0);
+ck_assert(key == NULL);
+ck_assert(value == NULL);
+ck_assert_int_eq(redhttp_headers_get_index(&first, 3, NULL, NULL), 0);
+redhttp_headers_free(&first);
+
 #test parse_line
 redhttp_header_t *first = NULL;
 redhttp_headers_parse_line(&first, "Foo:  bar");

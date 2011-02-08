@@ -160,6 +160,16 @@ redhttp_request_parse_arguments(request, "key1=value1");
 ck_assert_str_eq(redhttp_request_get_argument(request, "key1"), "value1");
 redhttp_request_free(request);
 
+#test get_argument_index
+const char *key, *value;
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_parse_arguments(request, "key0=value0");
+ck_assert_int_eq(redhttp_request_get_argument_index(request, 0, &key, &value), 1);
+ck_assert_str_eq(key, "key0");
+ck_assert_str_eq(value, "value0");
+ck_assert_int_eq(redhttp_request_get_argument_index(request, 1, NULL, NULL), 0);
+redhttp_request_free(request);
+
 #test parse_invalid_argument
 redhttp_request_t *request = redhttp_request_new();
 redhttp_request_parse_arguments(request, "invalid&");
