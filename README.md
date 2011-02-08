@@ -8,14 +8,14 @@ For the latest version of RedStore, please see:
 
 What is RedStore ?
 ------------------
-RedStore is a lightweight RDF triplestore written in C using the Redland library.
+RedStore is a lightweight RDF triplestore written in C using the [Redland] library.
 
 Features:
 
 * SPARQL over HTTP support
 * Compatible with rdfproc command line tool for offline operations
 * An HTTP interface that is compatible with 4store.
-* Only runtime dependancy is Redland.
+* Only runtime dependancy is [Redland].
 * Unit tests for most of the HTTP server code.
 
 
@@ -50,7 +50,7 @@ Query using the [SPARQL Query Tool]:
 Requirements
 ------------
 
-The following versions of Redland are recommend:
+The following versions of [Redland] are recommend:
 
 - [raptor2-2.0.0]
 - [rasqal-0.9.24]
@@ -94,6 +94,7 @@ GNU General Public License for more details.
 
 
 
+[Redland]:                     http://librdf.org/
 [Redland Storage Modules]:     http://librdf.org/docs/api/redland-storage-modules.html
 [SPARQL Query Tool]:           http://github.com/tialaramex/sparql-query
 [GNU General Public License]:  http://www.gnu.org/licenses/gpl.html
