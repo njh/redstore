@@ -132,12 +132,15 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
   return response;
 }
 
-redhttp_response_t *redhttp_response_new_redirect(const char *url)
+redhttp_response_t *redhttp_response_new_redirect(const char *url, int code)
 {
   static const char MESSAGE_FMT[] = "The document has moved <a href=\"%s\">here</a>.";
   redhttp_response_t *response;
   size_t message_length;
   char *message;
+
+  if (!code)
+    code = REDHTTP_MOVED_PERMANENTLY;
 
   message_length = snprintf(NULL, 0, MESSAGE_FMT, url);
   message = malloc(message_length + 1);
@@ -146,7 +149,7 @@ redhttp_response_t *redhttp_response_new_redirect(const char *url)
   snprintf(message, message_length + 1, MESSAGE_FMT, url);
 
   // Build the response
-  response = redhttp_response_new_error_page(REDHTTP_MOVED_PERMANENTLY, message);
+  response = redhttp_response_new_error_page(code, message);
   if (response)
     redhttp_response_add_header(response, "Location", url);
   free(message);

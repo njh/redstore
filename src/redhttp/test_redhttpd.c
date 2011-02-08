@@ -134,7 +134,7 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
 
 static redhttp_response_t *handle_redirect(redhttp_request_t * request, void *user_data)
 {
-  return redhttp_response_new_redirect("/query");
+  return redhttp_response_new_redirect("/query", REDHTTP_MOVED_PERMANENTLY);
 }
 
 static redhttp_response_t *handle_logging(redhttp_request_t * request, void *user_data)

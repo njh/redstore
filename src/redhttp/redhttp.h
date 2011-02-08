@@ -115,7 +115,7 @@ redhttp_response_t *redhttp_response_new(int status, const char *message);
 redhttp_response_t *redhttp_response_new_with_type(int status, const char *message,
                                                    const char *type);
 redhttp_response_t *redhttp_response_new_error_page(int code, const char *explanation);
-redhttp_response_t *redhttp_response_new_redirect(const char *url);
+redhttp_response_t *redhttp_response_new_redirect(const char *url, int code);
 int redhttp_response_count_headers(redhttp_response_t * response);
 void redhttp_response_print_headers(redhttp_response_t * response, FILE * socket);
 const char *redhttp_response_get_header(redhttp_response_t * response, const char *key);

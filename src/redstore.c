@@ -140,7 +140,7 @@ static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, vo
     if (tmp) {
       strcpy(tmp, path);
       tmp[path_len - 1] = '\0';
-      response = redhttp_response_new_redirect(tmp);
+      response = redhttp_response_new_redirect(tmp, REDHTTP_MOVED_PERMANENTLY);
       free(tmp);
     }
   }

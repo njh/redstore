@@ -63,12 +63,20 @@ ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
 ck_assert_str_eq(redhttp_response_get_header(response, "Content-Type"), "text/plain");
 redhttp_response_free(response);
 
-#test new_redirect
-redhttp_response_t *response = redhttp_response_new_redirect("/foo/bar");
+#test new_redirect_move_permanently
+redhttp_response_t *response = redhttp_response_new_redirect("/foo/bar", REDHTTP_MOVED_PERMANENTLY);
 ck_assert_str_eq(redhttp_response_get_status_message(response), "Moved Permanently");
 ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<h1>301 Moved Permanently</h1>") != NULL, "Page has h1 title");
 ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<p>The document has moved <a href=\"/foo/bar\">here</a>.</p>") != NULL, "Page has redirect message.");
 ck_assert_str_eq(redhttp_response_get_header(response, "Location"), "/foo/bar");
+redhttp_response_free(response);
+
+#test new_redirect_see_other
+redhttp_response_t *response = redhttp_response_new_redirect("/foo1/bar1", REDHTTP_SEE_OTHER);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "See Other");
+ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<h1>303 See Other</h1>") != NULL, "Page has h1 title");
+ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<p>The document has moved <a href=\"/foo1/bar1\">here</a>.</p>") != NULL, "Page has redirect message.");
+ck_assert_str_eq(redhttp_response_get_header(response, "Location"), "/foo1/bar1");
 redhttp_response_free(response);
 
 #test new_error_page
