@@ -9,7 +9,7 @@ use Errno;
 use warnings;
 use strict;
 
-use Test::More tests => 163;
+use Test::More tests => 172;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -61,6 +61,15 @@ is($response->code, 200, "Getting Service Description page is successful");
 is($response->content_type, 'text/html', "Service Description page is of type text/html");
 ok($response->content_length > 100, "Service Description page is more than 100 bytes long");
 is_valid_xhtml($response->content, "Service Description page should be valid XHTML");
+like($response->content, qr(<h1>Service Description</h1>), "Service Description page has an h1 title");
+like($response->content, qr(SPARQL 1.1), "Service Description references SPARQL 1.1");
+like($response->content, qr(application/sparql), "Service Description references application/sparql");
+like($response->content, qr(rdf-sparql-query), "Service Description references rdf-sparql-query");
+like($response->content, qr(rdfxml), "Service Description references rdfxml");
+like($response->content, qr(application/rdf\+xml), "Service Description references application/rdf+xml");
+like($response->content, qr(www.w3.org/TR/rdfa/), "Service Description references www.w3.org/TR/rdfa/");
+like($response->content, qr(SPARQL XML Query Results), "Service Description references SPARQL XML Query Results");
+like($response->content, qr(application/sparql-results\+xml), "Service Description references application/sparql-results+xml");
 
 # Test getting Service Description as RDF
 $response = $ua->get($base_url.'description?format=rdfxml-abbrev');
