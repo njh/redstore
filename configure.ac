@@ -4,7 +4,7 @@ AC_PREREQ(2.60)
 
 dnl ############# Initialization
 
-AC_INIT([RedStore], [0.5.2], [njh@aelius.com], redstore)
+AC_INIT([RedStore], [0.5.3], [njh@aelius.com], redstore)
 
 AC_CONFIG_SRCDIR([src/redstore.c])
 AC_CONFIG_AUX_DIR(build-scripts)
@@ -47,9 +47,9 @@ AC_FUNC_REALLOC
 
 dnl ############## Check for packages we depend upon
 
-PKG_CHECK_MODULES(RAPTOR, raptor2 >= 2.0.0)
-PKG_CHECK_MODULES(RASQAL, rasqal >= 0.9.24)
-PKG_CHECK_MODULES(REDLAND, redland >= 1.0.13)
+PKG_CHECK_MODULES(RAPTOR, raptor2 >= 2.0.1)
+PKG_CHECK_MODULES(RASQAL, rasqal >= 0.9.25)
+PKG_CHECK_MODULES(REDLAND, redland >= 1.0.14)
 
 PKG_CHECK_MODULES(CHECK, check >= 0.9.4, have_check="yes", have_check="no")
 if test x"$have_check" = "xyes"; then
