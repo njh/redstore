@@ -34,60 +34,6 @@ librdf_uri *saddle_ns_uri = NULL;
 librdf_uri *sd_ns_uri = NULL;
 
 
-static int description_add_query_languages()
-{
-  rasqal_world *rasqal = librdf_world_get_rasqal(world);
-  int i;
-
-  // FIXME: This should use the librdf API
-  for (i = 0; 1; i++) {
-    const char *name, *label;
-    const unsigned char *uri;
-    librdf_node *bnode = NULL;
-
-    if (rasqal_languages_enumerate(rasqal, i, &name, &label, &uri))
-      break;
-
-    bnode = librdf_new_node(world);
-    librdf_model_add(sd_model,
-                     librdf_new_node_from_node(service_node),
-                     librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                         (unsigned char *) "queryLanguage"),
-                     librdf_new_node_from_node(bnode)
-        );
-
-    if (name) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       LIBRDF_S_label(world),
-                       librdf_new_node_from_literal(world, (unsigned char *) name, NULL, 0)
-          );
-    }
-
-    if (label) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       LIBRDF_S_comment(world),
-                       librdf_new_node_from_literal(world, (unsigned char *) label, NULL, 0)
-          );
-    }
-
-    if (uri) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
-                                                           (unsigned char *) "spec"),
-                       librdf_new_node_from_uri_string(world, uri)
-          );
-    }
-
-    librdf_free_node(bnode);
-  }
-
-  return 0;
-}
-
-
 static int add_raptor_syntax_description(const raptor_syntax_description * desc, const char *type)
 {
   librdf_node *bnode = NULL;
@@ -95,7 +41,7 @@ static int add_raptor_syntax_description(const raptor_syntax_description * desc,
 
   bnode = librdf_new_node(world);
   if (!bnode) {
-    redstore_error("Failed to add syntax description.");
+    redstore_error("Failed to create new bnode for syntax description.");
     return -1;
   }
 
@@ -154,6 +100,22 @@ static int add_raptor_syntax_description(const raptor_syntax_description * desc,
   return 0;
 }
 
+static int description_add_query_languages()
+{
+  unsigned int i;
+
+  for (i = 0; 1; i++) {
+    const raptor_syntax_description* desc = NULL;
+
+    desc = librdf_query_language_get_description(world, i);
+    if (!desc)
+      break;
+
+    add_raptor_syntax_description(desc, "queryLanguage");
+  }
+
+  return 0;
+}
 
 static int description_add_query_result_formats()
 {
@@ -171,7 +133,6 @@ static int description_add_query_result_formats()
 
   return 0;
 }
-
 
 static int description_add_serialisers()
 {
@@ -277,7 +238,7 @@ static librdf_node *new_node_from_integer(librdf_world * world, int i)
   if (!string)
     return NULL;
 
-  /* snprintf() takes as length the buffer size including NULL */
+  // snprintf() takes as length the buffer size including NULL
   snprintf((char *) string, INTEGER_BUFFER_SIZE + 1, "%d", i);
 
   xsd_integer_uri =
