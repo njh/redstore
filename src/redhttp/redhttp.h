@@ -91,6 +91,7 @@ void redhttp_request_set_method(redhttp_request_t * request, const char *method)
 const char *redhttp_request_get_method(redhttp_request_t * request);
 void redhttp_request_set_url(redhttp_request_t * request, const char *url);
 const char *redhttp_request_get_url(redhttp_request_t * request);
+const char *redhttp_request_get_full_url(redhttp_request_t * request);
 void redhttp_request_set_path(redhttp_request_t * request, const char *path);
 const char *redhttp_request_get_path(redhttp_request_t * request);
 void redhttp_request_set_version(redhttp_request_t * request, const char *version);
@@ -99,7 +100,7 @@ void redhttp_request_set_query_string(redhttp_request_t * request, const char *q
 const char *redhttp_request_get_query_string(redhttp_request_t * request);
 const char *redhttp_request_get_remote_addr(redhttp_request_t * request);
 const char *redhttp_request_get_remote_port(redhttp_request_t * request);
-const char *redhttp_request_get_server_name(redhttp_request_t * request);
+const char *redhttp_request_get_host(redhttp_request_t * request);
 const char *redhttp_request_get_server_addr(redhttp_request_t * request);
 const char *redhttp_request_get_server_port(redhttp_request_t * request);
 void redhttp_request_set_socket(redhttp_request_t * request, FILE * socket);

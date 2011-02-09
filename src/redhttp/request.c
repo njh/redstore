@@ -270,6 +270,25 @@ const char *redhttp_request_get_url(redhttp_request_t * request)
   return request->url;
 }
 
+const char *redhttp_request_get_full_url(redhttp_request_t * request)
+{
+  assert(request != NULL);
+
+  if (!request->full_url) {
+    const char *scheme = "http://";
+    const char *host = redhttp_request_get_host(request);
+    const char *url = redhttp_request_get_url(request);
+    size_t full_len = strlen(scheme) + strlen(host) + strlen(url) + 1;
+
+    request->full_url = malloc(full_len);
+    snprintf(request->full_url, full_len, "%s%s%s",
+      scheme, host, redhttp_request_get_url(request)
+    );
+  }
+
+  return request->full_url;
+}
+
 void redhttp_request_set_path(redhttp_request_t * request, const char *path)
 {
   assert(request != NULL);
@@ -325,16 +344,28 @@ const char *redhttp_request_get_remote_port(redhttp_request_t * request)
   return request->remote_port;
 }
 
-const char *redhttp_request_get_server_name(redhttp_request_t * request)
+const char *redhttp_request_get_host(redhttp_request_t * request)
 {
-  const char* host = redhttp_request_get_header(request, "Host");
+  if (!request->host) {
+    const char* host_header = redhttp_request_get_header(request, "Host");
 
-  // FIXME: make default hostname configurable
-  if (host) {
-    return host;
-  } else {
-    return request->server_addr;
+    if (host_header) {
+      request->host = redhttp_strdup(host_header);
+    } else {
+      // FIXME: make default hostname configurable
+      if (strcmp(request->server_port, "80")==0) {
+        request->host = redhttp_strdup(request->server_addr);
+      } else {
+        // FIXME: wrap IPv6 addresses in square brackets
+        size_t host_len = strlen(request->server_addr) + 1 + strlen(request->server_port) + 1;
+        request->host = calloc(1, host_len);
+        if (request->host)
+          snprintf(request->host, host_len, "%s:%s", request->server_addr, request->server_port);
+      }
+    }
   }
+
+  return request->host;
 }
 
 const char *redhttp_request_get_server_addr(redhttp_request_t * request)
@@ -495,6 +526,10 @@ void redhttp_request_free(redhttp_request_t * request)
     free(request->path_glob);
   if (request->query_string)
     free(request->query_string);
+  if (request->host)
+    free(request->host);
+  if (request->full_url)
+    free(request->full_url);
   if (request->content_buffer)
     free(request->content_buffer);
 

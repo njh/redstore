@@ -52,6 +52,7 @@ struct redhttp_request_s {
   char remote_addr[NI_MAXHOST];
   char remote_port[NI_MAXSERV];
 
+  char *host;
   char server_addr[NI_MAXHOST];
   char server_port[NI_MAXSERV];
 
@@ -63,6 +64,7 @@ struct redhttp_request_s {
   char *path;
   char *path_glob;
   char *query_string;
+  char *full_url;
 
   char *content_buffer;
   size_t content_length;

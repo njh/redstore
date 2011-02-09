@@ -46,6 +46,30 @@ redhttp_request_set_socket(request, socket);
 ck_assert_msg(redhttp_request_get_socket(request) == socket, "redhttp_request_get_socket() failed");
 redhttp_request_free(request);
 
+#test get_host_header
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_add_header(request, "Host", "example.com");
+ck_assert_str_eq(redhttp_request_get_host(request), "example.com");
+redhttp_request_free(request);
+
+#test get_host_server_addr_port_8080
+redhttp_request_t *request = redhttp_request_new();
+char* server_addr = (char*)redhttp_request_get_server_addr(request);
+char* server_port = (char*)redhttp_request_get_server_port(request);
+strcpy(server_addr, "127.0.0.1");
+strcpy(server_port, "8080");
+ck_assert_str_eq(redhttp_request_get_host(request), "127.0.0.1:8080");
+redhttp_request_free(request);
+
+#test get_host_server_addr_port_80
+redhttp_request_t *request = redhttp_request_new();
+char* server_addr = (char*)redhttp_request_get_server_addr(request);
+char* server_port = (char*)redhttp_request_get_server_port(request);
+strcpy(server_addr, "80.68.95.25");
+strcpy(server_port, "80");
+ck_assert_str_eq(redhttp_request_get_host(request), "80.68.95.25");
+redhttp_request_free(request);
+
 #test set_and_get_method
 redhttp_request_t *request = redhttp_request_new();
 redhttp_request_set_method(request, "geT");
@@ -73,6 +97,12 @@ redhttp_request_t *request = redhttp_request_new();
 redhttp_request_set_url(request, "ignore");
 redhttp_request_set_url(request, NULL);
 ck_assert(redhttp_request_get_url(request) == NULL);
+redhttp_request_free(request);
+
+#test set_and_get_full_url
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/path?key=value", "1.0");
+redhttp_request_add_header(request, "Host", "example.com");
+ck_assert_str_eq(redhttp_request_get_full_url(request), "http://example.com/path?key=value");
 redhttp_request_free(request);
 
 #test set_and_get_path
