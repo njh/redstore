@@ -53,11 +53,11 @@ Query using the [SPARQL Query Tool]:
 Requirements
 ------------
 
-The following versions of [Redland] are recommend:
+The minimum required versions of the [Redland] RDF Libraries are:
 
-- [raptor2-2.0.0]
-- [rasqal-0.9.24]
-- [redland-1.0.13]
+- [raptor2-2.0.1]
+- [rasqal-0.9.25]
+- [redland-1.0.14]
 
 
 Installation
@@ -104,9 +104,9 @@ GNU General Public License for more details.
 
 [SPARQL 1.1 RDF Dataset HTTP Protocol]:  http://www.w3.org/2009/sparql/docs/http-rdf-update/
 
-[raptor2-2.0.0]:               http://download.librdf.org/source/raptor2-2.0.0.tar.gz
-[rasqal-0.9.24]:               http://download.librdf.org/source/rasqal-0.9.24.tar.gz
-[redland-1.0.13]:              http://download.librdf.org/source/redland-1.0.13.tar.gz
+[raptor2-2.0.1]:               http://download.librdf.org/source/raptor2-2.0.1.tar.gz
+[rasqal-0.9.25]:               http://download.librdf.org/source/rasqal-0.9.25.tar.gz
+[redland-1.0.14]:              http://download.librdf.org/source/redland-1.0.14.tar.gz
 
 [hashes]:                      http://librdf.org/docs/api/redland-storage-module-hashes.html
 [mysql]:                       http://librdf.org/docs/api/redland-storage-module-mysql.html
