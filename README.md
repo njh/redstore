@@ -13,8 +13,8 @@ RedStore is a lightweight RDF triplestore written in C using the [Redland] libra
 Features:
 
 * SPARQL over HTTP support
+* Supports the [SPARQL 1.1 RDF Dataset HTTP Protocol]
 * Compatible with rdfproc command line tool for offline operations
-* An HTTP interface that is compatible with 4store.
 * Only runtime dependancy is [Redland].
 * Unit tests for most of the HTTP server code.
 
@@ -31,17 +31,20 @@ Usage
        -q              Enable quiet mode
   
 
-Add a URI to the triplestore:
+Load a URI into the triplestore:
     curl --data uri=http://example.com/file.rdf http://localhost:8080/load
 
 Add a file to the triplestore:
-    curl -T file.rdf 'http://localhost:8080/data/http://example.com/data'
+    curl -T foaf.rdf 'http://localhost:8080/data/foaf.rdf'
+
+Add a file to the triplestore with full URI specified:
+    curl -T foaf.rdf 'http://localhost:8080/data/?graph=http://example.com/foaf.rdf'
 
 Add a file to the triplestore with type specified:
-    curl -T file.ttl -H 'Content-Type: application/x-turtle' 'http://localhost:8080/data/data.ttl'
+    curl -T foaf.ttl -H 'Content-Type: application/x-turtle' 'http://localhost:8080/data/foaf.rdf'
  
 You can delete graphs with in the same manner, using the DELETE HTTP verb:
-    curl -X DELETE 'http://localhost:8080/data/http://example.com/data'
+    curl -X DELETE 'http://localhost:8080/data/foaf.rdf'
 
 Query using the [SPARQL Query Tool]:
     sparql-query http://localhost:8080/sparql 'SELECT * WHERE { ?s ?p ?o } LIMIT 10'
@@ -98,6 +101,8 @@ GNU General Public License for more details.
 [Redland Storage Modules]:     http://librdf.org/docs/api/redland-storage-modules.html
 [SPARQL Query Tool]:           http://github.com/tialaramex/sparql-query
 [GNU General Public License]:  http://www.gnu.org/licenses/gpl.html
+
+[SPARQL 1.1 RDF Dataset HTTP Protocol]:  http://www.w3.org/2009/sparql/docs/http-rdf-update/
 
 [raptor2-2.0.0]:               http://download.librdf.org/source/raptor2-2.0.0.tar.gz
 [rasqal-0.9.24]:               http://download.librdf.org/source/rasqal-0.9.24.tar.gz

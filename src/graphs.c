@@ -52,8 +52,9 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
         break;
       }
 
+      // FIXME: don't use the 'graph' argument if a path is sufficient
       escaped = redhttp_url_escape((char *) librdf_uri_as_string(uri));
-      redstore_page_append_string(response, "<li><a href=\"/data/");
+      redstore_page_append_string(response, "<li><a href=\"/data/?graph=");
       redstore_page_append_escaped(response, escaped, 0);
       redstore_page_append_string(response, "\">");
       redstore_page_append_escaped(response, (char *) librdf_uri_as_string(uri), 0);

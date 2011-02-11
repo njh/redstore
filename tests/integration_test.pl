@@ -13,8 +13,6 @@ use Test::More tests => 172;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
-my $FOAF_URI = 'http://www.example.com/joe/foaf.rdf';
-my $ESCAPED_FOAF_URI = 'http%3A%2F%2Fwww.example.com%2Fjoe%2Ffoaf.rdf';
 
 my $REDSTORE = $ENV{REDSTORE};
 $REDSTORE = $ARGV[0] if ($ARGV[0]);
@@ -143,7 +141,7 @@ like($response->content, qr["boolean" : false], "SPARQL ASK Query contains right
 is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON");
 
 # Test POSTing a graph
-$request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
+$request = HTTP::Request->new( 'POST', $base_url.'data/?graph='.$ESCAPED_TEST_CASE_URI );
 $request->content( read_fixture('test001.rdf') );
 $request->content_length( length($request->content) );
 $request->content_type( 'application/rdf+xml' );
@@ -153,7 +151,7 @@ is($response->content_type, 'text/plain', "Non negotiated POST response is of ty
 like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
 
 # Test getting a graph as Turtle
-$request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
+$request = HTTP::Request->new( 'GET', $base_url.'data/?graph='.$ESCAPED_TEST_CASE_URI );
 $request->header('Accept', 'application/x-turtle');
 $response = $ua->request($request);
 is($response->code, 200, "Getting a graph is successful");
@@ -161,7 +159,7 @@ is($response->content_type, "application/x-turtle", "Content Type data is correc
 like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+\"v\"\s*.\n], "Graph data is correct");
 
 # Test getting a graph as ntriples
-$request = HTTP::Request->new( 'GET', $base_url.'data/'.$ESCAPED_TEST_CASE_URI );
+$request = HTTP::Request->new( 'GET', $base_url.'data/?graph='.$ESCAPED_TEST_CASE_URI );
 $request->header('Accept', 'text/plain');
 $response = $ua->request($request);
 is($response->code, 200, "Getting a graph is successful");
@@ -178,7 +176,7 @@ is($response->content, "$TEST_CASE_URI\n", "List of graphs page contains graph t
 $response = $ua->get($base_url.'graphs', 'Accept' => 'text/html');
 is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/html', "Graph list is of type text/html");
-like($response->content, qr[<li><a href="/data/$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");
+like($response->content, qr[<li><a href="/data/\?graph=$ESCAPED_TEST_CASE_URI">$TEST_CASE_URI</a></li>], "List of graphs page contains graph that was added");
 is_valid_xhtml($response->content, "Graph list should be valid XHTML");
 
 # Test getting list of graphs using SPARQL
@@ -191,7 +189,7 @@ is($lines[0], "Result,g", "First line of SPARQL response contains CSV header");
 is($lines[1], "1,uri($TEST_CASE_URI)", "Second line of SPARQL response contains graph URI");
 
 # Test getting a non-existant graph
-$response = $ua->get($base_url."data/http%3A%2F%2Fwww.example.com%2Finvalid");
+$response = $ua->get($base_url."data/invalid.rdf");
 is($response->code, 404, "Getting a non-existant graph returns 404");
 is($response->content_type, 'text/html', "Graph not found page is of type text/html");
 ok($response->content_length > 100, "Graph not found page is more than 100 bytes long");
@@ -258,7 +256,7 @@ is($response->content_type, 'text/plain', "SPARQL SELECT query for plain text Co
 like($response->content, qr[string\("v"\)], "SPARQL SELECT Query for plain text contains right content");
 
 # Test POSTing some Turtle
-$request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_FOAF_URI );
+$request = HTTP::Request->new( 'POST', $base_url.'data/foaf.rdf' );
 $request->content( read_fixture('foaf.ttl') );
 $request->content_length( length($request->content) );
 $request->content_type( 'application/x-turtle' );
@@ -268,7 +266,7 @@ is($response->content_type, 'text/plain', "Non negotiated POST response is of ty
 like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
 
 # Test POSTing some Turtle with an HTML response
-$request = HTTP::Request->new( 'POST', $base_url.'data/'.$ESCAPED_FOAF_URI );
+$request = HTTP::Request->new( 'POST', $base_url.'data/foaf.rdf' );
 $request->content( read_fixture('foaf.ttl') );
 $request->content_length( length($request->content) );
 $request->content_type( 'application/x-turtle' );
@@ -287,16 +285,16 @@ is(scalar(@_ = split(/<result>/,$response->content))-1, 2, "SPARQL SELECT Query 
 is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # Test a head request
-$response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
+$response = $ua->head($base_url.'data/foaf.rdf');
 is($response->code, 200, "HEAD response for graph we just created is 200");
 
 # Test DELETEing a graph
-$request = HTTP::Request->new( 'DELETE', $base_url.'data/'.$ESCAPED_FOAF_URI );
+$request = HTTP::Request->new( 'DELETE', $base_url.'data/foaf.rdf' );
 $response = $ua->request($request);
 is($response->code, 200, "DELETEing a graph is successful");
 
 # Test a head request on deleted graph
-$response = $ua->head($base_url.'data/'.$ESCAPED_FOAF_URI);
+$response = $ua->head($base_url.'data/foaf.rdf');
 is($response->code, 404, "HEAD response for deleted graph is 404");
 
 # Test dumping the triplestore as N-Quads
@@ -308,15 +306,15 @@ like($lines[-1], qr[^(\S+) (\S+) (\S+) (\S+) \.$], "Last line of dump looks like
 
 # Test POSTing a url to be loaded
 {
-    $ua->request(HTTP::Request->new( 'DELETE', $base_url.'data/'.$ESCAPED_FOAF_URI ));
+    $ua->request(HTTP::Request->new( 'DELETE', $base_url.'data/foaf.rdf' ));
     
-    $response = $ua->post( $base_url.'load', {'uri' => fixture_url('foaf.ttl'), 'graph' => $FOAF_URI});
+    $response = $ua->post( $base_url.'load', {'uri' => fixture_url('foaf.ttl'), 'graph' => $base_url.'data/foaf.rdf'});
     is($response->code, 200, "POSTing URL to load is successful");
     is($response->content_type, 'text/plain', "Non negotiated load response is of type text/plain");
-    like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
+    like($response->content, qr/Successfully added triples/, "Load response message contains triple count");
     
     # Count the number of triples
-    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    $response = $ua->get($base_url.'data/foaf.rdf', 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 14, "Number of triples in loaded graph is correct");
 }
@@ -351,7 +349,7 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
 
 # Test replacing data with a PUT request
 {
-    $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+    $request = HTTP::Request->new( 'PUT', $base_url.'data/foaf.rdf' );
     $request->content( read_fixture('foaf.ttl') );
     $request->content_length( length($request->content) );
     $request->content_type( 'application/x-turtle' );
@@ -359,12 +357,12 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     is($response->code, 200, "Putting data into a graph is successful");
     
     # Count the number of triples
-    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    $response = $ua->get($base_url.'data/foaf.rdf', 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 14, "Number of triples is correct");
     
     # Test PUTing data into a graph
-    $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+    $request = HTTP::Request->new( 'PUT', $base_url.'data/foaf.rdf' );
     $request->content( read_fixture('test001.rdf') );
     $request->content_length( length($request->content) );
     $request->content_type( 'application/rdf+xml' );
@@ -372,14 +370,14 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     is($response->code, 200, "Replacing data in a graph is successful");
     
     # Count the number of triples
-    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    $response = $ua->get($base_url.'data/foaf.rdf', 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 1, "New number of triples is correct");
 };
 
 # Test PUTing JSON
 {
-    $request = HTTP::Request->new( 'PUT', $base_url.'data/'.$ESCAPED_FOAF_URI );
+    $request = HTTP::Request->new( 'PUT', $base_url.'data/foaf.rdf' );
     $request->content( read_fixture('foaf.json') );
     $request->content_length( length($request->content) );
     $request->content_type( 'application/json' );
@@ -387,7 +385,7 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     is($response->code, 200, "Putting JSON data into a graph is successful");
 
     # Count the number of triples
-    $response = $ua->get($base_url.'data/'.$ESCAPED_FOAF_URI, 'Accept' => 'text/plain');
+    $response = $ua->get($base_url.'data/foaf.rdf', 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 14, "Number of triples after PUTing JSON is correct");
 };
@@ -416,14 +414,14 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
     like($response->content, qr/Successfully added triples to test:g/, "Response messages is correct");
 
     # Count the number of triples
-    $response = $ua->get($base_url.'data/test%3Ag', 'Accept' => 'text/plain');
+    $response = $ua->get($base_url.'data/?graph=test%3Ag', 'Accept' => 'text/plain');
     is($response->code, 200, "Getting the number of triples is successful");
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 2, "New number of triples is correct");
 }
 
 # Test POSTing to /insert without a content argument
-$response = $ua->post( $base_url.'insert', {'graph' => $FOAF_URI});
+$response = $ua->post( $base_url.'insert', {'graph' => $base_url.'data/foaf.rdf'});
 is($response->code, 400, "POSTing to /insert without any content should fail");
 like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument");
 
@@ -438,7 +436,7 @@ like($response->content, qr/Missing the 'content' argument/, "Response mentions 
     like($response->content, qr/Successfully deleted triples./, "Response messages is correct");
 
     # Count the number of triples
-    $response = $ua->get($base_url.'data/test%3Ag', 'Accept' => 'text/plain');
+    $response = $ua->get($base_url.'data/?graph=test%3Ag', 'Accept' => 'text/plain');
     is($response->code, 200, "Getting the number of triples is successful");
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 1, "Number of remaining triples is correct");

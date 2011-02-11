@@ -106,58 +106,90 @@ redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_dat
   return parse_data_from_request_body(request, NULL, load_stream_into_graph);
 }
 
-static librdf_node *get_graph_context(redhttp_request_t * request)
+static librdf_node *get_graph_node(redhttp_request_t * request)
 {
-  const char *uri = redhttp_request_get_path_glob(request);
-  librdf_node *context = NULL;
+  unsigned char *graph = NULL;
+  librdf_uri *base_uri = NULL;
+  librdf_uri *graph_uri = NULL;
+  librdf_node *graph_node = NULL;
 
-  if (!uri || strlen(uri) < 1) {
-    return NULL;
+  base_uri = librdf_new_uri(world, (unsigned char*)redhttp_request_get_full_url(request));
+  if (!base_uri) {
+    redstore_error("Failed to create librdf_uri for current request.");
+    goto CLEANUP;
   }
+
+  graph = (unsigned char *)redhttp_request_get_argument(request, "graph");
+  if (graph) {
+    graph_uri = librdf_new_uri_relative_to_base(base_uri, graph);
+  } else {
+    graph_uri = librdf_new_uri_from_uri(base_uri);
+  }
+
+  if (graph_uri) {
+    redstore_debug("Graph URI: %s", librdf_uri_as_string(graph_uri));
+  } else {
+    redstore_error("Failed to create librdf_uri for graph.");
+    goto CLEANUP;
+  }
+
   // Create node
-  context = librdf_new_node_from_uri_string(world, (const unsigned char *) uri);
-  if (!context) {
-    redstore_debug("Failed to create node from: %s", uri);
-    return NULL;
-  }
-  // Check if the graph exists
-  if (!librdf_model_contains_context(model, context)) {
-    redstore_debug("Graph not found: %s", uri);
-    librdf_free_node(context);
-    return NULL;
+  graph_node = librdf_new_node_from_uri(world, graph_uri);
+  if (!graph_node) {
+    redstore_error("Failed to create graph node from librdf_uri.");
   }
 
-  return context;
+CLEANUP:
+  if (base_uri)
+    librdf_free_uri(base_uri);
+  if (graph_uri)
+    librdf_free_uri(graph_uri);
+
+  return graph_node;
 }
 
 redhttp_response_t *handle_data_context_head(redhttp_request_t * request, void *user_data)
 {
-  librdf_node *context = get_graph_context(request);
-  redhttp_response_t *response;
+  librdf_node *graph_node = get_graph_node(request);
+  redhttp_response_t *response = NULL;
 
-  if (context) {
-    response = redhttp_response_new(REDHTTP_OK, NULL);
-    librdf_free_node(context);
-  } else {
-    response = redhttp_response_new(REDHTTP_NOT_FOUND, "Graph not found");
+  if (!graph_node) {
+    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                               "Failed to get node for graph.");
   }
+
+  if (librdf_model_contains_context(model, graph_node)) {
+    response = redhttp_response_new(REDHTTP_OK, NULL);
+  } else {
+    response = redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");
+  }
+
+  librdf_free_node(graph_node);
 
   return response;
 }
 
 redhttp_response_t *handle_data_context_get(redhttp_request_t * request, void *user_data)
 {
-  librdf_node *context = get_graph_context(request);
+  librdf_node *graph_node = get_graph_node(request);
   librdf_stream *stream = NULL;
   redhttp_response_t *response = NULL;
 
-  if (!context) {
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");
+  if (!graph_node) {
+    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                               "Failed to get node for graph.");
   }
+
+  // Check if the graph exists
+  if (!librdf_model_contains_context(model, graph_node)) {
+    librdf_free_node(graph_node);
+    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");;
+  }
+
   // Stream the graph
-  stream = librdf_model_context_as_stream(model, context);
+  stream = librdf_model_context_as_stream(model, graph_node);
   if (!stream) {
-    librdf_free_node(context);
+    librdf_free_node(graph_node);
     return redstore_error_page(REDSTORE_ERROR,
                                REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream context.");
   }
@@ -165,46 +197,50 @@ redhttp_response_t *handle_data_context_get(redhttp_request_t * request, void *u
   response = format_graph_stream(request, stream);
 
   librdf_free_stream(stream);
-  librdf_free_node(context);
+  librdf_free_node(graph_node);
 
   return response;
 }
 
 redhttp_response_t *handle_data_context_post(redhttp_request_t * request, void *user_data)
 {
-  const char *graph_uri = redhttp_request_get_path_glob(request);
-
-  if (!graph_uri || strlen(graph_uri) < 1) {
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Invalid Graph URI.");
+  librdf_node *graph_node = get_graph_node(request);
+  if (!graph_node) {
+    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                               "Failed to get node for graph.");
   }
 
-  return parse_data_from_request_body(request, graph_uri, load_stream_into_graph);
+  return parse_data_from_request_body(request, graph_node, load_stream_into_graph);
 }
 
 redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *user_data)
 {
-  const char *graph_uri = redhttp_request_get_path_glob(request);
-
-  if (!graph_uri || strlen(graph_uri) < 1) {
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Invalid Graph URI.");
+  librdf_node *graph_node = get_graph_node(request);
+  if (!graph_node) {
+    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                               "Failed to get node for graph.");
   }
 
-  return parse_data_from_request_body(request, graph_uri, clear_and_load_stream_into_graph);
+  return parse_data_from_request_body(request, graph_node, clear_and_load_stream_into_graph);
 }
 
 redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void *user_data)
 {
-  librdf_node *context = get_graph_context(request);
-  redhttp_response_t *response;
+  librdf_node *graph_node = get_graph_node(request);
+  redhttp_response_t *response = NULL;
 
-  // Create node
-  if (!context) {
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");
+  if (!graph_node) {
+    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                               "Failed to get node for graph.");
   }
 
-  redstore_info("Deleting graph: %s", redhttp_request_get_path_glob(request));
+  // Check if the graph exists
+  if (!librdf_model_contains_context(model, graph_node)) {
+    librdf_free_node(graph_node);
+    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");;
+  }
 
-  if (librdf_model_context_remove_statements(model, context)) {
+  if (librdf_model_context_remove_statements(model, graph_node)) {
     response =
         redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
                             "Error while trying to delete graph");
@@ -226,7 +262,7 @@ redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void
     redhttp_negotiate_free(&accept);
   }
 
-  librdf_free_node(context);
+  librdf_free_node(graph_node);
 
   return response;
 }

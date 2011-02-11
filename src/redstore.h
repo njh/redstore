@@ -143,10 +143,10 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
                                              librdf_node * graph);
 redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned char *buffer,
                                            size_t content_length, const char *parser_name,
-                                           const char *graph_uri_str,
+                                           librdf_node *graph_node,
                                            redstore_stream_processor stream_proc);
 redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request,
-                                                 const char *graph_uri_str,
+                                                 librdf_node *graph_node,
                                                  redstore_stream_processor stream_proc);
 redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_data);
