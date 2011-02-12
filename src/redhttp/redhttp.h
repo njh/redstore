@@ -74,7 +74,8 @@ void redhttp_headers_free(redhttp_header_t ** first);
 
 redhttp_request_t *redhttp_request_new(void);
 redhttp_request_t *redhttp_request_new_with_args(const char *method,
-                                                 const char *url, const char *version);
+                                                 const char *path_and_query,
+                                                 const char *version);
 char *redhttp_request_read_line(redhttp_request_t * request);
 const char *redhttp_request_get_header(redhttp_request_t * request, const char *key);
 int redhttp_request_count_headers(redhttp_request_t * request);
@@ -89,9 +90,9 @@ const char *redhttp_request_get_path_glob(redhttp_request_t * request);
 void redhttp_request_parse_arguments(redhttp_request_t * request, const char *input);
 void redhttp_request_set_method(redhttp_request_t * request, const char *method);
 const char *redhttp_request_get_method(redhttp_request_t * request);
-void redhttp_request_set_url(redhttp_request_t * request, const char *url);
+void redhttp_request_set_path_and_query(redhttp_request_t * request, const char *path_and_query);
+const char *redhttp_request_get_path_and_query(redhttp_request_t * request);
 const char *redhttp_request_get_url(redhttp_request_t * request);
-const char *redhttp_request_get_full_url(redhttp_request_t * request);
 void redhttp_request_set_path(redhttp_request_t * request, const char *path);
 const char *redhttp_request_get_path(redhttp_request_t * request);
 void redhttp_request_set_version(redhttp_request_t * request, const char *version);

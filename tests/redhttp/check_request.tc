@@ -33,7 +33,7 @@ redhttp_request_free(request);
 redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo%2fbar?rat=white", "1.0");
 ck_assert_msg(request != NULL, "redhttp_request_new() returned null");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
-ck_assert_str_eq(redhttp_request_get_url(request), "/foo%2fbar?rat=white");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/foo%2fbar?rat=white");
 ck_assert_str_eq(redhttp_request_get_path(request), "/foo/bar");
 ck_assert_str_eq(redhttp_request_get_query_string(request), "rat=white");
 ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
@@ -83,26 +83,26 @@ redhttp_request_set_method(request, NULL);
 ck_assert(redhttp_request_get_method(request) == NULL);
 redhttp_request_free(request);
 
-#test set_and_get_url
+#test set_and_get_path_and_query
 redhttp_request_t *request = redhttp_request_new();
-redhttp_request_set_url(request, "ignore");
-redhttp_request_set_url(request, "/foo/BAR?rat=white");
-ck_assert_str_eq(redhttp_request_get_url(request), "/foo/BAR?rat=white");
+redhttp_request_set_path_and_query(request, "ignore");
+redhttp_request_set_path_and_query(request, "/foo/BAR?rat=white");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/foo/BAR?rat=white");
 ck_assert_str_eq(redhttp_request_get_path(request), "/foo/BAR");
 ck_assert_str_eq(redhttp_request_get_query_string(request), "rat=white");
 redhttp_request_free(request);
 
-#test set_and_get_null_url
+#test set_and_get_null_path_and_query
 redhttp_request_t *request = redhttp_request_new();
-redhttp_request_set_url(request, "ignore");
-redhttp_request_set_url(request, NULL);
-ck_assert(redhttp_request_get_url(request) == NULL);
+redhttp_request_set_path_and_query(request, "ignore");
+redhttp_request_set_path_and_query(request, NULL);
+ck_assert(redhttp_request_get_path_and_query(request) == NULL);
 redhttp_request_free(request);
 
-#test set_and_get_full_url
+#test get_url
 redhttp_request_t *request = redhttp_request_new_with_args("GET", "/path?key=value", "1.0");
 redhttp_request_add_header(request, "Host", "example.com");
-ck_assert_str_eq(redhttp_request_get_full_url(request), "http://example.com/path?key=value");
+ck_assert_str_eq(redhttp_request_get_url(request), "http://example.com/path?key=value");
 redhttp_request_free(request);
 
 #test set_and_get_path
@@ -245,7 +245,7 @@ redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_crlf.txt", "
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
-ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf?format=xml");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/foaf.rdf?format=xml");
 ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
 ck_assert_str_eq(redhttp_request_get_query_string(request), "format=xml");
 ck_assert_str_eq(redhttp_request_get_path(request), "/foaf.rdf");
@@ -267,7 +267,7 @@ redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_09.txt", "rb
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
-ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/foaf.rdf");
 ck_assert_str_eq(redhttp_request_get_version(request), "0.9");
 redhttp_request_free(request);
 
@@ -286,7 +286,7 @@ redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_with_spaces.
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read_status_line(request) == 0, "Failed to parse status line");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
-ck_assert_str_eq(redhttp_request_get_url(request), "/hello world%20.txt");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/hello world%20.txt");
 ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
 ck_assert_msg(redhttp_request_get_query_string(request) == NULL, "query_string should be NULL");
 ck_assert_str_eq(redhttp_request_get_path(request), "/hello world .txt");
@@ -299,7 +299,7 @@ redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_crlf.txt", "
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
-ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf?format=xml");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/foaf.rdf?format=xml");
 ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
 ck_assert_str_eq(redhttp_request_get_query_string(request), "format=xml");
 ck_assert_str_eq(redhttp_request_get_path(request), "/foaf.rdf");
@@ -312,7 +312,7 @@ redhttp_request_set_socket(request, fopen(FIXTURE_DIR "http_request_09.txt", "rb
 ck_assert_msg(redhttp_request_get_socket(request) != NULL, "fopen() returned null");
 ck_assert_msg(redhttp_request_read(request) == 0, "Failed to read request");
 ck_assert_str_eq(redhttp_request_get_method(request), "GET");
-ck_assert_str_eq(redhttp_request_get_url(request), "/foaf.rdf");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/foaf.rdf");
 ck_assert_str_eq(redhttp_request_get_version(request), "0.9");
 redhttp_request_free(request);
 
@@ -325,7 +325,7 @@ ck_assert_msg(redhttp_request_read(request) == 0, "Failed to parse request");
 ck_assert_int_eq(redhttp_request_get_content_length(request), 23);
 ck_assert_msg(strncmp(redhttp_request_get_content_buffer(request), "animal=rat&colour=white", 23)==0, "Content buffer should contain post data");
 ck_assert_str_eq(redhttp_request_get_method(request), "POST");
-ck_assert_str_eq(redhttp_request_get_url(request), "/buy");
+ck_assert_str_eq(redhttp_request_get_path_and_query(request), "/buy");
 ck_assert_str_eq(redhttp_request_get_version(request), "1.0");
 ck_assert_str_eq(redhttp_request_get_argument(request, "animal"), "rat");
 ck_assert_str_eq(redhttp_request_get_argument(request, "colour"), "white");

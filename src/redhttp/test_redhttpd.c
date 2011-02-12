@@ -74,8 +74,8 @@ static redhttp_response_t *handle_query(redhttp_request_t * request, void *user_
 
   fprintf(socket, "<pre>\n");
   fprintf(socket, "Method: %s\n", redhttp_request_get_method(request));
+  fprintf(socket, "Path and Query: %s\n", redhttp_request_get_path_and_query(request));
   fprintf(socket, "Version: HTTP/%s\n", redhttp_request_get_version(request));
-  fprintf(socket, "Full URL: %s\n", redhttp_request_get_full_url(request));
   fprintf(socket, "URL: %s\n", redhttp_request_get_url(request));
   fprintf(socket, "Path: %s\n", redhttp_request_get_path(request));
   fprintf(socket, "Path Glob: %s\n", redhttp_request_get_path_glob(request));

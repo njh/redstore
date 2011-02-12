@@ -113,7 +113,7 @@ static librdf_node *get_graph_node(redhttp_request_t * request)
   librdf_uri *graph_uri = NULL;
   librdf_node *graph_node = NULL;
 
-  base_uri = librdf_new_uri(world, (unsigned char*)redhttp_request_get_full_url(request));
+  base_uri = librdf_new_uri(world, (unsigned char*)redhttp_request_get_url(request));
   if (!base_uri) {
     redstore_error("Failed to create librdf_uri for current request.");
     goto CLEANUP;

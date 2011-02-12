@@ -45,14 +45,15 @@ redhttp_request_t *redhttp_request_new(void)
 }
 
 redhttp_request_t *redhttp_request_new_with_args(const char *method,
-                                                 const char *url, const char *version)
+                                                 const char *path_and_query,
+                                                 const char *version)
 {
   redhttp_request_t *request = redhttp_request_new();
   if (!request)
     return NULL;
 
   redhttp_request_set_method(request, method);
-  redhttp_request_set_url(request, url);
+  redhttp_request_set_path_and_query(request, path_and_query);
   redhttp_request_set_version(request, version);
   return request;
 }
@@ -225,68 +226,71 @@ const char *redhttp_request_get_method(redhttp_request_t * request)
   return request->method;
 }
 
-void redhttp_request_set_url(redhttp_request_t * request, const char *url)
+void redhttp_request_set_path_and_query(redhttp_request_t * request, const char *path_and_query)
 {
   assert(request != NULL);
 
-  if (request->url)
-    free(request->url);
+  if (request->path_and_query)
+    free(request->path_and_query);
 
-  if (url) {
+  if (path_and_query) {
     char *ptr = NULL;
     char *path = NULL;
     size_t path_len = 0;
 
-    // Store a copy of the URL
-    request->url = redhttp_strdup(url);
-    if (!request->url)
+    // Store a copy of the path and query
+    request->path_and_query = redhttp_strdup(path_and_query);
+    if (!request->path_and_query)
       return;
 
     // Check for query string
-    ptr = strchr(url, '?');
+    ptr = strchr(path_and_query, '?');
     if (ptr) {
-      path_len = (ptr - url);
+      path_len = (ptr - path_and_query);
       redhttp_request_set_query_string(request, &ptr[1]);
       redhttp_request_parse_arguments(request, &ptr[1]);
     } else {
-      path_len = strlen(url);
+      path_len = strlen(path_and_query);
     }
 
     // Unescape the path
     path = calloc(1, path_len + 1);
     if (path) {
-      strncpy(path, url, path_len);
+      strncpy(path, path_and_query, path_len);
       path[path_len] = '\0';
       request->path = redhttp_url_unescape(path);
       free(path);
     }
   } else {
-    request->url = NULL;
+    request->path_and_query = NULL;
   }
+}
+
+const char *redhttp_request_get_path_and_query(redhttp_request_t * request)
+{
+  return request->path_and_query;
 }
 
 const char *redhttp_request_get_url(redhttp_request_t * request)
 {
-  return request->url;
-}
-
-const char *redhttp_request_get_full_url(redhttp_request_t * request)
-{
   assert(request != NULL);
 
-  if (!request->full_url) {
+  if (!request->url) {
     const char *scheme = "http://";
     const char *host = redhttp_request_get_host(request);
-    const char *url = redhttp_request_get_url(request);
-    size_t full_len = strlen(scheme) + strlen(host) + strlen(url) + 1;
-
-    request->full_url = malloc(full_len);
-    snprintf(request->full_url, full_len, "%s%s%s",
-      scheme, host, redhttp_request_get_url(request)
-    );
+    const char *path_and_query = redhttp_request_get_path_and_query(request);
+    
+    if (scheme && host && path_and_query) {
+      size_t full_len = strlen(scheme) + strlen(host) + strlen(path_and_query) + 1;
+  
+      request->url = malloc(full_len);
+      if (request->url) {
+        snprintf(request->url, full_len, "%s%s%s", scheme, host, path_and_query);
+      }
+    }
   }
 
-  return request->full_url;
+  return request->url;
 }
 
 void redhttp_request_set_path(redhttp_request_t * request, const char *path)
@@ -402,7 +406,7 @@ int redhttp_request_read_status_line(redhttp_request_t * request)
 {
   char *line, *ptr;
   char *method = NULL;
-  char *url = NULL;
+  char *path_and_query = NULL;
   char *version = NULL;
 
   assert(request != NULL);
@@ -424,27 +428,27 @@ int redhttp_request_read_status_line(redhttp_request_t * request)
     ptr++;
   *ptr++ = '\0';
 
-  // Find the start of the url
+  // Find the start of the path and query section
   while (isspace(*ptr) && *ptr != '\n')
     ptr++;
   if (*ptr == '\n' || *ptr == '\0') {
     free(line);
     return REDHTTP_BAD_REQUEST;
   }
-  url = ptr;
+  path_and_query = ptr;
 
-  // Find the end of the url
-  ptr = &url[strlen(url)];
-  while ((*ptr == '\0' || isspace(*ptr)) && ptr > url)
+  // Find the end of the path and query section
+  ptr = &path_and_query[strlen(path_and_query)];
+  while ((*ptr == '\0' || isspace(*ptr)) && ptr > path_and_query)
     ptr--;
   ptr[1] = '\0';
-  while (!isspace(*ptr) && ptr > url)
+  while (!isspace(*ptr) && ptr > path_and_query)
     ptr--;
 
   // Is there a version string at the end?
-  if (ptr > url && (strncmp("HTTP/", &ptr[1], 5) == 0 || strncmp("http/", &ptr[1], 5) == 0)) {
+  if (ptr > path_and_query && (strncmp("HTTP/", &ptr[1], 5) == 0 || strncmp("http/", &ptr[1], 5) == 0)) {
     version = &ptr[6];
-    while (isspace(*ptr) && ptr > url)
+    while (isspace(*ptr) && ptr > path_and_query)
       ptr--;
     ptr[1] = '\0';
   } else {
@@ -452,7 +456,7 @@ int redhttp_request_read_status_line(redhttp_request_t * request)
   }
 
   redhttp_request_set_method(request, method);
-  redhttp_request_set_url(request, url);
+  redhttp_request_set_path_and_query(request, path_and_query);
   redhttp_request_set_version(request, version);
 
   free(line);
@@ -516,8 +520,8 @@ void redhttp_request_free(redhttp_request_t * request)
 
   if (request->method)
     free(request->method);
-  if (request->url)
-    free(request->url);
+  if (request->path_and_query)
+    free(request->path_and_query);
   if (request->version)
     free(request->version);
   if (request->path)
@@ -528,8 +532,8 @@ void redhttp_request_free(redhttp_request_t * request)
     free(request->query_string);
   if (request->host)
     free(request->host);
-  if (request->full_url)
-    free(request->full_url);
+  if (request->url)
+    free(request->url);
   if (request->content_buffer)
     free(request->content_buffer);
 

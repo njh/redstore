@@ -56,15 +56,15 @@ struct redhttp_request_s {
   char server_addr[NI_MAXHOST];
   char server_port[NI_MAXSERV];
 
-  char *url;
   char *method;
+  char *path_and_query;
   char *version;
   void *user_data;
 
+  char *url;
   char *path;
   char *path_glob;
   char *query_string;
-  char *full_url;
 
   char *content_buffer;
   size_t content_length;
