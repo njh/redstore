@@ -61,8 +61,8 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
     } else {
       char *text = calloc(1, BUFSIZ);
       response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
-      snprintf(text, BUFSIZ, "Successfully added triples to %s.\n", graph_str);
-      redhttp_response_set_content(response, text, BUFSIZ);
+      snprintf(text, BUFSIZ, "Successfully added triples to %s\n", graph_str);
+      redhttp_response_set_content(response, text, strlen(text));
     }
     free(format_str);
     redhttp_negotiate_free(&accept);
@@ -120,7 +120,7 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
     char *text = calloc(1, BUFSIZ);
     response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
     strncpy(text, message, BUFSIZ);
-    redhttp_response_set_content(response, text, BUFSIZ);
+    redhttp_response_set_content(response, text, strlen(text));
   }
   free(format_str);
   redhttp_negotiate_free(&accept);
