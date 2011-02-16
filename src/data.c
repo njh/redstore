@@ -101,9 +101,92 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
   }
 }
 
+static librdf_node* new_graph_node(const char * base_uri_str)
+{
+  char *id = redstore_genid();
+  char *path = NULL;
+  size_t path_len = 6 + strlen(id) + 1;
+  librdf_node *graph_node = NULL;
+  librdf_uri *base_uri = NULL;
+  librdf_uri *graph_uri = NULL;
+
+  path = malloc(path_len);
+  if (path) {
+    snprintf(path, path_len, "/data/%s", id);
+  } else {
+    redstore_error("Failed to create path for new graph.");
+    goto CLEANUP;
+  }
+
+  base_uri = librdf_new_uri(world, (unsigned char*)base_uri_str);
+  if (!base_uri) {
+    redstore_error("Failed to create librdf_uri for current request.");
+    goto CLEANUP;
+  }
+
+  graph_uri = librdf_new_uri_relative_to_base(base_uri, (unsigned char*)path);
+  if (graph_uri) {
+    redstore_debug("New Graph URI: %s", librdf_uri_as_string(graph_uri));
+  } else {
+    redstore_error("Failed to create librdf_uri for new graph.");
+    goto CLEANUP;
+  }
+
+  // Create node
+  graph_node = librdf_new_node_from_uri(world, graph_uri);
+  if (!graph_node) {
+    redstore_error("Failed to create graph node from librdf_uri.");
+  }
+
+CLEANUP:
+  if (path)
+    free(path);
+  if (base_uri)
+    librdf_free_uri(base_uri);
+  if (graph_uri)
+    librdf_free_uri(graph_uri);
+
+  return graph_node;
+}
+
 redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_data)
 {
-  return parse_data_from_request_body(request, NULL, load_stream_into_graph);
+  redhttp_response_t *response = NULL;
+  librdf_node *graph_node = NULL;
+  int attempts;
+
+  for(attempts=0; attempts<10; attempts++) {
+    graph_node = new_graph_node(redhttp_request_get_url(request));
+    if (!graph_node) {
+      return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                                 "Failed to create node for graph identifier.");
+    }
+
+    if (!librdf_model_contains_context(model, graph_node)) {
+      break;
+    } else {
+      librdf_uri *graph_uri = librdf_node_get_uri(graph_node);
+      redstore_debug("Graph already exists while trying to create new graph identifier: %s",
+                     librdf_uri_as_string(graph_uri));
+      librdf_free_node(graph_node);
+      graph_node = NULL;
+    }
+  }
+
+  if (graph_node) {
+    response = parse_data_from_request_body(request, graph_node, load_stream_into_graph);
+    if (redhttp_response_get_status_code(response) == 200) {
+      librdf_uri* graph_uri = librdf_node_get_uri(graph_node);
+      redhttp_response_set_status_code(response, 201);
+      redhttp_response_add_header(response, "Location", (char*)librdf_uri_as_string(graph_uri));
+    }
+    librdf_free_node(graph_node);
+  } else {
+    response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+                                   "Failed to create new graph identifier.");
+  }
+
+  return response;
 }
 
 static librdf_node *get_graph_node(redhttp_request_t * request)
@@ -256,7 +339,7 @@ redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void
       char *text = calloc(1, BUFSIZ);
       response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
       snprintf(text, BUFSIZ, "Successfully deleted graph.\n");
-      redhttp_response_set_content(response, text, BUFSIZ);
+      redhttp_response_set_content(response, text, strlen(text));
     }
     free(format_str);
     redhttp_negotiate_free(&accept);

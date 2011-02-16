@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 39;
+use Test::More tests => 44;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -121,12 +121,12 @@ like($lines[-1], qr[^(\S+) (\S+) (\S+) (\S+) \.$], "Last line of dump looks like
     $request->content_type( 'application/x-turtle' );
     $response = $ua->request($request);
     is($response->code, 200, "Putting data into a graph is successful");
-    
+
     # Count the number of triples
     $response = $ua->get($service_endpoint.'/foaf.rdf', 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 14, "Number of triples is correct");
-    
+
     # Test PUTing data into a graph
     $request = HTTP::Request->new( 'PUT', $service_endpoint.'/foaf.rdf' );
     $request->content( read_fixture('test001.rdf') );
@@ -134,7 +134,7 @@ like($lines[-1], qr[^(\S+) (\S+) (\S+) (\S+) \.$], "Last line of dump looks like
     $request->content_type( 'application/rdf+xml' );
     $response = $ua->request($request);
     is($response->code, 200, "Replacing data in a graph is successful");
-    
+
     # Count the number of triples
     $response = $ua->get($service_endpoint.'/foaf.rdf', 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
@@ -156,18 +156,41 @@ like($lines[-1], qr[^(\S+) (\S+) (\S+) (\S+) \.$], "Last line of dump looks like
     is(scalar(@lines), 14, "Number of triples after PUTing JSON is correct");
 };
 
-# Test POSTing data into the default graph
+# Test POSTing data into a new graph, with a graph store allocated identifier
 {
     $request = HTTP::Request->new( 'POST', $service_endpoint );
-    $request->content( read_fixture('foaf.nt') );
+    $request->content( read_fixture('foaf.ttl') );
     $request->content_length( length($request->content) );
-    $request->content_type( 'text/plain' );
+    $request->content_type( 'application/x-turtle' );
+    $request->header( 'Accept', 'text/plain' );
     $response = $ua->request($request);
-    is($response->code, 200, "POSTing data into the default graph is succcessful");
-    like($response->content, qr/Successfully added triples to the default graph/, "Response messages is correct");
+    is($response->code, 201, "POSTing data into a new graph should return status code 201");
+    is($response->content_type, "text/plain", "Content Type of response is correct");
+    like($response->content, qr/Successfully added triples to/, "Response messages is correct");
 
-    ## FIXME: check that the number of triples in the store is correct.
+    my $new_uri = $response->header('Location');
+    like($new_uri,  qr[^$service_endpoint], "The location header should match the service endpoint URI");
+    like($new_uri,  qr[/([0-9a-f]{4})-([0-9a-f]{4})$], "The new graph identifier should be in the format xxxx-xxxx");
+
+    # Check that the new graph exists
+    $response = $ua->get($new_uri, 'Accept' => 'text/plain');
+    is($response->code, 200, "The new graph can be GET again");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 14, "Number of triples in new graph is correct");
 }
+
+# Test POSTing data into the default graph
+# {
+#     $request = HTTP::Request->new( 'POST', $service_endpoint );
+#     $request->content( read_fixture('foaf.nt') );
+#     $request->content_length( length($request->content) );
+#     $request->content_type( 'text/plain' );
+#     $response = $ua->request($request);
+#     is($response->code, 200, "POSTing data into the default graph is succcessful");
+#     like($response->content, qr/Successfully added triples to the default graph/, "Response messages is correct");
+#
+#     ## FIXME: check that the number of triples in the store is correct.
+# }
 
 # Test DELETEing everything in the triplestore
 {
