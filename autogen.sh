@@ -35,7 +35,7 @@ SRCDIR=${SRCDIR-.}
 
 # Because GIT doesn't support empty directories
 if [ ! -d "$SRCDIR/build-scripts" ]; then
-       mkdir "$SRCDIR/build-scripts"
+    mkdir "$SRCDIR/build-scripts"
 fi
 
 # The programs required for configuring which will be searched for
@@ -43,11 +43,6 @@ fi
 # Set an envariable of the same name in uppercase, to override scan
 #
 programs="automake aclocal autoconf autoheader libtoolize"
-confs=`find . -name configure.ac -print`
-ltdl_args=
-if grep "^AC_LIBLTDL_" $confs >/dev/null; then
-  ltdl_args="--ltdl"
-fi
 
 # Some dependencies for autotools:
 # automake 1.11 requires autoconf 2.62
@@ -65,7 +60,7 @@ libtoolize_min_vers=020200
 automake_args="--gnu --add-missing --force --copy -Wall"
 aclocal_args=
 autoconf_args=
-libtoolize_args="--force --copy --automake $ltdl_args"
+libtoolize_args="--force --copy --automake"
 configure_args="--enable-maintainer-mode"
 
 
@@ -251,58 +246,41 @@ done
 
 echo "$program: Dependencies satisfied"
 
-if test -d $SRCDIR/libltdl; then
-  touch $SRCDIR/libltdl/NO-AUTO-GEN
+cd "$SRCDIR"
+# Ensure that these are created by the versions on this system
+# (indirectly via automake)
+$DRYRUN rm -f ltconfig ltmain.sh libtool stamp-h*
+# Made by automake
+$DRYRUN rm -f missing depcomp
+# automake junk
+$DRYRUN rm -rf autom4te*.cache
+
+config_macro_dir=`sed -ne 's/^AC_CONFIG_MACRO_DIR(\([^)]*\).*/\1/p' configure.ac`
+if test "X$config_macro_dir" = X; then
+  config_macro_dir=.
+else
+  aclocal_args="$aclocal_args -I $config_macro_dir "
 fi
 
+config_aux_dir=`sed -ne 's/^AC_CONFIG_AUX_DIR(\([^)]*\).*/\1/p' configure.ac`
+if test "X$config_aux_dir" = X; then
+  config_aux_dir=.
+fi
 
-for coin in `find $SRCDIR -name configure.ac -print`
-do 
-  dir=`dirname $coin`
-  if test -f "$dir/NO-AUTO-GEN"; then
-    echo $program: Skipping $dir -- flagged as no auto-gen
-  else
-    echo " "
-    echo $program: Processing directory $dir
-    ( cd "$dir"
+echo "$program: Running $libtoolize $libtoolize_args"
+$DRYRUN rm -f ltmain.sh libtool
+eval $DRYRUN $libtoolize $libtoolize_args
 
-      # Ensure that these are created by the versions on this system
-      # (indirectly via automake)
-      $DRYRUN rm -f ltconfig ltmain.sh libtool stamp-h*
-      # Made by automake
-      $DRYRUN rm -f missing depcomp
-      # automake junk
-      $DRYRUN rm -rf autom4te*.cache
-
-      config_macro_dir=`sed -ne 's/^AC_CONFIG_MACRO_DIR(\([^)]*\).*/\1/p' configure.ac`
-      if test "X$config_macro_dir" = X; then
-	config_macro_dir=.
-      else
-        aclocal_args="$aclocal_args -I $config_macro_dir "
-      fi
-
-      config_aux_dir=`sed -ne 's/^AC_CONFIG_AUX_DIR(\([^)]*\).*/\1/p' configure.ac`
-      if test "X$config_aux_dir" = X; then
-	config_aux_dir=.
-      fi
-
-      echo "$program: Running $libtoolize $libtoolize_args"
-      $DRYRUN rm -f ltmain.sh libtool
-      eval $DRYRUN $libtoolize $libtoolize_args
-
-      echo "$program: Running $aclocal $aclocal_args"
-      $DRYRUN $aclocal $aclocal_args
-      if grep "^AM_CONFIG_HEADER" configure.ac >/dev/null; then
-	echo "$program: Running $autoheader"
-	$DRYRUN $autoheader
-      fi
-      echo "$program: Running $automake $automake_args"
-      $DRYRUN $automake $automake_args $automake_args
-      echo "$program: Running $autoconf"
-      $DRYRUN $autoconf $autoconf_args
-    )
-  fi
-done
+echo "$program: Running $aclocal $aclocal_args"
+$DRYRUN $aclocal $aclocal_args
+if grep "^AM_CONFIG_HEADER" configure.ac >/dev/null; then
+  echo "$program: Running $autoheader"
+  $DRYRUN $autoheader
+fi
+echo "$program: Running $automake $automake_args"
+$DRYRUN $automake $automake_args $automake_args
+echo "$program: Running $autoconf"
+$DRYRUN $autoconf $autoconf_args
 
 
 rm -f config.cache
