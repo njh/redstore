@@ -197,7 +197,7 @@ redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *us
                               "PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt;\n");
   redstore_page_append_string(response,
                               "PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;\n\n");
-  redstore_page_append_string(response, "SELECT * WHERE {\n ?s ?p ?o\n} LIMIT 10\n");
+  redstore_page_append_string(response, "SELECT * WHERE {\n GRAPH ?g {?s ?p ?o}\n} LIMIT 10\n");
   redstore_page_append_string(response, "</textarea></div>\n");
 
   redstore_page_append_string(response, "<div class=\"buttons\">\n");
