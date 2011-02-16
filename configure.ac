@@ -44,6 +44,10 @@ AC_CHECK_HEADERS([stdlib.h])
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 
+AC_CHECK_FUNCS_ONCE([srandomdev])
+if test x"$ac_cv_func_srandomdev" = "xyes"; then
+  AC_DEFINE(HAVE_SRANDOMDEV, 1, [Define to 1 if you have srandomdev()].)
+fi
 
 dnl ############## Check for packages we depend upon
 

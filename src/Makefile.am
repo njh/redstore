@@ -7,6 +7,7 @@ redstore_SOURCES = \
   data.c \
   description.c \
   formatters.c \
+  genid.c \
   graphs.c \
   images.c \
   pages.c \

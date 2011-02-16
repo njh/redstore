@@ -182,5 +182,7 @@ int redstore_is_html_format(const char *str);
 int redstore_is_text_format(const char *str);
 int redstore_is_nquads_format(const char *str);
 
+char* redstore_genid(void);
+
 
 #endif
