@@ -89,6 +89,7 @@ AC_CONFIG_FILES([
   src/Makefile
   src/redhttp/Makefile
   tests/Makefile
+  tests/integration/Makefile
   tests/redhttp/Makefile
 ])
 
