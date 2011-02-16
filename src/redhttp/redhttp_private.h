@@ -117,7 +117,7 @@ static inline char* redhttp_strndup(const char* str1, size_t str1_len)
   if (str1) {
     str2 = malloc(str1_len + 1);
     if (str2) {
-      strncpy(str2, str1, str1_len);
+      memcpy(str2, str1, str1_len);
       str2[str1_len] = '\0';
     }
   }
