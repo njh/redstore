@@ -60,7 +60,6 @@ static struct redhttp_message_s {
 redhttp_response_t *redhttp_response_new(int code, const char *message)
 {
   redhttp_response_t *response;
-  unsigned int i;
 
   assert(code >= 100 && code < 1000);
 
@@ -68,20 +67,11 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
   if (!response) {
     perror("failed to allocate memory for redhttp_response_t");
     return NULL;
-  } else {
-    response->status_code = code;
-    if (message == NULL) {
-      for (i = 0; redhttp_status_messages[i].message; i++) {
-        if (redhttp_status_messages[i].code == code) {
-          message = redhttp_status_messages[i].message;
-          break;
-        }
-      }
-      if (message == NULL)
-        message = "Unknown";
-    }
-    response->status_message = redhttp_strdup(message);
   }
+
+  redhttp_response_set_status_code(response, code);
+  if (message)
+    redhttp_response_set_status_message(response, message);
 
   return response;
 }
@@ -265,9 +255,39 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
   }
 }
 
+void redhttp_response_set_status_code(redhttp_response_t * response, int code)
+{
+  const char* message = NULL;
+  unsigned int i;
+
+  assert(code >= 100 && code < 1000);
+  response->status_code = code;
+
+  for (i = 0; redhttp_status_messages[i].message; i++) {
+    if (redhttp_status_messages[i].code == code) {
+      message = redhttp_status_messages[i].message;
+      break;
+    }
+  }
+
+  redhttp_response_set_status_message(response, message);
+}
+
 int redhttp_response_get_status_code(redhttp_response_t * response)
 {
   return response->status_code;
+}
+
+void redhttp_response_set_status_message(redhttp_response_t * response, const char* message)
+{
+  if (response->status_message) {
+    free(response->status_message);
+  }
+  if (message == NULL) {
+    response->status_message = redhttp_strdup("Unknown");
+  } else {
+    response->status_message = redhttp_strdup(message);
+  }
 }
 
 const char *redhttp_response_get_status_message(redhttp_response_t * response)

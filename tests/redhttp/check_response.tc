@@ -31,10 +31,37 @@ ck_assert_int_eq(redhttp_response_get_status_code(response), REDHTTP_OK);
 ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
 redhttp_response_free(response);
 
+#test new_response_with_message
+redhttp_response_t *response = redhttp_response_new(REDHTTP_CREATED, "Document Created");
+ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
+ck_assert_int_eq(redhttp_response_get_status_code(response), REDHTTP_CREATED);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "Document Created");
+redhttp_response_free(response);
+
 #test new_response_unknown
 redhttp_response_t *response = redhttp_response_new(999, NULL);
 ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
 ck_assert_int_eq(redhttp_response_get_status_code(response), 999);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "Unknown");
+redhttp_response_free(response);
+
+#test set_status_code
+redhttp_response_t *response = redhttp_response_new(999, NULL);
+redhttp_response_set_status_code(response, 200);
+ck_assert_int_eq(redhttp_response_get_status_code(response), 200);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
+redhttp_response_free(response);
+
+#test set_status_message
+redhttp_response_t *response = redhttp_response_new(REDHTTP_CREATED, NULL);
+redhttp_response_set_status_message(response, "Document Created");
+ck_assert_int_eq(redhttp_response_get_status_code(response), 201);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "Document Created");
+redhttp_response_free(response);
+
+#test set_status_message_null
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+redhttp_response_set_status_message(response, NULL);
 ck_assert_str_eq(redhttp_response_get_status_message(response), "Unknown");
 redhttp_response_free(response);
 
@@ -63,10 +90,19 @@ ck_assert_str_eq(redhttp_response_get_status_message(response), "OK");
 ck_assert_str_eq(redhttp_response_get_header(response, "Content-Type"), "text/plain");
 redhttp_response_free(response);
 
-#test new_redirect_move_permanently
-redhttp_response_t *response = redhttp_response_new_redirect("/foo/bar", REDHTTP_MOVED_PERMANENTLY);
+#test new_redirect
+redhttp_response_t *response = redhttp_response_new_redirect("/foo/bar", 0);
+ck_assert_int_eq(redhttp_response_get_status_code(response), 301);
 ck_assert_str_eq(redhttp_response_get_status_message(response), "Moved Permanently");
 ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<h1>301 Moved Permanently</h1>") != NULL, "Page has h1 title");
+ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<p>The document has moved <a href=\"/foo/bar\">here</a>.</p>") != NULL, "Page has redirect message.");
+ck_assert_str_eq(redhttp_response_get_header(response, "Location"), "/foo/bar");
+redhttp_response_free(response);
+
+#test new_redirect_move_permanently
+redhttp_response_t *response = redhttp_response_new_redirect("/foo/bar", REDHTTP_MOVED_TEMPORARILY);
+ck_assert_str_eq(redhttp_response_get_status_message(response), "Moved Temporarily");
+ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<h1>302 Moved Temporarily</h1>") != NULL, "Page has h1 title");
 ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<p>The document has moved <a href=\"/foo/bar\">here</a>.</p>") != NULL, "Page has redirect message.");
 ck_assert_str_eq(redhttp_response_get_header(response, "Location"), "/foo/bar");
 redhttp_response_free(response);
