@@ -25,12 +25,29 @@
 #include "redstore.h"
 
 
+static char* server_root_url(redhttp_request_t * request)
+{
+    const char *host = redhttp_request_get_host(request);
+    size_t len = 7 + strlen(host) + 2;
+    char *url = NULL;
+
+    url = malloc(len);
+    if (!url)
+      return NULL;
+
+    snprintf(url, len, "http://%s/", host);
+
+    return url;
+}
+
 static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
                                                    librdf_iterator * iterator)
 {
   redhttp_response_t *response = redstore_page_new("Named Graphs");
-  if (!response)
-    return NULL;
+  char *root_url = server_root_url(request);
+
+  if (!root_url || !response)
+    goto CLEANUP;
 
   if (!librdf_iterator_end(iterator)) {
     redstore_page_append_string(response, "<ul>\n");
@@ -38,7 +55,7 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
     while (!librdf_iterator_end(iterator)) {
       librdf_uri *uri;
       librdf_node *node;
-      char *escaped;
+      char *uri_str, *escaped;
 
       node = (librdf_node *) librdf_iterator_get_object(iterator);
       if (!node) {
@@ -52,14 +69,24 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
         break;
       }
 
-      // FIXME: don't use the 'graph' argument if a path is sufficient
-      escaped = redhttp_url_escape((char *) librdf_uri_as_string(uri));
-      redstore_page_append_string(response, "<li><a href=\"/data/?graph=");
-      redstore_page_append_escaped(response, escaped, 0);
-      redstore_page_append_string(response, "\">");
-      redstore_page_append_escaped(response, (char *) librdf_uri_as_string(uri), 0);
-      redstore_page_append_string(response, "</a></li>\n");
-      free(escaped);
+      uri_str = (char*)librdf_uri_as_string(uri);
+      if (strstr(uri_str, root_url)) {
+        // Direct graph identification
+        redstore_page_append_string(response, "<li><a href=\"");
+        redstore_page_append_escaped(response, uri_str, 0);
+        redstore_page_append_string(response, "\">");
+        redstore_page_append_escaped(response, uri_str, 0);
+        redstore_page_append_string(response, "</a></li>\n");
+      } else {
+        // Indirect graph identification
+        escaped = redhttp_url_escape(uri_str);
+        redstore_page_append_string(response, "<li><a href=\"/data/?graph=");
+        redstore_page_append_escaped(response, escaped, 0);
+        redstore_page_append_string(response, "\">");
+        redstore_page_append_escaped(response, uri_str, 0);
+        redstore_page_append_string(response, "</a></li>\n");
+        free(escaped);
+      }
 
       librdf_iterator_next(iterator);
     }
@@ -74,6 +101,10 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
 
   redstore_page_end(response);
 
+CLEANUP:
+  if (root_url)
+    free(root_url);
+
   return response;
 }
 
@@ -82,11 +113,11 @@ static redhttp_response_t *handle_text_graph_index(redhttp_request_t * request,
 {
   redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
   FILE *socket = redhttp_request_get_socket(request);
-  redhttp_response_send(response, request);
-
 
   if (!response)
     return NULL;
+
+  redhttp_response_send(response, request);
 
   while (!librdf_iterator_end(iterator)) {
     librdf_uri *uri;

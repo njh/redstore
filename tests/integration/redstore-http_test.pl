@@ -9,9 +9,6 @@ use strict;
 
 use Test::More tests => 80;
 
-my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
-my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
-
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
 my $ua = new_redstore_client();
@@ -114,7 +111,6 @@ is_valid_xhtml($response->content, "No graphs message should be valid XHTML");
 
 
 my $TEST_URI = $base_url."data/test001.rdf";
-my $ESCAPED_TEST_URI = "http%3A%2F%2Flocalhost%3A$port%2Fdata%2Ftest001.rdf";
 load_fixture('test001.rdf', $TEST_URI);
 
 # Test getting list of graphs
@@ -127,7 +123,7 @@ is($response->content, "$TEST_URI\n", "List of graphs page contains graph that w
 $response = $ua->get($base_url.'graphs', 'Accept' => 'text/html');
 is($response->code, 200, "Getting list of graphs is successful");
 is($response->content_type, 'text/html', "Graph list is of type text/html");
-like($response->content, qr[<li><a href="/data/\?graph=$ESCAPED_TEST_URI">$TEST_URI</a></li>], "List of graphs page contains graph that was added");
+like($response->content, qr[<li><a href="$TEST_URI">$TEST_URI</a></li>], "List of graphs page contains graph that was added");
 is_valid_xhtml($response->content, "Graph list should be valid XHTML");
 
 # Test POSTing a url to be loaded
