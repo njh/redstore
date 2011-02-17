@@ -273,12 +273,10 @@ eval $DRYRUN $libtoolize $libtoolize_args
 
 echo "$program: Running $aclocal $aclocal_args"
 $DRYRUN $aclocal $aclocal_args
-if grep "^AM_CONFIG_HEADER" configure.ac >/dev/null; then
-  echo "$program: Running $autoheader"
-  $DRYRUN $autoheader
-fi
+echo "$program: Running $autoheader"
+$DRYRUN $autoheader
 echo "$program: Running $automake $automake_args"
-$DRYRUN $automake $automake_args $automake_args
+$DRYRUN $automake $automake_args
 echo "$program: Running $autoconf"
 $DRYRUN $autoconf $autoconf_args
 
