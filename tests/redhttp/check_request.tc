@@ -190,6 +190,24 @@ redhttp_request_parse_arguments(request, "key1=value1");
 ck_assert_str_eq(redhttp_request_get_argument(request, "key1"), "value1");
 redhttp_request_free(request);
 
+#test single_argument_exists
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_parse_arguments(request, "default");
+ck_assert(redhttp_request_argument_exists(request, "default") == 1);
+ck_assert(redhttp_request_argument_exists(request, "other") == 0);
+redhttp_request_free(request);
+
+#test argument_exists
+redhttp_request_t *request = redhttp_request_new();
+redhttp_request_parse_arguments(request, "key1=value1&key2;key3&key4=value4;z;");
+ck_assert(redhttp_request_argument_exists(request, "key1") == 1);
+ck_assert(redhttp_request_argument_exists(request, "key2") == 1);
+ck_assert(redhttp_request_argument_exists(request, "key3") == 1);
+ck_assert(redhttp_request_argument_exists(request, "key4") == 1);
+ck_assert(redhttp_request_argument_exists(request, "key5") == 0);
+ck_assert(redhttp_request_argument_exists(request, "z") == 1);
+redhttp_request_free(request);
+
 #test get_argument_index
 const char *key, *value;
 redhttp_request_t *request = redhttp_request_new();
@@ -200,9 +218,9 @@ ck_assert_str_eq(value, "value0");
 ck_assert_int_eq(redhttp_request_get_argument_index(request, 1, NULL, NULL), 0);
 redhttp_request_free(request);
 
-#test parse_invalid_argument
+#test parse_empty_arguments
 redhttp_request_t *request = redhttp_request_new();
-redhttp_request_parse_arguments(request, "invalid&");
+redhttp_request_parse_arguments(request, "");
 ck_assert_int_eq(redhttp_request_count_arguments(request), 0);
 redhttp_request_free(request);
 

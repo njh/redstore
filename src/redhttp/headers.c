@@ -52,17 +52,13 @@ void redhttp_headers_add(redhttp_header_t ** first, const char *key, const char 
   assert(first != NULL);
   assert(key != NULL);
   assert(strlen(key) > 0);
-  assert(value != NULL);
-
-  if (strlen(value) == 0)
-    return;
 
   // FIXME: append value if header already exists
 
   // Create new header item
   header = calloc(1, sizeof(redhttp_header_t));
   header->key = redhttp_strdup(key);
-  header->value = redhttp_strdup(value);
+  header->value = value && strlen(value) ? redhttp_strdup(value) : NULL;
   header->next = NULL;
 
   // append the new method to the list
@@ -102,6 +98,21 @@ const char *redhttp_headers_get(redhttp_header_t ** first, const char *key)
   }
 
   return NULL;
+}
+
+int redhttp_headers_exists(redhttp_header_t ** first, const char *key)
+{
+  redhttp_header_t *it;
+
+  assert(first != NULL);
+  assert(key != NULL);
+
+  for (it = *first; it; it = it->next) {
+    if (redhttp_strcasecmp(key, it->key) == 0)
+      return 1;
+  }
+
+  return 0;
 }
 
 

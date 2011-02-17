@@ -142,6 +142,11 @@ const char *redhttp_request_get_argument(redhttp_request_t * request, const char
   return redhttp_headers_get(&request->arguments, key);
 }
 
+int redhttp_request_argument_exists(redhttp_request_t * request, const char *key)
+{
+  return redhttp_headers_exists(&request->arguments, key);
+}
+
 int redhttp_request_get_argument_index(redhttp_request_t * request, unsigned int index, const char**key, const char** value)
 {
   return redhttp_headers_get_index(&request->arguments, index, key, value);
@@ -167,6 +172,7 @@ const char *redhttp_request_get_path_glob(redhttp_request_t * request)
 void redhttp_request_parse_arguments(redhttp_request_t * request, const char *input)
 {
   char *args, *ptr, *key, *value;
+  char *equals, *amp, *semi;
 
   assert(request != NULL);
   if (!input)
@@ -178,22 +184,39 @@ void redhttp_request_parse_arguments(redhttp_request_t * request, const char *in
 
   for (ptr = args; ptr && *ptr;) {
     key = ptr;
-    ptr = strchr(key, '=');
-    if (ptr == NULL)
-      break;
-    *ptr++ = '\0';
+    equals = strchr(ptr, '=');
+    amp = strchr(ptr, '&');
+    semi = strchr(ptr, ';');
 
-    value = ptr;
-    ptr = strchr(value, '&');
-    if (ptr != NULL) {
-      *ptr++ = '\0';
+    if (equals && (!amp || equals < amp) && (!semi || equals < semi)) {
+      // There is a value for this key
+      *equals = '\0';
+      value = equals + 1;
+    } else {
+      // No value associated with this key
+      value = NULL;
+    }
+
+    if (amp || semi) {
+      if (amp && (!semi || (amp < semi))) {
+        *amp = '\0';
+        ptr = amp + 1;
+      } else {
+        *semi = '\0';
+        ptr = semi + 1;
+      }
+    } else {
+      ptr = NULL;
     }
 
     key = redhttp_url_unescape(key);
-    value = redhttp_url_unescape(value);
+    value = value ? redhttp_url_unescape(value) : NULL;
     redhttp_headers_add(&request->arguments, key, value);
-    free(key);
-    free(value);
+
+    if (key)
+      free(key);
+    if (value)
+      free(value);
   }
 
   free(args);
@@ -279,10 +302,10 @@ const char *redhttp_request_get_url(redhttp_request_t * request)
     const char *scheme = "http://";
     const char *host = redhttp_request_get_host(request);
     const char *path_and_query = redhttp_request_get_path_and_query(request);
-    
+
     if (scheme && host && path_and_query) {
       size_t full_len = strlen(scheme) + strlen(host) + strlen(path_and_query) + 1;
-  
+
       request->url = malloc(full_len);
       if (request->url) {
         snprintf(request->url, full_len, "%s%s%s", scheme, host, path_and_query);
