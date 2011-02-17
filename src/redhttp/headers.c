@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <ctype.h>
 #include <time.h>
 #include <assert.h>
 
@@ -32,17 +31,6 @@
 #include "redhttp_private.h"
 #include "redhttp.h"
 
-
-static int redhttp_strcasecmp(const char *s1, const char *s2)
-{
-  int r = 0;
-
-  while (((s1 == s2) || !(r = ((int) (tolower(*((char *) s1))))
-                          - tolower(*((char *) s2))))
-         && (++s2, *s1++));
-
-  return r;
-}
 
 void redhttp_headers_print(redhttp_header_t ** first, FILE * socket)
 {
