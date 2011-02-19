@@ -70,35 +70,56 @@ redhttp_response_t *redstore_page_new(int code, const char *title)
   return response;
 }
 
-redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, int log_level, int code, const char *message)
+redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, int log_level, int code, const char *format, ...)
 {
   redhttp_negotiate_t *accept = redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
   char *format_str = redstore_get_format(request, accept, "text/plain");
   const char * title = redhttp_response_status_message_for_code(code);
   redhttp_response_t *response = NULL;
+  size_t message_len = 0;
+  char* message = NULL;
+  va_list ap;
 
   assert(request != NULL);
-  assert(message != NULL);
+  assert(format != NULL);
+
+  // Work out how long the full message is
+  va_start(ap, format);
+  message_len = vsnprintf(NULL, 0, format, ap);
+  va_end(ap);
+
+  // Allocate memory for the message
+  message = malloc(message_len+1);
+  if (!message)
+    return NULL;
+
+  // Create the full message
+  va_start(ap, format);
+  vsnprintf(message, message_len, format, ap);
+  va_end(ap);
 
   if (redstore_is_html_format(format_str)) {
     response = redstore_page_new(code, title);
     redstore_page_append_string(response, "<p>");
     redstore_page_append_escaped(response, message, 0);
-    redstore_page_append_string(response, "</p>");
+    redstore_page_append_string(response, "</p>\n");
     redstore_page_end(response);
   } else {
     size_t text_len = strlen(title) + 2 + strlen(message) + 2;
-    char *text = malloc(text_len);
+    char *plain_text = malloc(text_len);
     response = redhttp_response_new_with_type(code, NULL, "text/plain");
-    snprintf(text, text_len, "%s: %s\n", title, message);
-    redhttp_response_set_content(response, text, text_len-1);
+    snprintf(plain_text, text_len, "%s: %s\n", title, message);
+    redhttp_response_set_content(response, plain_text, text_len-1);
   }
 
   if (log_level) {
     redstore_log(log_level, "Response: %d %s (%s)", code, title, message);
   }
 
-  free(format_str);
+  if (format_str)
+    free(format_str);
+  if (message)
+    free(message);
   redhttp_negotiate_free(&accept);
 
   return response;

@@ -113,7 +113,7 @@ redhttp_response_t *handle_sparql(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data);
 
 redhttp_response_t *redstore_page_new(int code, const char *title);
-redhttp_response_t *redstore_page_new_with_message(redhttp_request_t * request, int log_level, int code, const char *message);
+redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, int log_level, int code, const char *format, ...);
 int redstore_page_append_string(redhttp_response_t * response, const char *str);
 int redstore_page_append_decimal(redhttp_response_t * response, int decimal);
 int redstore_page_append_strings(redhttp_response_t * response, ...);
@@ -176,7 +176,7 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
 
 redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user_data);
 
-void redstore_log(RedstoreLogLevel level, const char *fmt, ...);
+void redstore_log(RedstoreLogLevel level, const char *format, ...);
 
 char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported, const char* default_format);
 int redstore_is_html_format(const char *str);
