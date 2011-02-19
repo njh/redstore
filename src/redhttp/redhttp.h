@@ -115,6 +115,8 @@ int redhttp_request_read_status_line(redhttp_request_t * request);
 int redhttp_request_read(redhttp_request_t * request);
 void redhttp_request_free(redhttp_request_t * request);
 
+
+const char* redhttp_response_status_message_for_code(int code);
 redhttp_response_t *redhttp_response_new(int status, const char *message);
 redhttp_response_t *redhttp_response_new_with_type(int status, const char *message,
                                                    const char *type);

@@ -24,6 +24,11 @@
 
 #suite redhttp_response
 
+#test status_message_for_code
+ck_assert_str_eq(redhttp_response_status_message_for_code(REDHTTP_OK), "OK");
+ck_assert_str_eq(redhttp_response_status_message_for_code(REDHTTP_NOT_FOUND), "Not Found");
+ck_assert(redhttp_response_status_message_for_code(-1) == NULL);
+
 #test new_response
 redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
 ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");

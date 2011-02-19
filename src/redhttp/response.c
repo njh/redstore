@@ -57,6 +57,18 @@ static struct redhttp_message_s {
   REDHTTP_SERVICE_UNAVAILABLE, "Service Unavailable"}, {
 0, NULL}};
 
+
+const char* redhttp_response_status_message_for_code(int code)
+{
+  int i;
+  for (i = 0; redhttp_status_messages[i].message; i++) {
+    if (redhttp_status_messages[i].code == code) {
+      return redhttp_status_messages[i].message;
+    }
+  }
+  return NULL;
+}
+
 redhttp_response_t *redhttp_response_new(int code, const char *message)
 {
   redhttp_response_t *response;
@@ -258,19 +270,13 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
 void redhttp_response_set_status_code(redhttp_response_t * response, int code)
 {
   const char* message = NULL;
-  unsigned int i;
 
   assert(code >= 100 && code < 1000);
   response->status_code = code;
 
-  for (i = 0; redhttp_status_messages[i].message; i++) {
-    if (redhttp_status_messages[i].code == code) {
-      message = redhttp_status_messages[i].message;
-      break;
-    }
-  }
-
-  redhttp_response_set_status_message(response, message);
+  redhttp_response_set_status_message(
+    response, redhttp_response_status_message_for_code(code)
+  );
 }
 
 int redhttp_response_get_status_code(redhttp_response_t * response)
