@@ -148,6 +148,15 @@ static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, vo
   return response;
 }
 
+// Custom 404 handler
+static redhttp_response_t *handle_not_found(redhttp_request_t * request, void *user_data)
+{
+  return redstore_page_new_with_message(
+    request, REDSTORE_DEBUG, REDHTTP_NOT_FOUND,
+    "Unsupported path."
+  );
+}
+
 static int redland_log_handler(void *user, librdf_log_message * msg)
 {
   int level = librdf_log_message_level(msg);
@@ -334,6 +343,7 @@ static redhttp_server_t *redstore_setup_http_server()
   redhttp_server_add_handler(server, "GET", "/favicon.ico", handle_image_favicon, NULL);
   redhttp_server_add_handler(server, "GET", "/robots.txt", handle_page_robots_txt, NULL);
   redhttp_server_add_handler(server, "GET", NULL, remove_trailing_slash, NULL);
+  redhttp_server_add_handler(server, NULL, NULL, handle_not_found, NULL);
 
   // Set the server signature
   redhttp_server_set_signature(server, PACKAGE_NAME "/" PACKAGE_VERSION);

@@ -32,8 +32,9 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
 
   stream = librdf_model_as_stream(model);
   if (!stream) {
-    return redstore_error_page(REDSTORE_ERROR,
-                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model."
+    );
   }
 
   response = format_graph_stream(request, stream);
@@ -53,8 +54,9 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
   // First:  delete all the named graphs
   iterator = librdf_storage_get_contexts(storage);
   if (!iterator) {
-    return redstore_error_page(REDSTORE_ERROR,
-                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs."
+    );
   }
 
   while (!librdf_iterator_end(iterator)) {
@@ -75,8 +77,9 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
   // Second: delete the remaining triples
   stream = librdf_model_as_stream(model);
   if (!stream) {
-    return redstore_error_page(REDSTORE_ERROR,
-                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model."
+    );
   }
 
   while (!librdf_stream_end(stream)) {
@@ -94,10 +97,13 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
   librdf_free_stream(stream);
 
   if (err) {
-    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Error deleting some statements.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error deleting some statements."
+    );
   } else {
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_OK, "Successfully deleted all statements.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_OK, "Successfully deleted all statements."
+    );
   }
 }
 
@@ -158,8 +164,10 @@ redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_dat
   for(attempts=0; attempts<10; attempts++) {
     graph_node = new_graph_node(redhttp_request_get_url(request));
     if (!graph_node) {
-      return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                 "Failed to create node for graph identifier.");
+      return redstore_page_new_with_message(
+        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        "Failed to create node for graph identifier."
+      );
     }
 
     if (!librdf_model_contains_context(model, graph_node)) {
@@ -182,8 +190,10 @@ redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_dat
     }
     librdf_free_node(graph_node);
   } else {
-    response = redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                                   "Failed to create new graph identifier.");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      "Failed to create new graph identifier."
+    );
   }
 
   return response;
@@ -237,14 +247,17 @@ redhttp_response_t *handle_data_context_head(redhttp_request_t * request, void *
   redhttp_response_t *response = NULL;
 
   if (!graph_node) {
-    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Failed to get node for graph.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
+    );
   }
 
   if (librdf_model_contains_context(model, graph_node)) {
     response = redhttp_response_new(REDHTTP_OK, NULL);
   } else {
-    response = redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found."
+    );
   }
 
   librdf_free_node(graph_node);
@@ -259,22 +272,26 @@ redhttp_response_t *handle_data_context_get(redhttp_request_t * request, void *u
   redhttp_response_t *response = NULL;
 
   if (!graph_node) {
-    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Failed to get node for graph.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
+    );
   }
 
   // Check if the graph exists
   if (!librdf_model_contains_context(model, graph_node)) {
     librdf_free_node(graph_node);
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");;
+    return redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found."
+    );
   }
 
   // Stream the graph
   stream = librdf_model_context_as_stream(model, graph_node);
   if (!stream) {
     librdf_free_node(graph_node);
-    return redstore_error_page(REDSTORE_ERROR,
-                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream context.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream context."
+    );
   }
 
   response = format_graph_stream(request, stream);
@@ -289,8 +306,9 @@ redhttp_response_t *handle_data_context_post(redhttp_request_t * request, void *
 {
   librdf_node *graph_node = get_graph_node(request);
   if (!graph_node) {
-    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Failed to get node for graph.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
+    );
   }
 
   return parse_data_from_request_body(request, graph_node, load_stream_into_graph);
@@ -300,8 +318,9 @@ redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *u
 {
   librdf_node *graph_node = get_graph_node(request);
   if (!graph_node) {
-    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Failed to get node for graph.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
+    );
   }
 
   return parse_data_from_request_body(request, graph_node, clear_and_load_stream_into_graph);
@@ -313,26 +332,29 @@ redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void
   redhttp_response_t *response = NULL;
 
   if (!graph_node) {
-    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Failed to get node for graph.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
+    );
   }
 
   // Check if the graph exists
   if (!librdf_model_contains_context(model, graph_node)) {
     librdf_free_node(graph_node);
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found.");;
+    return redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found."
+    );
   }
 
   if (librdf_model_context_remove_statements(model, graph_node)) {
-    response =
-        redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                            "Error while trying to delete graph");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error while trying to delete graph"
+    );
   } else {
     redhttp_negotiate_t *accept =
         redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
     char *format_str = redstore_get_format(request, accept, "text/plain");
     if (redstore_is_html_format(format_str)) {
-      response = redstore_page_new("Success");
+      response = redstore_page_new(REDHTTP_OK, "Success");
       redstore_page_append_string(response, "<p>Successfully deleted graph.</p>");
       redstore_page_end(response);
     } else {

@@ -65,14 +65,17 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
   }
 
   if (!format_name) {
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
-                               "Result format not supported for graph query type.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+      "Result format not supported for graph query type."
+    );
   }
 
   serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
   if (!serialiser) {
-    return redstore_error_page(REDSTORE_ERROR,
-                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser."
+    );
   }
   // Send back the response headers
   response = redhttp_response_new(REDHTTP_OK, NULL);
@@ -102,8 +105,10 @@ redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
   // Create an iostream
   iostream = raptor_new_iostream_to_file_handle(raptor, socket);
   if (!iostream) {
-    return redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Failed to create raptor_iostream when serialising nquads.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      "Failed to create raptor_iostream when serialising nquads."
+    );
   }
   // Send back the response headers
   response = redhttp_response_new(REDHTTP_OK, NULL);
@@ -210,22 +215,26 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
   free(format_str);
 
   if (!format_name) {
-    return redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
-                               "Result format not supported for bindings query type.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+      "Result format not supported for bindings query type."
+    );
   }
 
   formatter = librdf_new_query_results_formatter2(results, format_name, NULL, NULL);
   if (!formatter) {
-    return redstore_error_page(REDSTORE_ERROR,
-                               REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create results formatter.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create results formatter."
+    );
   }
 
   iostream = raptor_new_iostream_to_file_handle(raptor, socket);
   if (!iostream) {
     librdf_free_query_results_formatter(formatter);
-    return redstore_error_page(REDSTORE_ERROR,
-                               REDHTTP_INTERNAL_SERVER_ERROR,
-                               "Failed to create raptor_iostream for results output.");
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      "Failed to create raptor_iostream for results output."
+    );
   }
   // Send back the response headers
   response = redhttp_response_new(REDHTTP_OK, NULL);

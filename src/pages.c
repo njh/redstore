@@ -33,17 +33,21 @@ typedef struct redstore_page_s {
   raptor_iostream *iostream;
 } redstore_page_t;
 
-redhttp_response_t *redstore_error_page(int level, int code, const char *message)
+redhttp_response_t *redstore_page_new(int code, const char *title)
 {
-  redstore_log(level, message);
-  return redhttp_response_new_error_page(code, message);
-}
-
-redhttp_response_t *redstore_page_new(const char *title)
-{
-  redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/html");
   raptor_world *raptor = librdf_world_get_raptor(world);
+  redhttp_response_t *response = NULL;
   redstore_page_t *page = NULL;
+
+  if (!code)
+    code = REDHTTP_OK;
+
+  response = redhttp_response_new_with_type(code, NULL, "text/html");
+  if (!response)
+    return NULL;
+
+  if (!title)
+    title = redhttp_response_get_status_message(response);
 
   // Create the iostream
   page = calloc(1, sizeof(redstore_page_t));
@@ -62,6 +66,38 @@ redhttp_response_t *redstore_page_new(const char *title)
   redstore_page_append_string(response, "</head>\n");
   redstore_page_append_string(response, "<body>\n");
   redstore_page_append_strings(response, "<h1>", title, "</h1>\n", NULL);
+
+  return response;
+}
+
+redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, int log_level, int code, const char *message)
+{
+  redhttp_negotiate_t *accept = redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
+  char *format_str = redstore_get_format(request, accept, "text/plain");
+  const char * title = redhttp_response_status_message_for_code(code);
+  redhttp_response_t *response = NULL;
+
+  assert(request != NULL);
+  assert(message != NULL);
+
+  if (redstore_is_html_format(format_str)) {
+    response = redstore_page_new(code, title);
+    redstore_page_append_strings(response, "<p>", message, "</p>", NULL);
+    redstore_page_end(response);
+  } else {
+    size_t text_len = strlen(title) + 2 + strlen(message) + 2;
+    char *text = malloc(text_len);
+    response = redhttp_response_new_with_type(code, NULL, "text/plain");
+    snprintf(text, text_len, "%s: %s\n", title, message);
+    redhttp_response_set_content(response, text, text_len-1);
+  }
+
+  if (log_level) {
+    redstore_log(log_level, "Response: %d %s (%s)", code, title, message);
+  }
+
+  free(format_str);
+  redhttp_negotiate_free(&accept);
 
   return response;
 }
@@ -124,7 +160,7 @@ void redstore_page_end(redhttp_response_t * response)
 
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data)
 {
-  redhttp_response_t *response = redstore_page_new("RedStore");
+  redhttp_response_t *response = redstore_page_new(REDHTTP_OK, "RedStore");
   redstore_page_append_string(response, "<ul>\n");
   redstore_page_append_string(response, "  <li><a href=\"/query\">Query Form</a></li>\n");
   redstore_page_append_string(response, "  <li><a href=\"/graphs\">List Named Graphs</a></li>\n");
@@ -190,7 +226,7 @@ redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *us
       librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char *) "resultFormat");
   redhttp_response_t *response = NULL;
 
-  response = redstore_page_new("Query Form");
+  response = redstore_page_new(REDHTTP_OK, "Query Form");
   redstore_page_append_string(response, "<form action=\"./query\" method=\"get\">\n");
   redstore_page_append_string(response, "<div><textarea name=\"query\" cols=\"80\" rows=\"18\">\n");
   redstore_page_append_string(response,
@@ -227,7 +263,7 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
   const char *title = (char *) user_data;
   const char *action = redhttp_request_get_path(request);
 
-  redhttp_response_t *response = redstore_page_new(title);
+  redhttp_response_t *response = redstore_page_new(REDHTTP_OK, title);
   redstore_page_append_strings(response, "<form method=\"post\" action=\"", action, "\">\n", NULL);
   redstore_page_append_string(response,
                               "<div><textarea name=\"content\" cols=\"80\" rows=\"18\">\n");
@@ -251,7 +287,7 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
 
 redhttp_response_t *handle_page_load_form(redhttp_request_t * request, void *user_data)
 {
-  redhttp_response_t *response = redstore_page_new("Load URI");
+  redhttp_response_t *response = redstore_page_new(REDHTTP_OK, "Load URI");
   redstore_page_append_string(response, "<form method=\"post\" action=\"/load\"><div>\n"
                               "<label for=\"uri\">URI:</label> <input id=\"uri\" name=\"uri\" type=\"text\" size=\"40\" /><br />\n"
                               "<label for=\"graph\">Graph:</label> <input id=\"graph\" name=\"graph\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"

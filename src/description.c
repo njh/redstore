@@ -322,7 +322,7 @@ static void syntax_html_table(const char *title, librdf_node * source, librdf_no
 
 static redhttp_response_t *handle_html_description(redhttp_request_t * request, void *user_data)
 {
-  redhttp_response_t *response = redstore_page_new("Service Description");
+  redhttp_response_t *response = redstore_page_new(REDHTTP_OK, "Service Description");
   librdf_node *total_node =
       librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "totalTriples");
   librdf_node *rf_node =

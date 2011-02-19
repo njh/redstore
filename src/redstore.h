@@ -45,10 +45,11 @@
 
 // ------- Logging ---------
 typedef enum {
-  REDSTORE_DEBUG = 1,           // Only display debug if verbose
-  REDSTORE_INFO,  // Don't show info when quiet
-  REDSTORE_ERROR, // Always display
-  REDSTORE_FATAL  // Quit if fatal
+  REDSTORE_NOLOG = 0,  // Don't log the message
+  REDSTORE_DEBUG,      // Only display debug if verbose
+  REDSTORE_INFO,       // Don't show info when quiet
+  REDSTORE_ERROR,      // Always display
+  REDSTORE_FATAL       // Quit if fatal
 } RedstoreLogLevel;
 
 
@@ -111,8 +112,8 @@ redhttp_response_t *handle_query(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_sparql(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *user_data);
 
-redhttp_response_t *redstore_error_page(int level, int code, const char *message);
-redhttp_response_t *redstore_page_new(const char *title);
+redhttp_response_t *redstore_page_new(int code, const char *title);
+redhttp_response_t *redstore_page_new_with_message(redhttp_request_t * request, int log_level, int code, const char *message);
 int redstore_page_append_string(redhttp_response_t * response, const char *str);
 int redstore_page_append_decimal(redhttp_response_t * response, int decimal);
 int redstore_page_append_strings(redhttp_response_t * response, ...);

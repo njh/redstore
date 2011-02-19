@@ -39,17 +39,17 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
 
   query = librdf_new_query(world, lang, NULL, (unsigned char *) query_string, NULL);
   if (!query) {
-    response =
-        redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                            "librdf_new_query failed");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_new_query failed"
+    );
     goto CLEANUP;
   }
 
   results = librdf_model_query_execute(model, query);
   if (!results) {
-    response =
-        redstore_error_page(REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-                            "librdf_model_query_execute failed");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_model_query_execute failed"
+    );
     goto CLEANUP;
   }
 
@@ -63,19 +63,20 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
       response = format_graph_stream(request, stream);
       librdf_free_stream(stream);
     } else {
-      response =
-          redstore_error_page(REDSTORE_DEBUG, REDHTTP_INTERNAL_SERVER_ERROR,
-                              "Failed to get query results graph.");
+      response = redstore_page_new_with_message(
+        request, REDSTORE_DEBUG, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get query results graph."
+      );
     }
   } else if (librdf_query_results_is_boolean(results)) {
     response = format_bindings_query_result(request, results);
   } else if (librdf_query_results_is_syntax(results)) {
-    response =
-        redstore_error_page(REDSTORE_INFO, REDHTTP_NOT_IMPLEMENTED,
-                            "Syntax results format is not supported.");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_NOT_IMPLEMENTED, "Syntax results format is not supported."
+    );
   } else {
-    response =
-        redstore_error_page(REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown results type.");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown results type."
+    );
   }
 
 
@@ -113,7 +114,9 @@ redhttp_response_t *handle_sparql(redhttp_request_t * request, void *user_data)
   if (query_string) {
     response = perform_query(request, query_string);
   } else {
-    response = redstore_error_page(REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Missing query string.");
+    response = redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Missing query string."
+    );
   }
 
   return response;

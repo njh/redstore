@@ -58,9 +58,9 @@ is(scalar(@lines), 1, "Number of triples is correct");
 # Test getting a non-existant graph
 $response = $ua->get($service_endpoint.'/invalid.rdf');
 is($response->code, 404, "Getting a non-existant graph returns 404");
-is($response->content_type, 'text/html', "Graph not found page is of type text/html");
-ok($response->content_length > 100, "Graph not found page is more than 100 bytes long");
-is_valid_xhtml($response->content, "Graph not found page should be valid XHTML");
+is($response->content_type, 'text/plain', "Graph not found page is of type text/plain");
+is($response->content, "Not Found: Graph not found.\n", "Graph not found message content is correct");
+is($response->content_length, length("Not Found: Graph not found.\n"), "Graph not found message content length header is correct");
 
 
 # Test POSTing some Turtle
