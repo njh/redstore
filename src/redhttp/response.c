@@ -269,8 +269,6 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
 
 void redhttp_response_set_status_code(redhttp_response_t * response, int code)
 {
-  const char* message = NULL;
-
   assert(code >= 100 && code < 1000);
   response->status_code = code;
 
