@@ -29,47 +29,27 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
                                            librdf_node * graph)
 {
   redhttp_response_t *response = NULL;
+  const char *graph_str = NULL;
 
   if (librdf_model_context_add_statements(model, graph, stream)) {
     return redstore_page_new_with_message(
       request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to add statements to graph."
     );
   }
+
   // FIXME: check for parse errors or parse warnings
-  if (!response) {
-    redhttp_negotiate_t *accept =
-        redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-    char *format_str = redstore_get_format(request, accept, "text/plain");
-    const char *graph_str = NULL;
 
-    if (graph) {
-      librdf_uri *graph_uri = librdf_node_get_uri(graph);
-      if (graph_uri)
-        graph_str = (char *) librdf_uri_as_string(graph_uri);
-    } else {
-      graph_str = "the default graph";
-    }
-
-    redstore_info("Successfully added triples to graph.");
-    import_count++;
-
-    if (redstore_is_html_format(format_str)) {
-      response = redstore_page_new(REDHTTP_OK, NULL);
-      redstore_page_append_string(response, "<p>Successfully added triples to ");
-      redstore_page_append_escaped(response, graph_str, 0);
-      redstore_page_append_string(response, "</p>\n");
-      redstore_page_end(response);
-    } else {
-      char *text = calloc(1, BUFSIZ);
-      response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
-      snprintf(text, BUFSIZ, "Successfully added triples to %s\n", graph_str);
-      redhttp_response_set_content(response, text, strlen(text));
-    }
-    free(format_str);
-    redhttp_negotiate_free(&accept);
+  if (graph) {
+    librdf_uri *graph_uri = librdf_node_get_uri(graph);
+    if (graph_uri)
+      graph_str = (const char *) librdf_uri_as_string(graph_uri);
+  } else {
+    graph_str = "the default graph";
   }
 
-  return response;
+  return redstore_page_new_with_message(
+    request, REDSTORE_INFO, REDHTTP_OK, "Successfully added triples to %s\n", graph_str
+  );
 }
 
 redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request,
@@ -85,11 +65,7 @@ redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request
 redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf_stream * stream,
                                              librdf_node * graph)
 {
-  redhttp_negotiate_t *accept =
-      redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-  char *format_str = redstore_get_format(request, accept, "text/plain");
   redhttp_response_t *response = NULL;
-  const char *message = NULL;
   int count = 0;
 
   while (!librdf_stream_end(stream)) {
@@ -105,28 +81,15 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
     librdf_stream_next(stream);
   }
 
-  redstore_info("Deleted %d triples.", count);
   if (count > 0) {
-    message = "Successfully deleted triples.";
+    return redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_OK, "Successfully deleted %d triples.", count
+    );
   } else {
-    message = "No triples deleted.";
+    return redstore_page_new_with_message(
+      request, REDSTORE_INFO, REDHTTP_OK, "No triples deleted."
+    );
   }
-
-  // Send the response
-  if (redstore_is_html_format(format_str)) {
-    response = redstore_page_new(REDHTTP_OK, NULL);
-    redstore_page_append_strings(response, "<p>", message, "</p>\n", NULL);
-    redstore_page_end(response);
-  } else {
-    char *text = calloc(1, BUFSIZ);
-    response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
-    strncpy(text, message, BUFSIZ);
-    redhttp_response_set_content(response, text, strlen(text));
-  }
-  free(format_str);
-  redhttp_negotiate_free(&accept);
-
-  return response;
 }
 
 redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned char *buffer,
