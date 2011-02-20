@@ -34,7 +34,7 @@ redhttp_response_t *load_stream_into_new_graph(redhttp_request_t * request, libr
 
   if (librdf_model_context_add_statements(model, graph_node, stream)) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
       "Failed to add triples to graph."
     );
   }
@@ -42,7 +42,7 @@ redhttp_response_t *load_stream_into_new_graph(redhttp_request_t * request, libr
   // FIXME: check for parse errors or parse warnings
 
   response = redstore_page_new_with_message(
-    request, REDSTORE_INFO, REDHTTP_CREATED,
+    request, LIBRDF_LOG_INFO, REDHTTP_CREATED,
     "Successfully added triples to new graph: %s", graph_str
   );
 
@@ -58,7 +58,7 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
 
   if (librdf_model_context_add_statements(model, graph, stream)) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to add triples to graph."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to add triples to graph."
     );
   }
 
@@ -69,11 +69,11 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
     if (graph_uri)
       graph_str = (const char *) librdf_uri_as_string(graph_uri);
   } else {
-    graph_str = "the default graph";
+    graph_str = "the default graph.";
   }
 
   return redstore_page_new_with_message(
-    request, REDSTORE_INFO, REDHTTP_OK, "Successfully added triples to %s", graph_str
+    request, LIBRDF_LOG_INFO, REDHTTP_OK, "Successfully added triples to %s", graph_str
   );
 }
 
@@ -107,11 +107,11 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
 
   if (count > 0) {
     return redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_OK, "Successfully deleted %d triples.", count
+      request, LIBRDF_LOG_INFO, REDHTTP_OK, "Successfully deleted %d triples.", count
     );
   } else {
     return redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_OK, "No triples deleted."
+      request, LIBRDF_LOG_INFO, REDHTTP_OK, "No triples deleted."
     );
   }
 }
@@ -131,7 +131,7 @@ redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned
     base_uri = librdf_new_uri(world, (unsigned char *) base_uri_str);
     if (!base_uri) {
       response = redstore_page_new_with_message(
-        request, REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create base URI."
+        request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create base URI."
       );
       goto CLEANUP;
     }
@@ -141,7 +141,7 @@ redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned
     base_uri = librdf_new_uri_from_uri(graph_uri);
     if (!base_uri) {
       response = redstore_page_new_with_message(
-        request, REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create base URI from graph URI."
+        request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create base URI from graph URI."
       );
       goto CLEANUP;
     }
@@ -153,7 +153,7 @@ redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned
   parser = librdf_new_parser(world, parser_name, NULL, NULL);
   if (!parser) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create parser."
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create parser."
     );
     goto CLEANUP;
   }
@@ -161,7 +161,7 @@ redhttp_response_t *parse_data_from_buffer(redhttp_request_t * request, unsigned
   stream = librdf_parser_parse_counted_string_as_stream(parser, buffer, content_length, base_uri);
   if (!stream) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to parse data."
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to parse data."
     );
     goto CLEANUP;
   }
@@ -196,13 +196,13 @@ redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request,
     content_length = atoi(content_length_str);
     if (content_length <= 0) {
       response = redstore_page_new_with_message(
-        request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Invalid content length header."
+        request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Invalid content length header."
       );
       goto CLEANUP;
     }
   } else {
     response = redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing content length header."
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing content length header."
     );
     goto CLEANUP;
   }
@@ -211,7 +211,7 @@ redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request,
   buffer = malloc(content_length);
   if (!buffer) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
       "Failed to allocate memory for input data."
     );
     goto CLEANUP;
@@ -220,7 +220,7 @@ redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request,
   data_read = fread(buffer, 1, content_length, redhttp_request_get_socket(request));
   if (data_read != content_length) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error reading content from client."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error reading content from client."
     );
     goto CLEANUP;
   }
@@ -228,7 +228,7 @@ redhttp_response_t *parse_data_from_request_body(redhttp_request_t * request,
   parser_name = librdf_parser_guess_name2(world, content_type, buffer, NULL);
   if (!parser_name) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to guess parser type."
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to guess parser type."
     );
     goto CLEANUP;
   }
@@ -258,7 +258,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
 
   if (!uri_arg) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing URI to load"
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing URI to load"
     );
     goto CLEANUP;
   }
@@ -266,7 +266,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
   uri = librdf_new_uri(world, (const unsigned char *) uri_arg);
   if (!uri) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for URI"
+      request, LIBRDF_LOG_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for URI"
     );
     goto CLEANUP;
   }
@@ -278,7 +278,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
   }
   if (!base_uri) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for Base URI"
+      request, LIBRDF_LOG_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for Base URI"
     );
     goto CLEANUP;
   }
@@ -290,7 +290,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
   }
   if (!graph_uri) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for Graph URI"
+      request, LIBRDF_LOG_ERROR, REDHTTP_BAD_REQUEST, "librdf_new_uri failed for Graph URI"
     );
     goto CLEANUP;
   }
@@ -308,7 +308,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
   parser = librdf_new_parser(world, parser_arg, NULL, NULL);
   if (!parser) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create parser"
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create parser"
     );
     goto CLEANUP;
   }
@@ -316,7 +316,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
   stream = librdf_parser_parse_as_stream(parser, uri, base_uri);
   if (!stream) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to parse RDF as stream."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to parse RDF as stream."
     );
     goto CLEANUP;
   }
@@ -324,7 +324,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
   graph = librdf_new_node_from_uri(world, graph_uri);
   if (!graph) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
       "librdf_new_node_from_uri failed for graph-uri."
     );
   }
@@ -358,7 +358,7 @@ redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_d
 
   if (!content) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing the 'content' argument."
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing the 'content' argument."
     );
   }
 
@@ -369,7 +369,7 @@ redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_d
     graph_node = librdf_new_node_from_uri_string(world, (unsigned char*)graph_uri_str);
     if (!graph_node) {
       return redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
         "Error creating graph node from URI string"
       );
     }
@@ -388,7 +388,7 @@ redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_d
 
   if (!content) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing the 'content' argument."
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing the 'content' argument."
     );
   }
 
@@ -399,7 +399,7 @@ redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_d
     graph_node = librdf_new_node_from_uri_string(world, (unsigned char*)graph_uri_str);
     if (!graph_node) {
       return redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
         "Error creating graph node from URI string"
       );
     }

@@ -69,27 +69,36 @@ static void termination_handler(int signum)
 }
 
 
-void redstore_log(RedstoreLogLevel level, const char *fmt, ...)
+void redstore_log(librdf_log_level level, const char *fmt, ...)
 {
   time_t t = time(NULL);
   char *time_str;
   va_list args;
 
   // Display the message level
-  if (level == REDSTORE_DEBUG) {
-    if (!verbose)
-      return;
-    printf("[DEBUG]  ");
-  } else if (level == REDSTORE_INFO) {
-    if (quiet)
-      return;
-    printf("[INFO]   ");
-  } else if (level == REDSTORE_ERROR) {
-    printf("[ERROR]  ");
-  } else if (level == REDSTORE_FATAL) {
-    printf("[FATAL]  ");
-  } else {
-    printf("[UNKNOWN]");
+  switch(level) {
+    case LIBRDF_LOG_DEBUG:
+      if (!verbose)
+        return;
+      printf("[DEBUG]   ");
+    break;
+    case LIBRDF_LOG_INFO:
+      if (quiet)
+        return;
+      printf("[INFO]    ");
+    break;
+    case LIBRDF_LOG_WARN:
+      printf("[WARNING] ");
+    break;
+    case LIBRDF_LOG_ERROR:
+      printf("[ERROR]   ");
+    break;
+    case LIBRDF_LOG_FATAL:
+      printf("[FATAL]   ");
+    break;
+    default:
+      printf("[UNKNOWN] ");
+    break;
   }
 
   // Display timestamp
@@ -104,7 +113,7 @@ void redstore_log(RedstoreLogLevel level, const char *fmt, ...)
   va_end(args);
 
   // If fatal then stop
-  if (level == REDSTORE_FATAL) {
+  if (level == LIBRDF_LOG_FATAL) {
     if (running) {
       // Quit gracefully
       running = 0;
@@ -148,21 +157,33 @@ static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, vo
   return response;
 }
 
-static int redland_log_handler(void *user, librdf_log_message * msg)
+static int redland_log_handler(void *user, librdf_log_message * log_msg)
 {
-  int level = librdf_log_message_level(msg);
-  int code = librdf_log_message_code(msg);
-  const char *message = librdf_log_message_message(msg);
+  int level = librdf_log_message_level(log_msg);
+  int code = librdf_log_message_code(log_msg);
+  const char *message = librdf_log_message_message(log_msg);
+  raptor_locator* locator = librdf_log_message_locator(log_msg);
 
-  printf("redland_log_handler: code=%d level=%d message=%s\n", code, level, message);
-  return 0;
+  redstore_log(level, "librdf error %d: %s", code, message ? message : "(no message)");
+
+  if(locator) {
+    int locator_len = raptor_locator_format(NULL, 0, locator);
+    if(locator_len>0) {
+      char *buffer=(char*)malloc(locator_len+1);
+      raptor_locator_format(buffer, locator_len, locator);
+      redstore_log(level, "Location: %s", buffer);
+      free(buffer);
+    }
+  }
+
+  return 1;
 }
 
 // Custom 404 handler
 static redhttp_response_t *handle_not_found(redhttp_request_t * request, void *user_data)
 {
   return redstore_page_new_with_message(
-    request, REDSTORE_DEBUG, REDHTTP_NOT_FOUND,
+    request, LIBRDF_LOG_DEBUG, REDHTTP_NOT_FOUND,
     "Unsupported path."
   );
 }

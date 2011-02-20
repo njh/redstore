@@ -44,26 +44,25 @@
 
 
 // ------- Logging ---------
-typedef enum {
-  REDSTORE_NOLOG = 0,  // Don't log the message
-  REDSTORE_DEBUG,      // Only display debug if verbose
-  REDSTORE_INFO,       // Don't show info when quiet
-  REDSTORE_ERROR,      // Always display
-  REDSTORE_FATAL       // Quit if fatal
-} RedstoreLogLevel;
 
-
+// Only display debug if verbose
 #define redstore_debug( ... ) \
-		redstore_log(REDSTORE_DEBUG, __VA_ARGS__ )
+		redstore_log(LIBRDF_LOG_DEBUG, __VA_ARGS__ )
 
+// Don't show info when quiet
 #define redstore_info( ... ) \
-		redstore_log(REDSTORE_INFO, __VA_ARGS__ )
+		redstore_log(LIBRDF_LOG_INFO, __VA_ARGS__ )
 
+#define redstore_warn( ... ) \
+		redstore_log(LIBRDF_LOG_WARN, __VA_ARGS__ )
+
+// Always display
 #define redstore_error( ... ) \
-		redstore_log( REDSTORE_ERROR, __VA_ARGS__ )
+		redstore_log(LIBRDF_LOG_ERROR, __VA_ARGS__ )
 
+// Quit if fatal
 #define redstore_fatal( ... ) \
-		redstore_log( REDSTORE_FATAL, __VA_ARGS__ )
+		redstore_log(LIBRDF_LOG_FATAL, __VA_ARGS__ )
 
 
 
@@ -174,7 +173,7 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
 
 redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user_data);
 
-void redstore_log(RedstoreLogLevel level, const char *format, ...);
+void redstore_log(librdf_log_level level, const char *format, ...);
 
 char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported, const char* default_format);
 int redstore_is_html_format(const char *str);

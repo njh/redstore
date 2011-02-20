@@ -96,7 +96,7 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
                                 "<p>This document is also available as <a href=\"/graphs?format=text\">plain text</a>.</p>\n");
 
   } else {
-    redstore_page_append_string(response, "<p style=\"font-style: italic\">No named graphs.</p>\n");
+    redstore_page_append_string(response, "<pre>No named graphs.</pre>\n");
   }
 
   redstore_page_end(response);
@@ -155,7 +155,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
   iterator = librdf_storage_get_contexts(storage);
   if (!iterator) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs."
     );
   }
 
@@ -165,7 +165,7 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
     response = handle_html_graph_index(request, iterator);
   } else {
     response = redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE, "No acceptable format supported."
+      request, LIBRDF_LOG_INFO, REDHTTP_NOT_ACCEPTABLE, "No acceptable format supported."
     );
   }
 

@@ -40,7 +40,7 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
   query = librdf_new_query(world, lang, NULL, (unsigned char *) query_string, NULL);
   if (!query) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_new_query failed"
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_new_query failed"
     );
     goto CLEANUP;
   }
@@ -48,7 +48,7 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
   results = librdf_model_query_execute(model, query);
   if (!results) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_model_query_execute failed"
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_model_query_execute failed"
     );
     goto CLEANUP;
   }
@@ -64,18 +64,18 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
       librdf_free_stream(stream);
     } else {
       response = redstore_page_new_with_message(
-        request, REDSTORE_DEBUG, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get query results graph."
+        request, LIBRDF_LOG_DEBUG, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get query results graph."
       );
     }
   } else if (librdf_query_results_is_boolean(results)) {
     response = format_bindings_query_result(request, results);
   } else if (librdf_query_results_is_syntax(results)) {
     response = redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_NOT_IMPLEMENTED, "Syntax results format is not supported."
+      request, LIBRDF_LOG_INFO, REDHTTP_NOT_IMPLEMENTED, "Syntax results format is not supported."
     );
   } else {
     response = redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown results type."
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown results type."
     );
   }
 
@@ -115,7 +115,7 @@ redhttp_response_t *handle_sparql(redhttp_request_t * request, void *user_data)
     response = perform_query(request, query_string);
   } else {
     response = redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_BAD_REQUEST, "Missing query string."
+      request, LIBRDF_LOG_INFO, REDHTTP_BAD_REQUEST, "Missing query string."
     );
   }
 

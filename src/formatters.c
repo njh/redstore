@@ -66,7 +66,7 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
 
   if (!format_name) {
     return redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+      request, LIBRDF_LOG_INFO, REDHTTP_NOT_ACCEPTABLE,
       "Result format not supported for graph query type."
     );
   }
@@ -74,7 +74,7 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
   serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
   if (!serialiser) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser."
     );
   }
   // Send back the response headers
@@ -106,7 +106,7 @@ redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request,
   iostream = raptor_new_iostream_to_file_handle(raptor, socket);
   if (!iostream) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
       "Failed to create raptor_iostream when serialising nquads."
     );
   }
@@ -216,7 +216,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
 
   if (!format_name) {
     return redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_NOT_ACCEPTABLE,
+      request, LIBRDF_LOG_INFO, REDHTTP_NOT_ACCEPTABLE,
       "Result format not supported for bindings query type."
     );
   }
@@ -224,7 +224,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
   formatter = librdf_new_query_results_formatter2(results, format_name, NULL, NULL);
   if (!formatter) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create results formatter."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create results formatter."
     );
   }
 
@@ -232,7 +232,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
   if (!iostream) {
     librdf_free_query_results_formatter(formatter);
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
       "Failed to create raptor_iostream for results output."
     );
   }

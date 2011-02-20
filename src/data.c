@@ -128,7 +128,7 @@ static redhttp_response_t *remove_all_statements(redhttp_request_t *request)
   iterator = librdf_storage_get_contexts(storage);
   if (!iterator) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get list of graphs."
     );
   }
 
@@ -151,7 +151,7 @@ static redhttp_response_t *remove_all_statements(redhttp_request_t *request)
   stream = librdf_model_as_stream(model);
   if (!stream) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
       "Failed to stream model."
     );
   }
@@ -172,11 +172,11 @@ static redhttp_response_t *remove_all_statements(redhttp_request_t *request)
 
   if (err) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error deleting some statements."
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error deleting some statements."
     );
   } else {
     return redstore_page_new_with_message(
-      request, REDSTORE_INFO, REDHTTP_OK, "Successfully deleted all statements."
+      request, LIBRDF_LOG_INFO, REDHTTP_OK, "Successfully deleted all statements."
     );
   }
 }
@@ -191,7 +191,7 @@ static redhttp_response_t *post_to_new_graph(redhttp_request_t * request)
     graph_node = new_graph_node(redhttp_request_get_url(request));
     if (!graph_node) {
       return redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
         "Failed to create node for graph identifier."
       );
     }
@@ -212,7 +212,7 @@ static redhttp_response_t *post_to_new_graph(redhttp_request_t * request)
     librdf_free_node(graph_node);
   } else {
     response = redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
       "Failed to create new graph identifier."
     );
   }
@@ -231,14 +231,14 @@ redhttp_response_t *handle_data_head(redhttp_request_t * request, void *user_dat
 
   if (has_graph && has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST,
       "The 'graph' and 'default' arguments can not be used together."
     );
   }
 
   if (!has_graph && !has_path && !has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
     );
   }
 
@@ -249,7 +249,7 @@ redhttp_response_t *handle_data_head(redhttp_request_t * request, void *user_dat
 
     if (!graph_node) {
       return redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
       );
     }
 
@@ -257,7 +257,7 @@ redhttp_response_t *handle_data_head(redhttp_request_t * request, void *user_dat
       response = redhttp_response_new(REDHTTP_OK, NULL);
     } else {
       response = redstore_page_new_with_message(
-        request, REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found."
+        request, LIBRDF_LOG_INFO, REDHTTP_NOT_FOUND, "Graph not found."
       );
     }
 
@@ -278,14 +278,14 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
 
   if (has_graph && has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST,
       "The 'graph' and 'default' arguments can not be used together."
     );
   }
 
   if (!has_graph && !has_path && !has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
     );
   }
 
@@ -293,7 +293,7 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
     stream = librdf_model_as_stream(model);
     if (!stream) {
       response = redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model."
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream model."
       );
       goto CLEANUP;
     }
@@ -301,7 +301,7 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
     graph_node = get_graph_node(request);
     if (!graph_node) {
       response = redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
         "Failed to get node for graph."
       );
       goto CLEANUP;
@@ -310,7 +310,7 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
     // Check if the graph exists
     if (!librdf_model_contains_context(model, graph_node)) {
       response = redstore_page_new_with_message(request,
-        REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found."
+        LIBRDF_LOG_INFO, REDHTTP_NOT_FOUND, "Graph not found."
       );
       goto CLEANUP;
     }
@@ -319,7 +319,7 @@ redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data
     stream = librdf_model_context_as_stream(model, graph_node);
     if (!stream) {
       response = redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream context."
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to stream context."
       );
       goto CLEANUP;
     }
@@ -345,7 +345,7 @@ redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_dat
 
   if (has_graph && has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST,
       "The 'graph' and 'default' arguments can not be used together."
     );
   }
@@ -356,7 +356,7 @@ redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_dat
     librdf_node *graph_node = get_graph_node(request);
     if (!graph_node) {
       return redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to get node for graph."
       );
     }
 
@@ -378,20 +378,20 @@ redhttp_response_t *handle_data_put(redhttp_request_t * request, void *user_data
 
   if (has_graph && has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST,
       "The 'graph' and 'default' arguments can not be used together."
     );
   }
 
   if (!has_graph && !has_path && !has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
     );
   }
 
   if (has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_NOT_IMPLEMENTED,
+      request, LIBRDF_LOG_DEBUG, REDHTTP_NOT_IMPLEMENTED,
       "PUTing data into the default graph is not implemented."
     );
   } else {
@@ -402,7 +402,7 @@ redhttp_response_t *handle_data_put(redhttp_request_t * request, void *user_data
       );
     } else {
       return redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
         "Failed to get node for graph."
       );
     }
@@ -419,14 +419,14 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
 
   if (has_graph && has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST,
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST,
       "The 'graph' and 'default' arguments can not be used together."
     );
   }
 
   if (!has_graph && !has_path && !has_default) {
     return redstore_page_new_with_message(
-      request, REDSTORE_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing graph path or argument."
     );
   }
 
@@ -437,7 +437,7 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
 
     if (!graph_node) {
       return redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
         "Failed to get node for graph."
       );
     }
@@ -446,18 +446,18 @@ redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_d
     if (!librdf_model_contains_context(model, graph_node)) {
       librdf_free_node(graph_node);
       return redstore_page_new_with_message(
-        request, REDSTORE_INFO, REDHTTP_NOT_FOUND, "Graph not found."
+        request, LIBRDF_LOG_INFO, REDHTTP_NOT_FOUND, "Graph not found."
       );
     }
 
     if (librdf_model_context_remove_statements(model, graph_node)) {
       response = redstore_page_new_with_message(
-        request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+        request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
         "Error while trying to delete graph"
       );
     } else {
       response = redstore_page_new_with_message(
-        request, REDSTORE_INFO, REDHTTP_OK,
+        request, LIBRDF_LOG_INFO, REDHTTP_OK,
         "Successfully deleted graph."
       );
     }
