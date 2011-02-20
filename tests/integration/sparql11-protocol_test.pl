@@ -130,16 +130,16 @@ is_wellformed_xml($response->content, "SPARQL response is valid XML");
 {
     $response = $ua->get($base_url."sparql?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D");
     is($response->code, 200, "GET response for query to /sparql is successful");
-    
+
     $response = $ua->post($base_url."sparql", {'query' => 'ASK {?s ?p ?o}'});
     is($response->code, 200, "POST response for query to /sparql is successful");
-    
+
     $response = $ua->get($base_url."sparql/?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
     is($response->code, 200, "GET response for query to /sparql/ is successful");
-    
+
     $response = $ua->get($base_url."sparql");
     is($response->code, 400, "GET response to /sparql without query is bad request");
-    
+
     $response = $ua->post($base_url."sparql");
     is($response->code, 400, "POST response to /sparql without query is bad request");
 }
