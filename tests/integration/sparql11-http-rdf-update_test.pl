@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 44;
+use Test::More tests => 61;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -54,14 +54,21 @@ is($response->code, 200, "Getting a graph is successful");
 @lines = split(/[\r\n]+/, $response->content);
 is(scalar(@lines), 1, "Number of triples is correct");
 
-
 # Test getting a non-existant graph
 $response = $ua->get($service_endpoint.'/invalid.rdf');
 is($response->code, 404, "Getting a non-existant graph returns 404");
 is($response->content_type, 'text/plain', "Graph not found page is of type text/plain");
-is($response->content, "Not Found: Graph not found.\n", "Graph not found message content is correct");
-is($response->content_length, length("Not Found: Graph not found.\n"), "Graph not found message content length header is correct");
+is($response->content, "Graph not found.\n", "Graph not found message content is correct");
+is($response->content_length, length("Graph not found.\n"), "Graph not found message content length header is correct");
 
+# Test a GET request without any arguments
+$response = $ua->get($service_endpoint);
+is($response->code, 400, "GETing with no arguments should be an error");
+is($response->content, "Missing graph path or argument.\n", "GETing with no arguments have the right error message.");
+
+# Test a GET request with both default and graph arguments
+$response = $ua->get($service_endpoint.'?graph=foobar&default');
+is($response->code, 400, "GET response for both default and graph arguments should be 400");
 
 # Test POSTing some Turtle
 $request = HTTP::Request->new( 'POST', $service_endpoint.'/foaf.rdf' );
@@ -93,6 +100,18 @@ is($response->code, 200, "HEAD response for graph we just created is 200");
 $response = $ua->head($service_endpoint.'/ignorethis?graph=foaf.rdf');
 is($response->code, 200, "HEAD response for /data/ignorethis?graph=foaf.rdf is 200");
 
+# Test a head request on the default graph
+$response = $ua->head($service_endpoint.'?default');
+is($response->code, 200, "HEAD response for the default graph is 200");
+
+# Test a head request without any arguments
+$response = $ua->head($service_endpoint);
+is($response->code, 400, "HEAD response for request with no arguements should be 400");
+
+# Test a head request with both default and graph arguments
+$response = $ua->head($service_endpoint.'?graph=foobar&default');
+is($response->code, 400, "HEAD response for both default and graph arguments should be 400");
+
 # Test head request on indirect URL resolution
 $response = $ua->head($service_endpoint.'/foo/bar/rat/rat?graph=/data/foaf.rdf');
 is($response->code, 200, "HEAD response for /data/foo/bar/rat/rat?graph=/data/foaf.rdf is 200");
@@ -107,11 +126,22 @@ $response = $ua->head($service_endpoint.'/foaf.rdf');
 is($response->code, 404, "HEAD response for deleted graph is 404");
 
 # Test dumping the triplestore as N-Quads
-$response = $ua->get($service_endpoint.'?format=nquads');
+$response = $ua->get($service_endpoint.'?default&format=nquads');
 is($response->code, 200, "Triplestore dump successful");
 is($response->content_type, 'text/x-nquads', "Triplestore dump is correct MIME type");
 @lines = split(/[\r\n]+/, $response->content);
 like($lines[-1], qr[^(\S+) (\S+) (\S+) (\S+) \.$], "Last line of dump looks like a quad");
+
+# Test PUTing without any arguments
+$request = HTTP::Request->new( 'PUT', $service_endpoint );
+$response = $ua->request($request);
+is($response->code, 400, "PUTing with no arguments should be an error");
+is($response->content, "Missing graph path or argument.\n", "PUTing with no arguments have the right error message.");
+
+# Test a PUT request with both default and graph arguments
+$request = HTTP::Request->new( 'PUT', $service_endpoint.'?graph=foobar&default');
+$response = $ua->request($request);
+is($response->code, 400, "PUT response for both default and graph arguments should be 400");
 
 # Test replacing data with a PUT request
 {
@@ -177,33 +207,55 @@ like($lines[-1], qr[^(\S+) (\S+) (\S+) (\S+) \.$], "Last line of dump looks like
     is($response->code, 200, "The new graph can be GET again");
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 14, "Number of triples in new graph is correct");
-}
+};
 
-# Test POSTing data into the default graph
-# {
-#     $request = HTTP::Request->new( 'POST', $service_endpoint );
-#     $request->content( read_fixture('foaf.nt') );
-#     $request->content_length( length($request->content) );
-#     $request->content_type( 'text/plain' );
-#     $response = $ua->request($request);
-#     is($response->code, 200, "POSTing data into the default graph is succcessful");
-#     like($response->content, qr/Successfully added triples to the default graph/, "Response messages is correct");
-#
-#     ## FIXME: check that the number of triples in the store is correct.
-# }
+
+
+# Test DELETEing without any arguments
+$request = HTTP::Request->new( 'DELETE', $service_endpoint );
+$response = $ua->request($request);
+is($response->code, 400, "DELETEing with no arguments should be an error");
+is($response->content, "Missing graph path or argument.\n", "DELETEing with no arguments have the right error message.");
+
+# Test a DELETE request with both default and graph arguments
+$request = HTTP::Request->new( 'DELETE', $service_endpoint.'?graph=foobar&default');
+$response = $ua->request($request);
+is($response->code, 400, "DELETE response for both default and graph arguments should be 400");
 
 # Test DELETEing everything in the triplestore
 {
-    $request = HTTP::Request->new( 'DELETE', $service_endpoint );
+    $request = HTTP::Request->new( 'DELETE', $service_endpoint.'?default' );
     $response = $ua->request($request);
     is($response->code, 200, "DELETEing all the triples is successful");
 
     # Count the number of triples
-    $response = $ua->get($service_endpoint, 'Accept' => 'text/plain');
+    $response = $ua->get($service_endpoint.'?default', 'Accept' => 'text/plain');
     is($response->code, 200, "Getting all the triples is successful");
     @lines = split(/[\r\n]+/, $response->content);
     is(scalar(@lines), 0, "There should be no triples remaining");
-}
+};
+
+# Test a POST request with both default and graph arguments
+$request = HTTP::Request->new( 'POST', $service_endpoint.'?graph=foobar&default');
+$response = $ua->request($request);
+is($response->code, 400, "POST response for both default and graph arguments should be 400");
+
+# Test POSTing data into the default graph
+{
+    $request = HTTP::Request->new( 'POST', $service_endpoint.'?default' );
+    $request->content( read_fixture('foaf.nt') );
+    $request->content_length( length($request->content) );
+    $request->content_type( 'text/plain' );
+    $response = $ua->request($request);
+    is($response->code, 200, "POSTing data into the default graph is succcessful");
+    like($response->content, qr/Successfully added triples to the default graph/, "Response messages is correct");
+
+    # Count the number of triples
+    $response = $ua->get($service_endpoint.'?default', 'Accept' => 'text/plain');
+    is($response->code, 200, "Getting all the triples is successful");
+    @lines = split(/[\r\n]+/, $response->content);
+    is(scalar(@lines), 14, "Number of triples in new graph is correct");
+};
 
 
 

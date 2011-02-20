@@ -125,17 +125,15 @@ void page_append_html_footer(redhttp_response_t * response);
 
 redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_data);
 
+redhttp_response_t *handle_data_head(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_data_get(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_data_put(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_data_post(redhttp_request_t * request, void *user_data);
-
-redhttp_response_t *handle_data_context_head(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_data_context_get(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_data_context_put(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_data_context_post(redhttp_request_t * request, void *user_data);
-redhttp_response_t *handle_data_context_delete(redhttp_request_t * request, void *user_data);
+redhttp_response_t *handle_data_delete(redhttp_request_t * request, void *user_data);
 
 
+redhttp_response_t *load_stream_into_new_graph(redhttp_request_t * request, librdf_stream * stream,
+                                               librdf_node * graph_node);
 redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream,
                                            librdf_node * graph);
 redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request,

@@ -25,15 +25,40 @@
 #include "redstore.h"
 
 
+redhttp_response_t *load_stream_into_new_graph(redhttp_request_t * request, librdf_stream * stream,
+                                           librdf_node * graph_node)
+{
+  redhttp_response_t *response = NULL;
+  librdf_uri *graph_uri = librdf_node_get_uri(graph_node);
+  const char *graph_str = (const char *) librdf_uri_as_string(graph_uri);
+
+  if (librdf_model_context_add_statements(model, graph_node, stream)) {
+    return redstore_page_new_with_message(
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      "Failed to add triples to graph."
+    );
+  }
+
+  // FIXME: check for parse errors or parse warnings
+
+  response = redstore_page_new_with_message(
+    request, REDSTORE_INFO, REDHTTP_CREATED,
+    "Successfully added triples to new graph: %s", graph_str
+  );
+
+  redhttp_response_add_header(response, "Location", graph_str);
+
+  return response;
+}
+
 redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_stream * stream,
                                            librdf_node * graph)
 {
-  redhttp_response_t *response = NULL;
   const char *graph_str = NULL;
 
   if (librdf_model_context_add_statements(model, graph, stream)) {
     return redstore_page_new_with_message(
-      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to add statements to graph."
+      request, REDSTORE_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to add triples to graph."
     );
   }
 
@@ -48,7 +73,7 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
   }
 
   return redstore_page_new_with_message(
-    request, REDSTORE_INFO, REDHTTP_OK, "Successfully added triples to %s\n", graph_str
+    request, REDSTORE_INFO, REDHTTP_OK, "Successfully added triples to %s", graph_str
   );
 }
 
@@ -65,7 +90,6 @@ redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request
 redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf_stream * stream,
                                              librdf_node * graph)
 {
-  redhttp_response_t *response = NULL;
   int count = 0;
 
   while (!librdf_stream_end(stream)) {
@@ -340,7 +364,7 @@ redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_d
 
   if (!content_type)
     content_type = DEFAULT_PARSE_FORMAT;
-    
+
   if (graph_uri_str) {
     graph_node = librdf_new_node_from_uri_string(world, (unsigned char*)graph_uri_str);
     if (!graph_node) {
@@ -370,7 +394,7 @@ redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_d
 
   if (!content_type)
     content_type = DEFAULT_PARSE_FORMAT;
-    
+
   if (graph_uri_str) {
     graph_node = librdf_new_node_from_uri_string(world, (unsigned char*)graph_uri_str);
     if (!graph_node) {

@@ -148,15 +148,6 @@ static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, vo
   return response;
 }
 
-// Custom 404 handler
-static redhttp_response_t *handle_not_found(redhttp_request_t * request, void *user_data)
-{
-  return redstore_page_new_with_message(
-    request, REDSTORE_DEBUG, REDHTTP_NOT_FOUND,
-    "Unsupported path."
-  );
-}
-
 static int redland_log_handler(void *user, librdf_log_message * msg)
 {
   int level = librdf_log_message_level(msg);
@@ -166,6 +157,17 @@ static int redland_log_handler(void *user, librdf_log_message * msg)
   printf("redland_log_handler: code=%d level=%d message=%s\n", code, level, message);
   return 0;
 }
+
+// Custom 404 handler
+static redhttp_response_t *handle_not_found(redhttp_request_t * request, void *user_data)
+{
+  return redstore_page_new_with_message(
+    request, REDSTORE_DEBUG, REDHTTP_NOT_FOUND,
+    "Unsupported path."
+  );
+}
+
+
 
 static void redstore_build_accepted_type_list()
 {
@@ -218,7 +220,7 @@ char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * sup
       strcpy(format_str, format_arg);
     redstore_debug("format_arg: %s", format_str);
   }
-  
+
   if (!format_str) {
     const char *accept_str = redhttp_request_get_header(request, "Accept");
     redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
@@ -323,14 +325,11 @@ static redhttp_server_t *redstore_setup_http_server()
   redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
   redhttp_server_add_handler(server, "POST", "/sparql", handle_sparql, NULL);
   redhttp_server_add_handler(server, "POST", "/sparql/", handle_sparql, NULL);
-  redhttp_server_add_handler(server, "HEAD", "/data/*", handle_data_context_head, NULL);
-  redhttp_server_add_handler(server, "GET", "/data/*", handle_data_context_get, NULL);
-  redhttp_server_add_handler(server, "PUT", "/data/*", handle_data_context_put, NULL);
-  redhttp_server_add_handler(server, "POST", "/data/*", handle_data_context_post, NULL);
-  redhttp_server_add_handler(server, "DELETE", "/data/*", handle_data_context_delete, NULL);
-  redhttp_server_add_handler(server, "GET", "/data", handle_data_get, NULL);
-  redhttp_server_add_handler(server, "POST", "/data", handle_data_post, NULL);
-  redhttp_server_add_handler(server, "DELETE", "/data", handle_data_delete, NULL);
+  redhttp_server_add_handler(server, "HEAD", "/data*", handle_data_head, NULL);
+  redhttp_server_add_handler(server, "GET", "/data*", handle_data_get, NULL);
+  redhttp_server_add_handler(server, "PUT", "/data*", handle_data_put, NULL);
+  redhttp_server_add_handler(server, "POST", "/data*", handle_data_post, NULL);
+  redhttp_server_add_handler(server, "DELETE", "/data*", handle_data_delete, NULL);
   redhttp_server_add_handler(server, "GET", "/insert", handle_page_update_form, "Insert Triples");
   redhttp_server_add_handler(server, "POST", "/insert", handle_insert_post, NULL);
   redhttp_server_add_handler(server, "GET", "/delete", handle_page_update_form, "Delete Triples");

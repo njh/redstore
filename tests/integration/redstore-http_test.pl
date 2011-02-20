@@ -129,12 +129,12 @@ is_valid_xhtml($response->content, "Graph list should be valid XHTML");
 # Test POSTing a url to be loaded
 {
     $ua->request(HTTP::Request->new( 'DELETE', $base_url.'data/foaf.rdf' ));
-    
+
     $response = $ua->post( $base_url.'load', {'uri' => fixture_url('foaf.ttl'), 'graph' => $base_url.'data/foaf.rdf'});
     is($response->code, 200, "POSTing URL to load is successful");
     is($response->content_type, 'text/plain', "Non negotiated load response is of type text/plain");
     like($response->content, qr/Successfully added triples/, "Load response message contains triple count");
-    
+
     # Count the number of triples
     $response = $ua->get($base_url.'data/foaf.rdf', 'Accept' => 'text/plain');
     @lines = split(/[\r\n]+/, $response->content);
@@ -183,7 +183,7 @@ like($response->content, qr/Missing the 'content' argument/, "Response mentions 
         'graph' => 'test:g'
     });
     is($response->code, 200, "POSTing data to /delete is successful");
-    like($response->content, qr/Successfully deleted triples./, "Response messages is correct");
+    is($response->content, "Successfully deleted 1 triples.\n", "Response messages is correct");
 
     # Count the number of triples
     $response = $ua->get($base_url.'data/?graph=test%3Ag', 'Accept' => 'text/plain');

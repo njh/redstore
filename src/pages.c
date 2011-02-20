@@ -95,7 +95,7 @@ redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, i
 
   // Create the full message
   va_start(ap, format);
-  vsnprintf(message, message_len, format, ap);
+  vsnprintf(message, message_len+1, format, ap);
   va_end(ap);
 
   if (redstore_is_html_format(format_str)) {
@@ -105,15 +105,16 @@ redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, i
     redstore_page_append_string(response, "</p>\n");
     redstore_page_end(response);
   } else {
-    size_t text_len = strlen(title) + 2 + strlen(message) + 2;
-    char *plain_text = malloc(text_len);
+    // FIXME: this could be simplified
+    size_t text_len = strlen(message) + 2;
+    char *text = malloc(text_len);
     response = redhttp_response_new_with_type(code, NULL, "text/plain");
-    snprintf(plain_text, text_len, "%s: %s\n", title, message);
-    redhttp_response_set_content(response, plain_text, text_len-1);
+    snprintf(text, text_len, "%s\n", message);
+    redhttp_response_set_content(response, text, text_len-1);
   }
 
   if (log_level) {
-    redstore_log(log_level, "Response: %d %s (%s)", code, title, message);
+    redstore_log(log_level, "Response: %s - %s", title, message);
   }
 
   if (format_str)
@@ -193,7 +194,7 @@ redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_dat
   redstore_page_append_string(response, "    <li><a href=\"/delete\">Delete Triples</a></li>");
   redstore_page_append_string(response, "  </ul></li>\n");
   redstore_page_append_string(response,
-                              "  <li><a href=\"/data?format=nquads\">Download Dump</a></li>\n");
+                              "  <li><a href=\"/data?default&amp;format=nquads\">Download Dump</a></li>\n");
   redstore_page_append_string(response,
                               "  <li><a href=\"/description\">Service Description</a></li>\n");
   redstore_page_append_string(response, "</ul>\n");
