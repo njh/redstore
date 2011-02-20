@@ -112,6 +112,7 @@ my $packages = [
     {
         'name' => 'redstore',
         'dirpath' => $TOP_DIR,
+        'config' => "./autogen.sh $DEFAULT_CONFIGURE_ARGS",
         'test' => 'make check',
         'checkfor' => 'bin/redstore',
         'alwaysbuild' => 1,
