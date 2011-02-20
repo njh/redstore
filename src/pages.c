@@ -100,9 +100,9 @@ redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, i
 
   if (redstore_is_html_format(format_str)) {
     response = redstore_page_new(code, title);
-    redstore_page_append_string(response, "<p>");
+    redstore_page_append_string(response, "<pre>");
     redstore_page_append_escaped(response, message, 0);
-    redstore_page_append_string(response, "</p>\n");
+    redstore_page_append_string(response, "</pre>\n");
     redstore_page_end(response);
   } else {
     // FIXME: this could be simplified
