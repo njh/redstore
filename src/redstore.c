@@ -39,9 +39,12 @@ unsigned long import_count = 0;
 unsigned long request_count = 0;
 const char *storage_name = DEFAULT_STORAGE_NAME;
 const char *storage_type = DEFAULT_STORAGE_TYPE;
+
 librdf_world *world = NULL;
 librdf_model *model = NULL;
 librdf_storage *storage = NULL;
+
+raptor_stringbuffer *error_buffer = NULL;
 
 redhttp_negotiate_t *accepted_serialiser_types = NULL;
 redhttp_negotiate_t *accepted_query_result_types = NULL;
@@ -138,6 +141,16 @@ static redhttp_response_t *request_log(redhttp_request_t * request, void *user_d
   return NULL;
 }
 
+static redhttp_response_t *reset_error_buffer(redhttp_request_t * request, void *user_data)
+{
+  if (error_buffer) {
+    raptor_free_stringbuffer(error_buffer);
+    error_buffer = NULL;
+  }
+    
+  return NULL;
+}
+
 static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, void *user_data)
 {
   const char *path = redhttp_request_get_path(request);
@@ -160,20 +173,44 @@ static redhttp_response_t *remove_trailing_slash(redhttp_request_t * request, vo
 static int redland_log_handler(void *user, librdf_log_message * log_msg)
 {
   int level = librdf_log_message_level(log_msg);
-  int code = librdf_log_message_code(log_msg);
   const char *message = librdf_log_message_message(log_msg);
   raptor_locator* locator = librdf_log_message_locator(log_msg);
 
-  redstore_log(level, "librdf error %d: %s", code, message ? message : "(no message)");
+  if (message) {
+    redstore_log(level, message);
+  }
 
-  if(locator) {
-    int locator_len = raptor_locator_format(NULL, 0, locator);
-    if(locator_len>0) {
-      char *buffer=(char*)malloc(locator_len+1);
-      raptor_locator_format(buffer, locator_len, locator);
-      redstore_log(level, "Location: %s", buffer);
-      free(buffer);
+  if (!error_buffer) {
+    error_buffer = raptor_new_stringbuffer();
+    if (!error_buffer) {
+      redstore_error("raptor_new_stringbuffer returned NULL");
+      return 1;
     }
+  }
+
+  if (level == LIBRDF_LOG_ERROR) {
+    raptor_stringbuffer_append_string(error_buffer, (unsigned char*)message, 1);
+    if (locator) {
+      int byte = raptor_locator_byte(locator);
+      int line = raptor_locator_line(locator);
+      int column = raptor_locator_column(locator);
+      
+      if (byte > 0) {
+        raptor_stringbuffer_append_string(error_buffer, (unsigned char*)", byte ", 1);
+        raptor_stringbuffer_append_decimal(error_buffer, byte);
+      }
+      
+      if (line > 0) {
+        raptor_stringbuffer_append_string(error_buffer, (unsigned char*)", line ", 1);
+        raptor_stringbuffer_append_decimal(error_buffer, line);
+      }
+      
+      if (column > 0) {
+        raptor_stringbuffer_append_string(error_buffer, (unsigned char*)", column ", 1);
+        raptor_stringbuffer_append_decimal(error_buffer, column);
+      }
+    }
+    raptor_stringbuffer_append_string(error_buffer, (unsigned char*)"\n", 1);
   }
 
   return 1;
@@ -340,6 +377,7 @@ static redhttp_server_t *redstore_setup_http_server()
   // Configure routing
   redhttp_server_add_handler(server, NULL, NULL, request_counter, &request_count);
   redhttp_server_add_handler(server, NULL, NULL, request_log, NULL);
+  redhttp_server_add_handler(server, NULL, NULL, reset_error_buffer, NULL);
   redhttp_server_add_handler(server, "GET", "/query", handle_query, NULL);
   redhttp_server_add_handler(server, "GET", "/sparql", handle_sparql, NULL);
   redhttp_server_add_handler(server, "GET", "/sparql/", handle_sparql, NULL);
@@ -504,7 +542,8 @@ int main(int argc, char *argv[])
   }
 
   description_free();
-
+  
+  reset_error_buffer(NULL, NULL);
   librdf_free_storage(storage);
   librdf_free_world(world);
 

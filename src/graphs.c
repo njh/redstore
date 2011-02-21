@@ -96,7 +96,7 @@ static redhttp_response_t *handle_html_graph_index(redhttp_request_t * request,
                                 "<p>This document is also available as <a href=\"/graphs?format=text\">plain text</a>.</p>\n");
 
   } else {
-    redstore_page_append_string(response, "<pre>No named graphs.</pre>\n");
+    redstore_page_append_string(response, "<p>No named graphs.</p>\n");
   }
 
   redstore_page_end(response);

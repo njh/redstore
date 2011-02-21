@@ -40,7 +40,8 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
   query = librdf_new_query(world, lang, NULL, (unsigned char *) query_string, NULL);
   if (!query) {
     response = redstore_page_new_with_message(
-      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_new_query failed"
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      "There was an error while creating the query."
     );
     goto CLEANUP;
   }
@@ -48,7 +49,8 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
   results = librdf_model_query_execute(model, query);
   if (!results) {
     response = redstore_page_new_with_message(
-      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "librdf_model_query_execute failed"
+      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      "There was an error while executing the query."
     );
     goto CLEANUP;
   }
@@ -75,7 +77,7 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
     );
   } else {
     response = redstore_page_new_with_message(
-      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown results type."
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Unknown librdf results type."
     );
   }
 

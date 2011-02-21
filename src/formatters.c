@@ -67,7 +67,7 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
   if (!format_name) {
     return redstore_page_new_with_message(
       request, LIBRDF_LOG_INFO, REDHTTP_NOT_ACCEPTABLE,
-      "Result format not supported for graph query type."
+      "Results format not supported for graph query type."
     );
   }
 
@@ -217,7 +217,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
   if (!format_name) {
     return redstore_page_new_with_message(
       request, LIBRDF_LOG_INFO, REDHTTP_NOT_ACCEPTABLE,
-      "Result format not supported for bindings query type."
+      "Results format not supported for bindings query type."
     );
   }
 

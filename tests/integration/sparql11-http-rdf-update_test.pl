@@ -248,7 +248,7 @@ is($response->code, 400, "POST response for both default and graph arguments sho
     $request->content_type( 'text/plain' );
     $response = $ua->request($request);
     is($response->code, 200, "POSTing data into the default graph is succcessful");
-    like($response->content, qr/Successfully added triples to the default graph/, "Response messages is correct");
+    like($response->content, qr/Successfully added triples to/, "Response messages is correct");
 
     # Count the number of triples
     $response = $ua->get($service_endpoint.'?default', 'Accept' => 'text/plain');

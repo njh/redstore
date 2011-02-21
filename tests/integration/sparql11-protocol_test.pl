@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 55;
+use Test::More tests => 61;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -45,6 +45,17 @@ like($response->content_type, qr[^(application|text)/json$], "SPARQL ASK query C
 like($response->content, qr["boolean" : false], "SPARQL ASK Query contains right content");
 is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON");
 
+# Take making an invalid query
+$response = $ua->get($base_url."query?query=asdfgh");
+is($response->code, 500, "Invalid SPARQL query should return error code");
+is($response->content_type, 'text/plain', "The content type for an invalid SPARQL query should be text/plain");
+like($response->content, qr[syntax error], "Invalid SPRQL query response should contain 'syntax error'");
+like($response->content, qr[line 1], "Invalid SPRQL query response should contain the line number");
+
+# Take making a query with an invalid result format
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=invalid");
+is($response->code, 406, "Unsupported result format should return status code 406");
+like($response->content, qr[Results format not supported], "Unsupported results formats should return an error message");
 
 
 my $TEST_URI = $base_url."data/test001.rdf";

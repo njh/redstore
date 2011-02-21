@@ -170,7 +170,7 @@ static redhttp_response_t *remove_all_statements(redhttp_request_t *request)
   }
   librdf_free_stream(stream);
 
-  if (err) {
+  if (err || error_buffer) {
     return redstore_page_new_with_message(
       request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Error deleting some statements."
     );

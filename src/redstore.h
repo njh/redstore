@@ -78,6 +78,8 @@ extern const char *storage_type;
 extern librdf_world *world;
 extern librdf_storage *storage;
 extern librdf_model *model;
+extern raptor_stringbuffer *error_buffer;
+
 extern redhttp_negotiate_t *accepted_serialiser_types;
 extern redhttp_negotiate_t *accepted_query_result_types;
 
@@ -116,6 +118,7 @@ redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, i
 int redstore_page_append_string(redhttp_response_t * response, const char *str);
 int redstore_page_append_decimal(redhttp_response_t * response, int decimal);
 int redstore_page_append_strings(redhttp_response_t * response, ...);
+int redstore_page_append_string_buffer(redhttp_response_t * response, raptor_stringbuffer *buffer, int escape);
 int redstore_page_append_escaped(redhttp_response_t * response, const char *str, char quote);
 void redstore_page_end(redhttp_response_t * response);
 

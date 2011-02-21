@@ -39,14 +39,18 @@ redhttp_response_t *load_stream_into_new_graph(redhttp_request_t * request, libr
     );
   }
 
-  // FIXME: check for parse errors or parse warnings
-
-  response = redstore_page_new_with_message(
-    request, LIBRDF_LOG_INFO, REDHTTP_CREATED,
-    "Successfully added triples to new graph: %s", graph_str
-  );
-
-  redhttp_response_add_header(response, "Location", graph_str);
+  if (error_buffer) {
+    return redstore_page_new_with_message(
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
+      "Error while adding triples to new graph: %s", graph_str
+    );
+  } else {
+    response = redstore_page_new_with_message(
+      request, LIBRDF_LOG_INFO, REDHTTP_CREATED,
+      "Successfully added triples to new graph: %s", graph_str
+    );
+    redhttp_response_add_header(response, "Location", graph_str);
+  }
 
   return response;
 }
@@ -62,8 +66,6 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
     );
   }
 
-  // FIXME: check for parse errors or parse warnings
-
   if (graph) {
     librdf_uri *graph_uri = librdf_node_get_uri(graph);
     if (graph_uri)
@@ -72,9 +74,15 @@ redhttp_response_t *load_stream_into_graph(redhttp_request_t * request, librdf_s
     graph_str = "the default graph.";
   }
 
-  return redstore_page_new_with_message(
-    request, LIBRDF_LOG_INFO, REDHTTP_OK, "Successfully added triples to %s", graph_str
-  );
+  if (error_buffer) {
+    return redstore_page_new_with_message(
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Error while adding triples to: %s", graph_str
+    );
+  } else {
+    return redstore_page_new_with_message(
+      request, LIBRDF_LOG_INFO, REDHTTP_OK, "Successfully added triples to: %s", graph_str
+    );
+  }
 }
 
 redhttp_response_t *clear_and_load_stream_into_graph(redhttp_request_t * request,
@@ -258,7 +266,7 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
 
   if (!uri_arg) {
     response = redstore_page_new_with_message(
-      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing URI to load"
+      request, LIBRDF_LOG_DEBUG, REDHTTP_BAD_REQUEST, "Missing URI to load."
     );
     goto CLEANUP;
   }

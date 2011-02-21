@@ -100,17 +100,32 @@ redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, i
 
   if (redstore_is_html_format(format_str)) {
     response = redstore_page_new(code, title);
-    redstore_page_append_string(response, "<pre>");
+    redstore_page_append_string(response, "<p>");
     redstore_page_append_escaped(response, message, 0);
-    redstore_page_append_string(response, "</pre>\n");
+    redstore_page_append_string(response, "</p>\n");
+
+    if (error_buffer) {
+      redstore_page_append_string(response, "<pre>");
+      redstore_page_append_string_buffer(response, error_buffer, 1);
+      redstore_page_append_string(response, "</pre>");
+    }
     redstore_page_end(response);
   } else {
-    // FIXME: this could be simplified
+    const char* error_str = "";
     size_t text_len = strlen(message) + 2;
-    char *text = malloc(text_len);
-    response = redhttp_response_new_with_type(code, NULL, "text/plain");
-    snprintf(text, text_len, "%s\n", message);
-    redhttp_response_set_content(response, text, text_len-1);
+    char *text = NULL;
+
+    if (error_buffer) {
+      text_len += raptor_stringbuffer_length(error_buffer);
+      error_str = (const char*)raptor_stringbuffer_as_string(error_buffer);
+    }
+
+    text = malloc(text_len);
+    if (text) {
+      response = redhttp_response_new_with_type(code, NULL, "text/plain");
+      snprintf(text, text_len, "%s\n%s", message, error_str);
+      redhttp_response_set_content(response, text, text_len-1);
+    }
   }
 
   if (log_level) {
@@ -153,6 +168,16 @@ int redstore_page_append_strings(redhttp_response_t * response, ...)
   va_end(ap);
 
   return 0;
+}
+
+int redstore_page_append_string_buffer(redhttp_response_t * response, raptor_stringbuffer *buffer, int escape)
+{
+  const char* string = (const char*)raptor_stringbuffer_as_string(buffer);
+  if (escape) {
+    return redstore_page_append_escaped(response, string, 0);
+  } else {
+    return redstore_page_append_string(response, string);
+  }
 }
 
 int redstore_page_append_escaped(redhttp_response_t * response, const char *str, char quote)

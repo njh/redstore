@@ -161,7 +161,7 @@ like($response->content, qr/Missing URI to load/, "Response mentions missing URI
         'graph' => 'test:g'
     });
     is($response->code, 200, "POSTing data to /insert is successful");
-    like($response->content, qr/Successfully added triples to test:g/, "Response messages is correct");
+    like($response->content, qr/Successfully added triples to/, "Response messages is correct");
 
     # Count the number of triples
     $response = $ua->get($base_url.'data/?graph=test%3Ag', 'Accept' => 'text/plain');
