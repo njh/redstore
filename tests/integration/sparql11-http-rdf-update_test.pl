@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 61;
+use Test::More tests => 63;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -38,12 +38,18 @@ is($response->code, 200, "PUTting a data into a graph is successful");
 is($response->content_type, 'text/plain', "Non negotiated PUT response is of type text/plain");
 like($response->content, qr/Successfully added triples/, "Load response message contain triple count");
 
+# Test getting a graph as default format
+$request = HTTP::Request->new( 'GET', $service_endpoint.'/?graph='.$ESCAPED_TEST_CASE_URI );
+$response = $ua->request($request);
+is($response->code, 200, "Getting a graph with no format specified is successful");
+is($response->content_type, "application/rdf+xml", "Default Content Type data is correct");
+
 # Test getting a graph as Turtle
 $request = HTTP::Request->new( 'GET', $service_endpoint.'/?graph='.$ESCAPED_TEST_CASE_URI );
 $request->header('Accept', 'application/x-turtle');
 $response = $ua->request($request);
-is($response->code, 200, "Getting a graph is successful");
-is($response->content_type, "application/x-turtle", "Content Type data is correct");
+is($response->code, 200, "Getting a graph as Turtle using content negotiation is successful");
+is($response->content_type, "application/x-turtle", "Getting a graph as Turtle using content negotiation has correct content type");
 like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+\"v\"\s*.\n], "Graph data is correct");
 
 # Test getting a graph as N-Triples

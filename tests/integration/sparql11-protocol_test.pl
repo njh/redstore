@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 61;
+use Test::More tests => 67;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -125,6 +125,21 @@ is($response->code, 200, "SPARQL SELECT query for plain text table is successful
 is($response->content_type, 'text/plain', "SPARQL SELECT query for plain text Content Type is correct");
 like($response->content, qr[string\("v"\)], "SPARQL SELECT Query for plain text contains right content");
 
+# Test content negotiation
+{
+  $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => 'application/json');
+  is($response->code, 200, "SPARQL SELECT with content negotiation for JSON is successful");
+  is($response->content_type, 'application/json', "SPARQL SELECT with content negotiation for JSON has correct content type");
+
+  $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => 'application/sparql-results+xml');
+  is($response->code, 200, "SPARQL SELECT with content negotiation for XML is successful");
+  is($response->content_type, 'application/sparql-results+xml', "SPARQL SELECT with content negotiation for XML has correct content type");
+  
+  # Test default mime type
+  $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => '*/*');
+  is($response->code, 200, "SPARQL SELECT with content negotiation for default is successful");
+  is($response->content_type, 'application/sparql-results+xml', "SPARQL SELECT with content negotiation for default has correct content type");
+}
 
 # Load some more data into the store
 load_fixture('foaf.ttl', $base_url.'data/foaf.rdf');
