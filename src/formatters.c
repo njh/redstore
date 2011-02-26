@@ -77,6 +77,12 @@ redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request,
       request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser."
     );
   }
+
+  // Add the namespaces used by the service description
+  librdf_serializer_set_namespace(serialiser, librdf_get_concept_schema_namespace(world), "rdfs");
+  librdf_serializer_set_namespace(serialiser, sd_ns_uri, "sd");
+  librdf_serializer_set_namespace(serialiser, format_ns_uri, "format");
+
   // Send back the response headers
   response = redhttp_response_new(REDHTTP_OK, NULL);
   if (mime_type)

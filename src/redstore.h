@@ -86,7 +86,7 @@ extern redhttp_negotiate_t *accepted_query_result_types;
 extern librdf_storage *sd_storage;
 extern librdf_model *sd_model;
 extern librdf_node *service_node;
-extern librdf_uri *saddle_ns_uri;
+extern librdf_uri *format_ns_uri;
 extern librdf_uri *sd_ns_uri;
 
 

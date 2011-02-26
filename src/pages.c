@@ -269,10 +269,10 @@ static void syntax_select_list(const char *name, const char *default_name, librd
 
 redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *user_data)
 {
-  librdf_node *ql_node = librdf_new_node_from_uri_local_name(world, saddle_ns_uri,
+  librdf_node *ql_node = librdf_new_node_from_uri_local_name(world, sd_ns_uri,
                                                              (unsigned char *) "queryLanguage");
   librdf_node *rf_node =
-      librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char *) "resultFormat");
+      librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "resultFormat");
   redhttp_response_t *response = NULL;
 
   response = redstore_page_new(REDHTTP_OK, "Query Form");
@@ -307,8 +307,8 @@ redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *us
 
 redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *user_data)
 {
-  librdf_node *pf_node =
-      librdf_new_node_from_uri_local_name(world, saddle_ns_uri, (unsigned char *) "parseFormat");
+  librdf_node *if_node =
+      librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "inputFormat");
   const char *title = (char *) user_data;
   const char *action = redhttp_request_get_path(request);
 
@@ -321,7 +321,7 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
   redstore_page_append_string(response, "</textarea></div>\n");
   redstore_page_append_string(response, "<div class=\"buttons\">\n");
   redstore_page_append_string(response, "Triples syntax: ");
-  syntax_select_list("content-type", DEFAULT_PARSE_FORMAT, service_node, pf_node, response);
+  syntax_select_list("content-type", DEFAULT_PARSE_FORMAT, service_node, if_node, response);
   redstore_page_append_string(response, "<br />");
   redstore_page_append_string(response,
                               "<label for=\"graph\">Graph:</label> <input id=\"graph\" name=\"graph\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
@@ -329,6 +329,7 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
                               "<input type=\"reset\" /> <input type=\"submit\" />\n"
                               "</div></form>\n");
   redstore_page_end(response);
+  librdf_free_node(if_node);
 
   return response;
 }
