@@ -1,8 +1,7 @@
-AM_CFLAGS = $(REDLAND_CFLAGS) $(WARNING_CFLAGS)
-AM_LDFLAGS = $(REDLAND_LIBS)
+AM_CFLAGS = $(REDLAND_CFLAGS) $(RASQAL_CFLAGS) $(RAPTOR_CFLAGS) $(WARNING_CFLAGS)
 
 bin_PROGRAMS = redstore
-redstore_LDADD = redhttp/libredhttp.la
+redstore_LDADD = redhttp/libredhttp.la $(REDLAND_LIBS) $(RASQAL_LIBS) $(RAPTOR_LIBS)
 redstore_SOURCES = \
   data.c \
   description.c \
