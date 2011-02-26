@@ -227,40 +227,21 @@ static redhttp_response_t *handle_not_found(redhttp_request_t * request, void *u
 
 
 
-static void redstore_build_accepted_type_list()
+static void redstore_build_accepted_type_list(redhttp_negotiate_t **accepted_types,
+                                              description_proc_t desc_proc)
 {
   unsigned int i, m;
 
-  // FIXME: This should use the librdf API
   for (i = 0; 1; i++) {
-    const raptor_syntax_description *desc = NULL;
-
-    desc = librdf_serializer_get_description(world, i);
+    const raptor_syntax_description *desc = desc_proc(world, i);
     if (!desc)
-      break;
+      return;
 
-    // FIXME: duplicated code
     for (m = 0; m < desc->mime_types_count; m++) {
-      redhttp_negotiate_add(&accepted_serialiser_types,
+      redhttp_negotiate_add(accepted_types,
                             desc->mime_types[m].mime_type,
-                            desc->mime_types[m].mime_type_len, desc->mime_types[m].q);
-    }
-  }
-
-
-  for (i = 0; 1; i++) {
-    const raptor_syntax_description* desc = NULL;
-
-    desc = librdf_query_results_formats_get_description(world, i);
-    if (!desc)
-      break;
-
-
-    // FIXME: duplicated code
-    for (m = 0; m < desc->mime_types_count; m++) {
-      redhttp_negotiate_add(&accepted_serialiser_types,
-                            desc->mime_types[m].mime_type,
-                            desc->mime_types[m].mime_type_len, desc->mime_types[m].q);
+                            desc->mime_types[m].mime_type_len,
+                            desc->mime_types[m].q);
     }
   }
 }
@@ -281,13 +262,15 @@ char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * sup
 
   if (!format_str) {
     const char *accept_str = redhttp_request_get_header(request, "Accept");
-    redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
-    format_str = redhttp_negotiate_choose(&supported, &accept);
-    redstore_debug("accept: %s", accept_str);
-    // FIXME: display list of supported formats
-    redstore_debug("supported: %d", redhttp_negotiate_count(&supported));
-    redstore_debug("chosen: %s", format_str);
-    redhttp_negotiate_free(&accept);
+    if (accept_str && accept_str[0] && strcmp("*/*", accept_str) != 0) {
+      redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
+      format_str = redhttp_negotiate_choose(&supported, &accept);
+      redstore_debug("accept: %s", accept_str);
+      // FIXME: display list of supported formats
+      redstore_debug("supported: %d", redhttp_negotiate_count(&supported));
+      redstore_debug("chosen: %s", format_str);
+      redhttp_negotiate_free(&accept);
+    }
   }
 
   if (!format_str) {
@@ -457,7 +440,14 @@ int main(int argc, char *argv[])
   librdf_world_set_logger(world, NULL, redland_log_handler);
 
   // Build list of accepted mime types
-  redstore_build_accepted_type_list();
+  redstore_build_accepted_type_list(
+    &accepted_serialiser_types,
+    librdf_serializer_get_description
+  );
+  redstore_build_accepted_type_list(
+    &accepted_query_result_types,
+    librdf_query_results_formats_get_description
+  );
 
   // Parse Switches
   while ((opt = getopt(argc, argv, "p:b:s:t:nvqh")) != -1) {

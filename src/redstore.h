@@ -96,6 +96,8 @@ typedef redhttp_response_t *(*redstore_stream_processor) (redhttp_request_t * re
                                                           librdf_stream * stream,
                                                           librdf_node * graph);
 
+typedef const raptor_syntax_description* (*description_proc_t) (librdf_world *world, unsigned int c);
+
 
 // ------- Prototypes -------
 

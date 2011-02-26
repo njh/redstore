@@ -34,17 +34,16 @@ librdf_uri *format_ns_uri = NULL;
 librdf_uri *sd_ns_uri = NULL;
 
 
-typedef const raptor_syntax_description* (*desc_func_t)(librdf_world *world, unsigned int c);
 
 
-static int add_syntax_descriptions(desc_func_t desc_func, const char *type)
+static int add_syntax_descriptions(description_proc_t desc_proc, const char *type)
 {
   librdf_node *bnode = NULL;
   unsigned int i,n;
 
   for(i=0; 1; i++) {
     const raptor_syntax_description* desc = NULL;
-    desc = desc_func(world, i);
+    desc = desc_proc(world, i);
     if (!desc)
       break;
 
