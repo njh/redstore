@@ -130,6 +130,7 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
   }
   snprintf(response->content_buffer, response->content_length + 1, ERROR_PAGE_FMT, code,
            response->status_message, code, response->status_message, explanation);
+  response->content_free_callback = free;
 
   return response;
 }
@@ -204,15 +205,15 @@ void redhttp_response_copy_content(redhttp_response_t * response,
   assert(content != NULL);
   assert(length > 0);
 
-  new_buf = realloc(response->content_buffer, length);
+  new_buf = realloc(response->content_buffer, length+1);
   if (new_buf) {
     memcpy(new_buf, content, length);
-    response->content_buffer = new_buf;
-    response->content_length = length;
+    new_buf[length] = '\0';
+    redhttp_response_set_content(response, new_buf, length, free);
   }
 }
 
-void redhttp_response_set_content(redhttp_response_t * response, char *content, size_t length)
+void redhttp_response_set_content(redhttp_response_t * response, char *content, size_t length, void (*content_free_callback) (void *ptr))
 {
   assert(response != NULL);
   assert(content != NULL);
@@ -220,6 +221,7 @@ void redhttp_response_set_content(redhttp_response_t * response, char *content, 
 
   response->content_buffer = content;
   response->content_length = length;
+  response->content_free_callback = content_free_callback;
 }
 
 void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * request)
@@ -325,8 +327,8 @@ void redhttp_response_free(redhttp_response_t * response)
 
   if (response->status_message)
     free(response->status_message);
-  if (response->content_buffer)
-    free(response->content_buffer);
+  if (response->content_free_callback && response->content_buffer)
+    response->content_free_callback(response->content_buffer);
 
   redhttp_headers_free(&response->headers);
   free(response);

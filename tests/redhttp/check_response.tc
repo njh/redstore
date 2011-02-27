@@ -50,6 +50,24 @@ ck_assert_int_eq(redhttp_response_get_status_code(response), 999);
 ck_assert_str_eq(redhttp_response_get_status_message(response), "Unknown");
 redhttp_response_free(response);
 
+#test set_content_no_free
+redhttp_response_t *response = redhttp_response_new(200, NULL);
+char message[] = "Hello World!";
+ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
+redhttp_response_set_content(response, message, sizeof(message)-1, NULL);
+ck_assert_str_eq(redhttp_response_get_content_buffer(response), "Hello World!");
+ck_assert_int_eq(redhttp_response_get_content_length(response), 12);
+redhttp_response_free(response);
+
+#test copy_content
+redhttp_response_t *response = redhttp_response_new(200, NULL);
+char message[] = "Hello World!";
+ck_assert_msg(response != NULL, "redhttp_response_new() returned NULL");
+redhttp_response_copy_content(response, message, sizeof(message)-1);
+ck_assert_str_eq(redhttp_response_get_content_buffer(response), "Hello World!");
+ck_assert_int_eq(redhttp_response_get_content_length(response), 12);
+redhttp_response_free(response);
+
 #test set_status_code
 redhttp_response_t *response = redhttp_response_new(999, NULL);
 redhttp_response_set_status_code(response, 200);

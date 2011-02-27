@@ -44,7 +44,7 @@ static void print_help(char *pname)
 static redhttp_response_t *handle_homepage(redhttp_request_t * request, void *user_data)
 {
   redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/html");
-  const char page[] =
+  static const char page[] =
       "<html><head><title>Homepage</title></head>"
       "<body><h1>Homepage</h1>"
       "<p>This is the homepage.</p>"
@@ -57,7 +57,7 @@ static redhttp_response_t *handle_homepage(redhttp_request_t * request, void *us
       "Enter a Title: <input name=\"title\" size=\"25\" value=\"Example Website\"/><br />"
       "<input type=\"submit\"></form></div></body></html>\n";
 
-  redhttp_response_copy_content(response, page, sizeof(page));
+  redhttp_response_set_content(response, (char*)page, sizeof(page)-1, NULL);
 
   return response;
 }

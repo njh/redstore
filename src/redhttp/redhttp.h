@@ -129,7 +129,7 @@ void redhttp_response_add_header(redhttp_response_t * response, const char *key,
 void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer);
 void redhttp_response_copy_content(redhttp_response_t * response,
                                    const char *content, size_t length);
-void redhttp_response_set_content(redhttp_response_t * response, char *buffer, size_t length);
+void redhttp_response_set_content(redhttp_response_t * response, char *buffer, size_t length, void (*content_free_callback) (void *ptr));
 void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * request);
 void redhttp_response_set_status_code(redhttp_response_t * response, int code);
 int redhttp_response_get_status_code(redhttp_response_t * response);

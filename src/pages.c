@@ -124,7 +124,7 @@ redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, i
     if (text) {
       response = redhttp_response_new_with_type(code, NULL, "text/plain");
       snprintf(text, text_len, "%s\n%s", message, error_str);
-      redhttp_response_set_content(response, text, text_len-1);
+      redhttp_response_set_content(response, text, text_len-1, free);
     }
   }
 
@@ -202,7 +202,7 @@ void redstore_page_end(redhttp_response_t * response)
   redstore_page_append_string(response, "</body></html>\n");
 
   raptor_free_iostream(page->iostream);
-  redhttp_response_set_content(response, page->buffer, page->buffer_len);
+  redhttp_response_set_content(response, page->buffer, page->buffer_len, free);
 
   free(page);
 }
@@ -232,7 +232,7 @@ redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *us
 {
   redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
   static const char text[] = "User-agent: *\nDisallow: /\n";
-  redhttp_response_copy_content(response, text, sizeof(text));
+  redhttp_response_set_content(response, (char*)text, sizeof(text)-1, NULL);
   return response;
 }
 
