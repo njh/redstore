@@ -240,13 +240,9 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
     }
 
     if (response->content_length) {
-      // FIXME: must be better way to do int to string
-      char *length_str = malloc(BUFSIZ);
-      if (length_str) {
-        snprintf(length_str, BUFSIZ, "%d", (int) response->content_length);
-        redhttp_response_add_header(response, "Content-Length", length_str);
-        free(length_str);
-      }
+      char length_str[32] = "";
+      snprintf(length_str, sizeof(length_str), "%d", (int) response->content_length);
+      redhttp_response_add_header(response, "Content-Length", length_str);
     }
 
     if (strncmp(request->version, "0.9", 3)) {
