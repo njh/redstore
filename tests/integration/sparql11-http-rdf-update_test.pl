@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 63;
+use Test::More tests => 64;
 
 my $TEST_CASE_URI = 'http://www.w3.org/2000/10/rdf-tests/rdfcore/xmlbase/test001.rdf';
 my $ESCAPED_TEST_CASE_URI = 'http%3A%2F%2Fwww.w3.org%2F2000%2F10%2Frdf-tests%2Frdfcore%2Fxmlbase%2Ftest001.rdf';
@@ -66,6 +66,10 @@ is($response->code, 404, "Getting a non-existant graph returns 404");
 is($response->content_type, 'text/plain', "Graph not found page is of type text/plain");
 is($response->content, "Graph not found.\n", "Graph not found message content is correct");
 is($response->content_length, length("Graph not found.\n"), "Graph not found message content length header is correct");
+
+# Test getting an unsupported content type
+$response = $ua->get($service_endpoint.'/?graph='.$ESCAPED_TEST_CASE_URI."&format=unsupported");
+is($response->code, 406, "Getting a graph in an unsupported format returns 406");
 
 # Test a GET request without any arguments
 $response = $ua->get($service_endpoint);
