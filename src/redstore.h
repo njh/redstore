@@ -155,23 +155,9 @@ redhttp_response_t *handle_load_post(redhttp_request_t * request, void *user_dat
 redhttp_response_t *handle_insert_post(redhttp_request_t * request, void *user_data);
 redhttp_response_t *handle_delete_post(redhttp_request_t * request, void *user_data);
 
-redhttp_response_t *format_bindings_query_result_librdf(redhttp_request_t *
-                                                        request,
-                                                        librdf_query_results *
-                                                        results, const char *format_str);
-redhttp_response_t *format_bindings_query_result_html(redhttp_request_t *
-                                                      request,
-                                                      librdf_query_results *
-                                                      results, const char *format_str);
-redhttp_response_t *format_bindings_query_result_text(redhttp_request_t *
-                                                      request,
-                                                      librdf_query_results *
-                                                      results, const char *format_str);
 redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
                                                  librdf_query_results * results);
 
-redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request, librdf_stream * stream);
-redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request, librdf_stream * stream);
 redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stream * stream);
 
 redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user_data);

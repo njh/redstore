@@ -386,7 +386,11 @@ redhttp_response_t *handle_description_get(redhttp_request_t * request, void *us
   if (format_str == NULL || redstore_is_html_format(format_str)) {
     response = handle_html_description(request, user_data);
   } else {
-    response = format_graph_stream_librdf(request, librdf_model_as_stream(sd_model));
+    librdf_stream *stream = librdf_model_as_stream(sd_model);
+    if (stream) {
+      response = format_graph_stream(request, stream);
+      librdf_free_stream(stream);
+    }
   }
 
   if (format_str)

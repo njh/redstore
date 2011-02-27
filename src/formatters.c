@@ -61,7 +61,7 @@ static int match_description(const char* format_str,
   return 0;
 }
 
-redhttp_response_t *format_graph_stream_librdf(redhttp_request_t * request, librdf_stream * stream)
+redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stream * stream)
 {
   FILE *socket = redhttp_request_get_socket(request);
   const char *format_name = NULL;
@@ -116,79 +116,6 @@ CLEANUP:
     librdf_free_serializer(serialiser);
   if (format_str)
     free(format_str);
-
-  return response;
-}
-
-
-redhttp_response_t *format_graph_stream_nquads(redhttp_request_t * request, librdf_stream * stream)
-{
-  raptor_world *raptor = librdf_world_get_raptor(world);
-  FILE *socket = redhttp_request_get_socket(request);
-  redhttp_response_t *response = NULL;
-  raptor_iostream *iostream = NULL;
-
-  // Create an iostream
-  iostream = raptor_new_iostream_to_file_handle(raptor, socket);
-  if (!iostream) {
-    return redstore_page_new_with_message(
-      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-      "Failed to create raptor_iostream when serialising nquads."
-    );
-  }
-  // Send back the response headers
-  response = redhttp_response_new(REDHTTP_OK, NULL);
-  redhttp_response_add_header(response, "Content-Type", "text/x-nquads");
-  redhttp_response_send(response, request);
-  raptor_iostream_string_write("# This data is in the N-Quads format\n", iostream);
-  raptor_iostream_string_write("# http://sw.deri.org/2008/07/n-quads/\n", iostream);
-  raptor_iostream_string_write("#\n", iostream);
-
-  while (!librdf_stream_end(stream)) {
-    librdf_statement *statement = librdf_stream_get_object(stream);
-    const raptor_term *subject, *predicate, *object, *context;
-
-    if (!statement)
-      break;
-
-    subject = (const raptor_term *) librdf_statement_get_subject(statement);
-    predicate = (const raptor_term *) librdf_statement_get_predicate(statement);
-    object = (const raptor_term *) librdf_statement_get_object(statement);
-    context = (const raptor_term *) librdf_stream_get_context2(stream);
-
-    raptor_term_ntriples_write(subject, iostream);
-    raptor_iostream_write_byte(' ', iostream);
-    raptor_term_ntriples_write(predicate, iostream);
-    raptor_iostream_write_byte(' ', iostream);
-    raptor_term_ntriples_write(object, iostream);
-    if (context) {
-      raptor_iostream_write_byte(' ', iostream);
-      raptor_term_ntriples_write(context, iostream);
-    }
-    raptor_iostream_counted_string_write(" .\n", 3, iostream);
-
-    librdf_stream_next(stream);
-  }
-
-  raptor_free_iostream(iostream);
-
-  return response;
-}
-
-
-redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stream * stream)
-{
-  redhttp_response_t *response;
-  char *format_str;
-
-  format_str = redstore_get_format(request, accepted_serialiser_types, DEFAULT_GRAPH_FORMAT);
-  if (redstore_is_nquads_format(format_str)) {
-    response = format_graph_stream_nquads(request, stream);
-  } else {
-    response = format_graph_stream_librdf(request, stream);
-  }
-
-  free(format_str);
 
   return response;
 }
