@@ -102,18 +102,16 @@ redhttp_response_t *delete_stream_from_graph(redhttp_request_t * request, librdf
 
   while (!librdf_stream_end(stream)) {
     librdf_statement *statement = librdf_stream_get_object(stream);
-    // FIXME: this is required due to a bug in librdf v1.0.10
-    if (graph) {
-      if (librdf_model_context_remove_statement(model, graph, statement) == 0)
-        count++;
-    } else {
-      if (librdf_model_remove_statement(model, statement) == 0)
-        count++;
-    }
+    if (librdf_model_context_remove_statement(model, graph, statement) == 0)
+      count++;
     librdf_stream_next(stream);
   }
 
-  if (count > 0) {
+  if (error_buffer) {
+    return redstore_page_new_with_message(
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR, "Error while deleting triples."
+    );
+  } else if (count > 0) {
     return redstore_page_new_with_message(
       request, LIBRDF_LOG_INFO, REDHTTP_OK, "Successfully deleted %d triples.", count
     );
