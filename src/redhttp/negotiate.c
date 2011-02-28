@@ -234,6 +234,47 @@ void redhttp_negotiate_add(redhttp_negotiate_t ** first, const char *type, size_
   redhttp_negotiate_sort(first);
 }
 
+char* redhttp_negotiate_to_string(redhttp_negotiate_t ** first)
+{
+  redhttp_negotiate_t *it;
+  size_t str_len = 0;
+  char *str = NULL;
+  char *ptr = NULL;
+
+  assert(first != NULL);
+
+  // First, calculate the length of the string
+  for (it = *first; it; it = it->next) {
+    str_len += strlen(it->type);
+    if (it->q != 10)
+      str_len += 6; // ;q=0.5
+    if (it->next)
+      str_len += 1; // ,
+  }
+
+  ptr = str = malloc(str_len+1);
+  if (!str)
+    return NULL;
+
+  // Second, build up the string
+  for (it = *first; it; it = it->next) {
+    size_t type_len = strlen(it->type);
+    memcpy(ptr, it->type, type_len);
+    ptr += type_len;
+    if (it->q != 10) {
+      snprintf(ptr, 7, ";q=%1.1f", (float)it->q/10);
+      ptr += 6;
+    }
+    if (it->next) {
+      *ptr = ',';
+      ptr += 1;
+    }
+  }
+  *ptr = '\0';
+
+  return str;
+}
+
 void redhttp_negotiate_free(redhttp_negotiate_t ** first)
 {
   redhttp_negotiate_t *it, *next;

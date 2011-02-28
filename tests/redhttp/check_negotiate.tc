@@ -111,3 +111,17 @@ ck_assert_str_eq(chosen, "text/html");
 free(chosen);
 redhttp_negotiate_free(&server);
 redhttp_negotiate_free(&client);
+
+#test to_string
+redhttp_negotiate_t *neg = redhttp_negotiate_parse("text/plain;q=0.8,foo/bar,text/html;q=0.9");
+char* str = redhttp_negotiate_to_string(&neg);
+ck_assert_str_eq(str, "foo/bar,text/html;q=0.9,text/plain;q=0.8");
+free(str);
+redhttp_negotiate_free(&neg);
+
+#test to_string2
+redhttp_negotiate_t *neg = redhttp_negotiate_parse("text/plain;q=1.0");
+char* str = redhttp_negotiate_to_string(&neg);
+ck_assert_str_eq(str, "text/plain");
+free(str);
+redhttp_negotiate_free(&neg);
