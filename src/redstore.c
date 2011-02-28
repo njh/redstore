@@ -34,6 +34,7 @@
 int quiet = 0;                  // Only display error messages
 int verbose = 0;                // Increase number of logging messages
 int running = 1;                // True while still running
+int exit_code = EXIT_SUCCESS;   // Exit code for when RedStore exits
 unsigned long query_count = 0;
 unsigned long import_count = 0;
 unsigned long request_count = 0;
@@ -117,6 +118,8 @@ void redstore_log(librdf_log_level level, const char *fmt, ...)
 
   // If fatal then stop
   if (level == LIBRDF_LOG_FATAL) {
+    // Exit with a non-zero exit code if there was a fatal error
+    exit_code++;
     if (running) {
       // Quit gracefully
       running = 0;
@@ -541,5 +544,5 @@ int main(int argc, char *argv[])
   redhttp_negotiate_free(&accepted_query_result_types);
   redhttp_server_free(server);
 
-  return 0; // FIXME: should return non-zero if there was a fatal error
+  return exit_code;
 }
