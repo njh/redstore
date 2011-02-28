@@ -267,12 +267,13 @@ char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * sup
     const char *accept_str = redhttp_request_get_header(request, "Accept");
     if (accept_str && accept_str[0] && strcmp("*/*", accept_str) != 0) {
       redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
+      char *supported_str = redhttp_negotiate_to_string(&supported);
       format_str = redhttp_negotiate_choose(&supported, &accept);
+      redstore_debug("supported: %s", supported_str);
       redstore_debug("accept: %s", accept_str);
-      // FIXME: display list of supported formats
-      redstore_debug("supported: %d", redhttp_negotiate_count(&supported));
       redstore_debug("chosen: %s", format_str);
       redhttp_negotiate_free(&accept);
+      free(supported_str);
     }
   }
 
