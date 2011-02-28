@@ -7,7 +7,7 @@ use redstore_testlib;
 use warnings;
 use strict;
 
-use Test::More tests => 80;
+use Test::More tests => 84;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -152,11 +152,31 @@ is($response->code, 400, "POSTing to /load an empty 'uri' argument should fail")
 like($response->content, qr/Missing URI to load/, "Response mentions missing URI");
 
 
-
-# Test POSTing triples to /insert
+# Test POSTing triples to /insert without a graph parameter
 {
     $response = $ua->post( $base_url.'insert', {
-        'content' => "<test:s1> <test:p2> <test:o3> .\n<test:s2> <test:p2> <test:o2> .\n",
+        'content' => "<test:s1> <test:p1> <test:o1> .\n<test:s2> <test:p2> <test:o2> .\n",
+        'content-type' => 'ntriples',
+    });
+    is($response->code, 200, "POSTing data to /insert with no graph parameter is successful");
+    like($response->content, qr/Successfully added triples to: the default graph/, "Response messages is correct");
+}
+
+# Test POSTing triples to /delete without a graph parameter
+{
+    $response = $ua->post( $base_url.'delete', {
+        'content' => "<test:s1> <test:p1> <test:o1> .\n",
+        'content-type' => 'ntriples',
+    });
+    is($response->code, 200, "POSTing data to /delete without a graph parameter is successful");
+    is($response->content, "Successfully deleted 1 triples.\n", "Response messages is correct");
+}
+
+
+# Test POSTing triples to /insert with a graph parameter
+{
+    $response = $ua->post( $base_url.'insert', {
+        'content' => "<test:s3> <test:p3> <test:o3> .\n<test:s4> <test:p4> <test:o4> .\n",
         'content-type' => 'ntriples',
         'graph' => 'test:g'
     });
@@ -175,14 +195,14 @@ $response = $ua->post( $base_url.'insert', {'graph' => $base_url.'data/foaf.rdf'
 is($response->code, 400, "POSTing to /insert without any content should fail");
 like($response->content, qr/Missing the 'content' argument/, "Response mentions missing content argument");
 
-# Test POSTing triples to /delete
+# Test POSTing triples to /delete with a graph parameter
 {
     $response = $ua->post( $base_url.'delete', {
-        'content' => "<test:s1> <test:p2> <test:o3> .\n",
+        'content' => "<test:s3> <test:p3> <test:o3> .\n",
         'content-type' => 'ntriples',
         'graph' => 'test:g'
     });
-    is($response->code, 200, "POSTing data to /delete is successful");
+    is($response->code, 200, "POSTing data to /delete with a graph parameter is successful");
     is($response->content, "Successfully deleted 1 triples.\n", "Response messages is correct");
 
     # Count the number of triples
