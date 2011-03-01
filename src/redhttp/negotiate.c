@@ -93,8 +93,10 @@ redhttp_negotiate_t *redhttp_negotiate_parse(const char *str)
           // FIXME: this could be improved
           for (p = params; p < (ptr - 3); p++) {
             if (p[0] == 'q' && p[1] == '=') {
-              float f;
-              if (sscanf(&p[2], "%f", &f) > 0)
+              const char * nptr = &p[2];
+              char * endptr = NULL;
+              float f = strtof(nptr, &endptr);
+              if (endptr != nptr)
                 q = f * 10;
             }
           }
