@@ -112,6 +112,31 @@ free(chosen);
 redhttp_negotiate_free(&server);
 redhttp_negotiate_free(&client);
 
+
+#test print
+redhttp_negotiate_t *neg = redhttp_negotiate_parse("text/plain;q=0.8,foo/bar,text/html;q=0.9");
+char buffer[BUFSIZ];
+FILE *tmp = tmpfile();
+char *str;
+
+// Write it out to the temporary file
+redhttp_negotiate_print(&neg, tmp);
+
+// Now read it back in again
+rewind(tmp);
+str = fgets(buffer, BUFSIZ, tmp);
+ck_assert_str_eq(str, "foo/bar;q=1.0\n");
+str = fgets(buffer, BUFSIZ, tmp);
+ck_assert_str_eq(str, "text/html;q=0.9\n");
+str = fgets(buffer, BUFSIZ, tmp);
+ck_assert_str_eq(str, "text/plain;q=0.8\n");
+str = fgets(buffer, BUFSIZ, tmp);
+ck_assert(str == NULL);
+
+redhttp_negotiate_free(&neg);
+fclose(tmp);
+
+
 #test to_string
 redhttp_negotiate_t *neg = redhttp_negotiate_parse("text/plain;q=0.8,foo/bar,text/html;q=0.9");
 char* str = redhttp_negotiate_to_string(&neg);

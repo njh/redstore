@@ -277,6 +277,19 @@ char* redhttp_negotiate_to_string(redhttp_negotiate_t ** first)
   return str;
 }
 
+void redhttp_negotiate_print(redhttp_negotiate_t ** first, FILE* socket)
+{
+  redhttp_negotiate_t *it;
+
+  assert(first != NULL);
+  assert(socket != NULL);
+
+  // First, calculate the length of the string
+  for (it = *first; it; it = it->next) {
+    fprintf(socket, "%s;q=%1.1f\n", it->type, (float)it->q / 10);
+  }
+}
+
 void redhttp_negotiate_free(redhttp_negotiate_t ** first)
 {
   redhttp_negotiate_t *it, *next;

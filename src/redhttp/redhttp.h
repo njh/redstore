@@ -164,6 +164,7 @@ int redhttp_negotiate_count(redhttp_negotiate_t ** first);
 void redhttp_negotiate_sort(redhttp_negotiate_t ** first);
 void redhttp_negotiate_add(redhttp_negotiate_t ** first, const char *type, size_t type_len, int q);
 char* redhttp_negotiate_to_string(redhttp_negotiate_t ** first);
+void redhttp_negotiate_print(redhttp_negotiate_t ** first, FILE * socket);
 void redhttp_negotiate_free(redhttp_negotiate_t ** first);
 
 char *redhttp_url_unescape(const char *escaped);
