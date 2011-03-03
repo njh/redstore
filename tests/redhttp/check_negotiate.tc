@@ -50,6 +50,16 @@ ck_assert_str_eq(type, "application/xhtml+xml");
 ck_assert_int_eq(q, 10);
 redhttp_negotiate_free(&neg);
 
+#test negotiate_parse2
+redhttp_negotiate_t *neg = redhttp_negotiate_parse("text/plain;q=0.8,foo/bar,text/html;q=0.9");
+const char* type;
+int q;
+ck_assert_int_eq(redhttp_negotiate_count(&neg), 3);
+ck_assert_int_eq(redhttp_negotiate_get(&neg, 2, &type, &q), 0);
+ck_assert_str_eq(type, "text/plain");
+ck_assert_int_eq(q, 8);
+redhttp_negotiate_free(&neg);
+
 #test negotiate_parse_empty
 redhttp_negotiate_t *neg = redhttp_negotiate_parse("");
 ck_assert_int_eq(redhttp_negotiate_get(&neg, 0, NULL, NULL), -1);
