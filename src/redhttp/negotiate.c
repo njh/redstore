@@ -24,6 +24,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <math.h>
 
 #include <errno.h>
 #include <sys/types.h>
@@ -97,7 +98,7 @@ redhttp_negotiate_t *redhttp_negotiate_parse(const char *str)
               char * endptr = NULL;
               double d = strtod(nptr, &endptr);
               if (endptr != nptr && d >= 0.0 && d <= 1.0)
-                q = d * 10.0;
+                q = lround(d * 10.0);
             }
           }
           break;
