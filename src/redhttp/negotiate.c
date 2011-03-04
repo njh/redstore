@@ -96,7 +96,7 @@ redhttp_negotiate_t *redhttp_negotiate_parse(const char *str)
               const char * nptr = &p[2];
               char * endptr = NULL;
               double d = strtod(nptr, &endptr);
-              if (endptr != nptr)
+              if (endptr != nptr && d >= 0.0 && d <= 1.0)
                 q = d * 10.0;
             }
           }
