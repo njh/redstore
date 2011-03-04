@@ -95,9 +95,9 @@ redhttp_negotiate_t *redhttp_negotiate_parse(const char *str)
             if (p[0] == 'q' && p[1] == '=') {
               const char * nptr = &p[2];
               char * endptr = NULL;
-              float f = strtof(nptr, &endptr);
+              double d = strtod(nptr, &endptr);
               if (endptr != nptr)
-                q = f * 10;
+                q = d * 10.0;
             }
           }
           break;
@@ -264,7 +264,7 @@ char* redhttp_negotiate_to_string(redhttp_negotiate_t ** first)
     memcpy(ptr, it->type, type_len);
     ptr += type_len;
     if (it->q != 10) {
-      snprintf(ptr, 7, ";q=%1.1f", (float)it->q/10);
+      snprintf(ptr, 7, ";q=%1.1f", (double)it->q / 10.0);
       ptr += 6;
     }
     if (it->next) {
@@ -286,7 +286,7 @@ void redhttp_negotiate_print(redhttp_negotiate_t ** first, FILE* socket)
 
   // First, calculate the length of the string
   for (it = *first; it; it = it->next) {
-    fprintf(socket, "%s;q=%1.1f\n", it->type, (float)it->q / 10);
+    fprintf(socket, "%s;q=%1.1f\n", it->type, (double)it->q / 10.0);
   }
 }
 
