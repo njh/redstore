@@ -43,6 +43,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h])
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
+AC_CHECK_LIB([m], [lround])
 
 AC_CHECK_FUNCS_ONCE([srandomdev])
 if test x"$ac_cv_func_srandomdev" = "xyes"; then
