@@ -94,12 +94,12 @@ my $packages = [
         'checkfor' => 'lib/libpq.a',
     },
     {
-        'url' => 'http://download.librdf.org/source/raptor2-2.0.0.tar.gz',
+        'url' => 'http://download.librdf.org/source/raptor2-2.0.1.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.24.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.25.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
         
