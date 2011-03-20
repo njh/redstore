@@ -71,6 +71,12 @@ char *redhttp_negotiate_choose(redhttp_negotiate_t ** server, redhttp_negotiate_
   return result;
 }
 
+static int redhttp_negotiate_round(double d) {
+  if (d >= 0)
+    return (int) (d+0.5);
+  else
+    return (int) (d-0.5);
+}
 
 redhttp_negotiate_t *redhttp_negotiate_parse(const char *str)
 {
@@ -98,7 +104,7 @@ redhttp_negotiate_t *redhttp_negotiate_parse(const char *str)
               char * endptr = NULL;
               double d = strtod(nptr, &endptr);
               if (endptr != nptr && d >= 0.0 && d <= 1.0)
-                q = lround(d * 10.0);
+                q = redhttp_negotiate_round(d * 10.0);
             }
           }
           break;
