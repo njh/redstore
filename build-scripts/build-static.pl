@@ -94,7 +94,7 @@ my $packages = [
         'checkfor' => 'lib/libpq.a',
     },
     {
-        'url' => 'http://download.librdf.org/source/raptor2-2.0.1.tar.gz',
+        'url' => 'http://download.librdf.org/source/raptor2-2.0.2.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
