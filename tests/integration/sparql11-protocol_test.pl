@@ -109,7 +109,7 @@ is_wellformed_json($response->content, "SPARQL ASK query response is valid JSON"
 # Test a CONSTRUCT query with a JSON response
 $response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
 is($response->code, 200, "SPARQL CONSTRUCT query for JSON is successful");
-is($response->content_type, "application/sparql-results+json", "SPARQL CONSTRUCT query Content Type for JSON is correct");
+is($response->content_type, "application/json", "SPARQL CONSTRUCT query Content Type for JSON is correct");
 like($response->content, qr["value" : "v"], "SPARQL CONSTRUCT query for JSON contains right content");
 is_wellformed_json($response->content, "SPARQL CONSTRUCT query response is valid JSON");
 
