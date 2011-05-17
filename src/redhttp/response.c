@@ -245,7 +245,7 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
       redhttp_response_add_header(response, "Content-Length", length_str);
     }
 
-    if (strncmp(request->version, "0.9", 3)) {
+    if (request->version && strncmp(request->version, "0.9", 3) != 0) {
       fprintf(request->socket, "HTTP/1.0 %d %s\r\n",
               response->status_code, response->status_message);
       redhttp_response_print_headers(response, request->socket);

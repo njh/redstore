@@ -495,7 +495,7 @@ int redhttp_request_read(redhttp_request_t * request)
   if (result)
     return result;
 
-  if (strncmp(request->version, "0.9", 3)) {
+  if (request->version && strncmp(request->version, "0.9", 3) != 0) {
     // Read in the headers
     while (!feof(request->socket)) {
       char *line = redhttp_request_read_line(request);
