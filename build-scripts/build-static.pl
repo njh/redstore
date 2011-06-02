@@ -78,7 +78,7 @@ my $packages = [
         'checkfor' => 'lib/libdb.a',
     },
     {
-        'url' => 'http://ftp.heanet.ie/mirrors/www.mysql.com/Downloads/MySQL-5.1/mysql-5.1.55.tar.gz',
+        'url' => 'http://ftp.heanet.ie/mirrors/www.mysql.com/Downloads/MySQL-5.1/mysql-5.1.57.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
         'checkfor' => 'lib/mysql/libmysqlclient.la',
     },
@@ -94,25 +94,26 @@ my $packages = [
         'checkfor' => 'lib/libpq.a',
     },
     {
-        'url' => 'http://download.librdf.org/source/raptor2-2.0.2.tar.gz',
+        'url' => 'http://download.librdf.org/source/raptor2-2.0.3.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.25.tar.gz',
+        'url' => 'http://snapshots.aelius.com/rasqal/rasqal-0.9.26-20110602.tar.gz',
+        'dirname' => 'rasqal-0.9.26',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
         
     },
     {
-        'url' => 'http://download.librdf.org/source/redland-1.0.13.tar.gz',
+        'url' => 'http://snapshots.aelius.com/redland/redland-1.0.14-20110601.tar.gz',
+        'dirname' => 'redland-1.0.14',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
     {
         'name' => 'redstore',
         'dirpath' => $TOP_DIR,
-        'config' => "./autogen.sh $DEFAULT_CONFIGURE_ARGS",
         'test' => 'make check',
         'checkfor' => 'bin/redstore',
         'alwaysbuild' => 1,
@@ -126,6 +127,7 @@ $ENV{'ASFLAGS'} = "-I${ROOT_DIR}/include";
 $ENV{'LDFLAGS'} = "-L${ROOT_DIR}/lib";
 $ENV{'INFOPATH'} = "${ROOT_DIR}/share/info";
 $ENV{'MANPATH'} = "${ROOT_DIR}/share/man";
+$ENV{'M4PATH'} = "${ROOT_DIR}/share/aclocal";
 $ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin";
 $ENV{'PKG_CONFIG_PATH'} = "${ROOT_DIR}/lib/pkgconfig";
 $ENV{'CLASSPATH'} = '';
@@ -258,7 +260,13 @@ sub config_package {
     if ($pkg->{'config'}) {
         safe_system($pkg->{'config'});
     } else {
-        safe_system("./configure $DEFAULT_CONFIGURE_ARGS");
+        if (-e "./configure") {
+          safe_system("./configure $DEFAULT_CONFIGURE_ARGS");
+        } elsif (-e "./autogen.sh") {
+          safe_system("./autogen.sh $DEFAULT_CONFIGURE_ARGS");
+        } else {
+          die "Don't know how to configure ".$pkg->{'name'};
+        }
     }
 }
 
