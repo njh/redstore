@@ -49,7 +49,7 @@ static redhttp_response_t *perform_query(redhttp_request_t * request, const char
   results = librdf_model_query_execute(model, query);
   if (!results) {
     response = redstore_page_new_with_message(
-      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
+      request, LIBRDF_LOG_INFO, REDHTTP_INTERNAL_SERVER_ERROR,
       "There was an error while executing the query."
     );
     goto CLEANUP;
