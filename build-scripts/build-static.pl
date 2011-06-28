@@ -99,11 +99,10 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
-        'url' => 'http://snapshots.aelius.com/rasqal/rasqal-0.9.26-20110602.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.26.tar.gz',
         'dirname' => 'rasqal-0.9.26',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
-        
     },
     {
         'url' => 'http://snapshots.aelius.com/redland/redland-1.0.14-20110601.tar.gz',
