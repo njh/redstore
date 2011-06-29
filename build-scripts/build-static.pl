@@ -23,6 +23,10 @@ my $packages = [
         'checkfor' => 'bin/checkmk',
     },
     {
+        'url' => 'http://kent.dl.sourceforge.net/project/mhash/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz',
+        'checkfor' => 'lib/libmhash.a',
+    },
+    {
         'url' => 'http://curl.haxx.se/download/curl-7.21.3.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp ".
@@ -153,7 +157,7 @@ if (`uname` =~ /^Darwin/) {
     die "gcc version $GCC_VER is not available." unless (-e $ENV{'CC'});
 
     # Not sure why these are required
-    $ENV{'CFLAGS'} .= " -I$SDK/usr/include";   
+    $ENV{'CFLAGS'} .= " -I$SDK/usr/include";
     $ENV{'LDFLAGS'} .= " -L$SDK/usr/lib";
 }
 
@@ -189,11 +193,11 @@ foreach my $pkg (@$packages) {
     if (defined $pkg->{'dirname'} and !defined $pkg->{'name'}) {
         $pkg->{'name'} = $pkg->{'dirname'};
     }
-    
+
     unless ($pkg->{'alwaysbuild'} or defined $pkg->{'checkfor'}) {
         die "Don't know how to check if ".$pkg->{'name'}." is already built.";
     }
-    
+
     if ($pkg->{'alwaysbuild'} or !-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
         download_package($pkg) if (defined $pkg->{'url'});
         extract_package($pkg) if (defined $pkg->{'tarpath'});
@@ -202,7 +206,7 @@ foreach my $pkg (@$packages) {
         make_package($pkg);
         test_package($pkg);
         install_package($pkg);
-        
+
         if (defined $pkg->{'checkfor'} && !-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
             die "Installing $pkg->{'name'} failed.";
         }
@@ -235,7 +239,7 @@ sub extract_package {
 
 sub download_package {
     my ($pkg) = @_;
-    
+
     unless (-e $pkg->{'tarpath'}) {
         safe_chdir();
         print "Downloading: ".$pkg->{'tarname'}."\n";
@@ -323,10 +327,10 @@ sub safe_system {
 sub gtkdoc_hack {
     my ($dir) = @_;
     my $script = "$dir/bin/gtkdoc-rebase";
-    
+
     open(SCRIPT, ">$script") or die "Failed to open $script: $!";
     print SCRIPT "#/bin/sh\n";
     close(SCRIPT);
-    
+
     chmod(0755, $script) or die "Failed to chmod 0755 $script: $!";
 }
