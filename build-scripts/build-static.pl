@@ -98,7 +98,7 @@ my $packages = [
         'checkfor' => 'lib/libpq.a',
     },
     {
-        'url' => 'http://download.librdf.org/source/raptor2-2.0.3.tar.gz',
+        'url' => 'http://download.librdf.org/source/raptor2-2.0.4.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
@@ -109,7 +109,7 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
     },
     {
-        'url' => 'http://snapshots.aelius.com/redland/redland-1.0.14-20110601.tar.gz',
+        'url' => 'http://download.librdf.org/source/redland-1.0.14.tar.gz',
         'dirname' => 'redland-1.0.14',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/redland.pc',
