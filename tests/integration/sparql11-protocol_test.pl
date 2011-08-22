@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 70;
+use Test::More tests => 82;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
