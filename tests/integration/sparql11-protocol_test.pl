@@ -74,7 +74,7 @@ is($response->content_type, 'text/csv', "Graph list is of type text/csv");
 @lines = split(/[\r\n]+/,$response->content);
 is(scalar(@lines), 2, "SPARQL response contains two lines");
 is($lines[0], "g", "First line of SPARQL response contains CSV header");
-is($lines[1], "uri($TEST_URI)", "Second line of SPARQL response contains graph URI");
+is($lines[1], "$TEST_URI", "Second line of SPARQL response contains graph URI");
 
 
 # Test a SELECT query with an HTML response
@@ -112,7 +112,7 @@ is($response->content_type, "text/csv", "SPARQL SELECT query Content Type data i
 @lines = split(/[\r\n]+/,$response->content);
 is(scalar(@lines), 2, "SPARQL response contains two lines");
 is($lines[0], "s,p,o", "First line of SPARQL response contains CSV header");
-is($lines[1], 'uri(http://example.org/dir/file#frag),uri(http://example.org/value),"v"', "Second line of SPARQL response contains the correct triple");
+is($lines[1], 'http://example.org/dir/file#frag,http://example.org/value,"v"', "Second line of SPARQL response contains the correct triple");
 
 # Test a SELECT query with a TSV response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=tsv");
@@ -120,8 +120,8 @@ is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "text/tab-separated-values", "SPARQL SELECT query Content Type data is correct");
 @lines = split(/[\r\n]+/,$response->content);
 is(scalar(@lines), 2, "SPARQL response contains two lines");
-is($lines[0], "s\tp\to", "First line of SPARQL response contains TSV header");
-is($lines[1], "uri(http://example.org/dir/file#frag)\turi(http://example.org/value)\t\"v\"", "Second line of SPARQL response contains the correct triple");
+is($lines[0], "?s\t?p\t?o", "First line of SPARQL response contains TSV header");
+is($lines[1], "<http://example.org/dir/file#frag>\t<http://example.org/value>\t\"v\"", "Second line of SPARQL response contains the correct triple");
 
 # Test a ASK query with a JSON response
 $response = $ua->get($base_url."query?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
