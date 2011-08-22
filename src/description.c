@@ -401,7 +401,10 @@ redhttp_response_t *handle_description_get(redhttp_request_t * request, void *us
 
 void description_free(void)
 {
-  librdf_free_storage(sd_storage);
-  librdf_free_uri(format_ns_uri);
-  librdf_free_uri(sd_ns_uri);
+  if (sd_storage)
+    librdf_free_storage(sd_storage);
+  if (format_ns_uri)
+    librdf_free_uri(format_ns_uri);
+  if (sd_ns_uri)
+    librdf_free_uri(sd_ns_uri);
 }

@@ -150,7 +150,7 @@ static redhttp_response_t *reset_error_buffer(redhttp_request_t * request, void 
     raptor_free_stringbuffer(error_buffer);
     error_buffer = NULL;
   }
-    
+
   return NULL;
 }
 
@@ -197,17 +197,17 @@ static int redland_log_handler(void *user, librdf_log_message * log_msg)
       int byte = raptor_locator_byte(locator);
       int line = raptor_locator_line(locator);
       int column = raptor_locator_column(locator);
-      
+
       if (byte > 0) {
         raptor_stringbuffer_append_string(error_buffer, (unsigned char*)", byte ", 1);
         raptor_stringbuffer_append_decimal(error_buffer, byte);
       }
-      
+
       if (line > 0) {
         raptor_stringbuffer_append_string(error_buffer, (unsigned char*)", line ", 1);
         raptor_stringbuffer_append_decimal(error_buffer, line);
       }
-      
+
       if (column > 0) {
         raptor_stringbuffer_append_string(error_buffer, (unsigned char*)", column ", 1);
         raptor_stringbuffer_append_decimal(error_buffer, column);
@@ -323,7 +323,7 @@ static librdf_storage *redstore_setup_storage(const char *name, const char *type
   // Create hash
   hash = librdf_new_hash_from_string(world, NULL, options);
   if (!hash) {
-    redstore_fatal("Failed to create storage options hash");
+    redstore_error("Failed to create storage options hash");
     return NULL;
   }
 
@@ -342,7 +342,7 @@ static librdf_storage *redstore_setup_storage(const char *name, const char *type
 
   storage = librdf_new_storage_with_options(world, type, name, hash);
   if (!storage) {
-    redstore_fatal("Failed to open %s storage '%s'", type, name);
+    redstore_error("Failed to open %s storage '%s'", type, name);
   }
 
   if (hash)
@@ -438,6 +438,7 @@ int main(int argc, char *argv[])
   world = librdf_new_world();
   if (!world) {
     redstore_fatal("Failed to initialise librdf world");
+    // Exit straight away - nothing to clean up
     return -1;
   }
   librdf_world_open(world);
@@ -505,45 +506,60 @@ int main(int argc, char *argv[])
   server = redstore_setup_http_server();
   if (!server) {
     redstore_fatal("Failed to initialise HTTP server.\n");
-    return -1;
+    goto cleanup;
   }
   // Create storgae
   storage = redstore_setup_storage(storage_name, storage_type, storage_options, storage_new);
   if (!storage) {
-    redstore_fatal("Failed to create storage.");
-    return -1;
+    redstore_fatal("Failed to open librdf storage.");
+    goto cleanup;
   }
   // Create model object
   model = librdf_new_model(world, storage, NULL);
   if (!model) {
-    redstore_fatal("Failed to create model for storage.");
-    return -1;
+    redstore_fatal("Failed to create librdf model for storage.");
+    goto cleanup;
   }
   // Create service description
   if (description_init()) {
     redstore_fatal("Failed to initialise Service Description.");
-    return -1;
+    goto cleanup;
   }
   // Start listening for connections
   redstore_info("Starting HTTP server on port %s", port);
   if (redhttp_server_listen(server, address, port, PF_UNSPEC)) {
     redstore_fatal("Failed to create HTTP server socket.");
-    return -1;
+    goto cleanup;
   }
 
   while (running) {
     redhttp_server_run(server);
   }
 
-  description_free();
-  
-  reset_error_buffer(NULL, NULL);
-  librdf_free_storage(storage);
-  librdf_free_world(world);
 
-  redhttp_negotiate_free(&accepted_serialiser_types);
-  redhttp_negotiate_free(&accepted_query_result_types);
-  redhttp_server_free(server);
+cleanup:
+  description_free();
+
+  // Free up memory used by the error buffer
+  reset_error_buffer(NULL, NULL);
+
+  // Clean up librdf
+  if (storage && librdf_storage_close(storage))
+    redstore_warn("Error while closing storage.");
+  if (model)
+    librdf_free_model(model);
+  if (storage)
+    librdf_free_storage(storage);
+  if (world)
+    librdf_free_world(world);
+
+  // Clean up redhttp
+  if (accepted_serialiser_types)
+    redhttp_negotiate_free(&accepted_serialiser_types);
+  if (accepted_query_result_types)
+    redhttp_negotiate_free(&accepted_query_result_types);
+  if (server)
+    redhttp_server_free(server);
 
   return exit_code;
 }
