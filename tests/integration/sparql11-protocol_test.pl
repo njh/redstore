@@ -67,14 +67,14 @@ like($response->content, qr[Results format not supported], "Unsupported results 
 my $TEST_URI = $base_url."data/test001.rdf";
 load_fixture('test001.rdf', $TEST_URI);
 
-# Test getting list of graphs using SPARQL
+# Test getting list of graphs using SPARQL as CSV
 $response = $ua->get($base_url."query?query=SELECT+DISTINCT+%3Fg+WHERE+%7BGRAPH+%3Fg+%7B+%3Fs+%3Fp+%3Fo+%7D%7D&format=csv");
 is($response->code, 200, "Getting list of graphs using SPARQL is successful");
 is($response->content_type, 'text/csv', "Graph list is of type text/csv");
 @lines = split(/[\r\n]+/,$response->content);
 is(scalar(@lines), 2, "SPARQL response contains two lines");
-is($lines[0], "Result,g", "First line of SPARQL response contains CSV header");
-is($lines[1], "1,uri($TEST_URI)", "Second line of SPARQL response contains graph URI");
+is($lines[0], "g", "First line of SPARQL response contains CSV header");
+is($lines[1], "uri($TEST_URI)", "Second line of SPARQL response contains graph URI");
 
 
 # Test a SELECT query with an HTML response
@@ -104,6 +104,24 @@ is($response->code, 200, "SPARQL SELECT query is successful");
 is($response->content_type, "application/sparql-results+json", "SPARQL SELECT query Content Type data is correct");
 like($response->content, qr[{ "type": "literal", "value": "v" }], "SPARQL SELECT Query contains right content");
 is_wellformed_json($response->content, "SPARQL SELECT query response is valid JSON");
+
+# Test a SELECT query with a CSV response
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=csv");
+is($response->code, 200, "SPARQL SELECT query is successful");
+is($response->content_type, "text/csv", "SPARQL SELECT query Content Type data is correct");
+@lines = split(/[\r\n]+/,$response->content);
+is(scalar(@lines), 2, "SPARQL response contains two lines");
+is($lines[0], "s,p,o", "First line of SPARQL response contains CSV header");
+is($lines[1], 'uri(http://example.org/dir/file#frag),uri(http://example.org/value),"v"', "Second line of SPARQL response contains the correct triple");
+
+# Test a SELECT query with a TSV response
+$response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=tsv");
+is($response->code, 200, "SPARQL SELECT query is successful");
+is($response->content_type, "text/tab-separated-values", "SPARQL SELECT query Content Type data is correct");
+@lines = split(/[\r\n]+/,$response->content);
+is(scalar(@lines), 2, "SPARQL response contains two lines");
+is($lines[0], "s\tp\to", "First line of SPARQL response contains TSV header");
+is($lines[1], "uri(http://example.org/dir/file#frag)\turi(http://example.org/value)\t\"v\"", "Second line of SPARQL response contains the correct triple");
 
 # Test a ASK query with a JSON response
 $response = $ua->get($base_url."query?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=json");
@@ -140,6 +158,10 @@ like($response->content, qr[string\("v"\)], "SPARQL SELECT Query for plain text 
   $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => 'application/sparql-results+xml');
   is($response->code, 200, "SPARQL SELECT with content negotiation for XML is successful");
   is($response->content_type, 'application/sparql-results+xml', "SPARQL SELECT with content negotiation for XML has correct content type");
+
+  $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => 'application/sparql-results+xml;q=0.1,application/sparql-results+json;q=1.0');
+  is($response->code, 200, "SPARQL SELECT with content negotiation for JSON with q= values is successful");
+  is($response->content_type, 'application/sparql-results+json', "SPARQL SELECT with content negotiation for JSON with q= values has correct content type");
   
   # Test default mime type
   $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => '*/*');
