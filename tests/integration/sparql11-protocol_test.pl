@@ -112,7 +112,7 @@ is($response->content_type, "text/csv", "SPARQL SELECT query Content Type data i
 @lines = split(/[\r\n]+/,$response->content);
 is(scalar(@lines), 2, "SPARQL response contains two lines");
 is($lines[0], "s,p,o", "First line of SPARQL response contains CSV header");
-is($lines[1], 'http://example.org/dir/file#frag,http://example.org/value,"v"', "Second line of SPARQL response contains the correct triple");
+is($lines[1], 'http://example.org/dir/file#frag,http://example.org/value,v', "Second line of SPARQL response contains the correct triple");
 
 # Test a SELECT query with a TSV response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=tsv");
