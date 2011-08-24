@@ -103,7 +103,7 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/raptor2.pc',
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.26.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.27.tar.gz',
         'dirname' => 'rasqal-0.9.26',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
