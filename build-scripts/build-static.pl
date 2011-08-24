@@ -104,13 +104,11 @@ my $packages = [
     },
     {
         'url' => 'http://download.librdf.org/source/rasqal-0.9.27.tar.gz',
-        'dirname' => 'rasqal-0.9.26',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => 'lib/pkgconfig/rasqal.pc',
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.14.tar.gz',
-        'dirname' => 'redland-1.0.14',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=${ROOT_DIR}",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
