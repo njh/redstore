@@ -24,7 +24,7 @@ sub test_storage
 
     # Test that the server really is running
     $response = $ua->get($base_url);
-    is($response->code, 200, "Getting homepage is successful");
+    is($response->code, 200, "$storage_type - getting homepage is successful");
 
     # Test loading some data
     load_fixture('foaf.nt', $base_url."data/foaf.nt");
@@ -40,11 +40,11 @@ sub test_storage
     
     # Test fetching it back using SELECT
     $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=csv");
-    is($response->code, 200, "SPARQL SELECT query is successful");
-    is($response->content_type, "text/csv", "SPARQL SELECT query Content Type data is text/csv");
+    is($response->code, 200, "$storage_type - SPARQL SELECT query is successful");
+    is($response->content_type, "text/csv", "$storage_type - SPARQL SELECT query Content Type data is text/csv");
     my @lines = split(/[\r\n]+/,$response->content);
-    is(scalar(@lines), 15, "SPARQL response contains fifteen lines");
-    is($lines[0], "s,p,o", "First line of SPARQL response contains CSV header");
+    is(scalar(@lines), 15, "$storage_type - SPARQL response contains fifteen lines");
+    is($lines[0], "s,p,o", "$storage_type - First line of SPARQL response contains CSV header");
 
     # Shut down redstore
     stop_redstore($pid);
@@ -65,7 +65,7 @@ sub test_storage
     test_storage("sqlite", undef, 'redstore-test.sqlite', 1);
     
     # Clean-up
-    ok(unlink('redstore-test.sqlite'), "Deleted sqlite storage file");
+    ok(unlink('redstore-test.sqlite'), "Deleting sqlite storage file");
 }
 
 # BDB
@@ -81,6 +81,6 @@ sub test_storage
 
     # Clean-up
     foreach my $file (@dbfiles) {
-      ok(unlink($file), "Deleted storage file $file");
+      ok(unlink($file), "Deleting storage file $file");
     }
 }
