@@ -1,7 +1,8 @@
 dist_check_SCRIPTS = \
   redstore-http_test.pl \
   sparql11-http-rdf-update_test.pl \
-  sparql11-protocol_test.pl
+  sparql11-protocol_test.pl \
+  redstore-storage_test.pl
 
 dist_check_DATA = \
   test001.rdf \
