@@ -7,15 +7,14 @@ use redstore_testlib;
 use warnings;
 use strict;
 
-use Test::More tests => 84;
+use Test::More tests => 85;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
 my $ua = new_redstore_client();
 
 # Start RedStore
-my ($pid, $port) = start_redstore();
-my $base_url = "http://localhost:$port/";
+my ($pid, $base_url) = start_redstore();
 
 # Double check that the server is running
 is_running($pid);

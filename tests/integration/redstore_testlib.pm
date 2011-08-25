@@ -21,24 +21,26 @@ sub new_redstore_client {
 }
 
 sub start_redstore {
-    my ($cmd) = @_;
-    my ($pid, $port);
+    my $storage = shift || 'memory';
+    my $storage_options = shift || undef;
+    my $storage_name = shift || 'redstore-test';
+    my $storage_new = shift;
+
+    my ($cmd, $pid, $port);
     my $count = 0;
 
-    unless (defined $cmd) {
-      if ($ENV{REDSTORE}) {
-        $cmd = $ENV{REDSTORE};
-      } elsif ($ARGV[0]) {
-        $cmd = $ARGV[0];
-      } else {
-        die "Error: REDSTORE environment variable is not set and no command line argument given";
-      }
+    if ($ENV{REDSTORE}) {
+      $cmd = $ENV{REDSTORE};
+    } elsif ($ARGV[0]) {
+      $cmd = $ARGV[0];
+    } else {
+      die "Error: REDSTORE environment variable is not set and no command line argument given";
     }
 
     unless (-e $cmd) {
         die "Error: RedStore command does not exist: $cmd";
     }
-    
+
     do {
         $port = 10000 + (int(rand(10000) + time()) % 10000);
         $count += 1;
@@ -48,20 +50,35 @@ sub start_redstore {
             # fork returned undef, so failed
             die "cannot fork: $!";
         } elsif ($pid == 0) {
-            exec("$cmd -q -n -p $port -b localhost -s memory");
+            my @args = (
+              $cmd, '-q',
+              '-b', 'localhost',
+              '-p', $port,
+              '-s', $storage
+            );
+            push(@args, '-n') if ($storage_new);
+            push(@args, '-t', $storage_options) if ($storage_options);
+            push(@args, $storage_name);
+            print "# ".join(' ', @args)."\n";
+            exec(@args);
             die "failed to exec redstore: $!";
-        } 
+        }
 
         sleep(1);
     } while (kill(0,$pid) <= 0 && $count < 10);
 
-    return ($pid, $port);
+    die "Failed to start redstore" if ($count == 10);
+
+    # Give it a little bit longer to get ready
+    sleep(1);
+
+    return ($pid, "http://localhost:$port/");
 }
 
 sub stop_redstore {
     my ($pid) = @_;
     my $count = 0;
-    
+
     return unless ($pid);
 
     while (waitpid($pid,WNOHANG) == 0 && $count < 10) {
@@ -98,7 +115,7 @@ sub load_fixture {
 
     my $ua = new_redstore_client();
     my $response = $ua->request($request);
-    die "Failed to load fixture: ".$response->message() unless $response->code == 200;
+    is($response->code, 200, "Loading $filename into $target_uri is successful.");
 }
 
 sub fixture_path {
@@ -120,9 +137,9 @@ sub read_fixture {
 
 sub is_valid_xhtml {
     my ($xhtml, $name) = @_;
-    
+
     is_wellformed_xml($xhtml, $name);
-    
+
     # FIXME: don't let xmllint download DTDs
     # FIXME: hide "- validates" message
 # 	SKIP: {
@@ -130,13 +147,13 @@ sub is_valid_xhtml {
 #         if (system("which xmllint > /dev/null")) {
 #             skip("xmllint is not available", 1);
 #         }
-#     
+#
 #         # Open a pipe to xmllint
 #         open(LINT, "|xmllint --noout --valid --schema xhtml1-strict.xsd -")
 #             or die "Failed to open pipe to xmllint: $!";
 #         print LINT $xhtml;
 #         close(LINT);
-# 
+#
 #         if ($?) {
 #         	fail($name);
 #         } else {
