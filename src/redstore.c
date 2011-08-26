@@ -38,8 +38,8 @@ int exit_code = EXIT_SUCCESS;   // Exit code for when RedStore exits
 unsigned long query_count = 0;
 unsigned long import_count = 0;
 unsigned long request_count = 0;
-const char *storage_name = DEFAULT_STORAGE_NAME;
-const char *storage_type = DEFAULT_STORAGE_TYPE;
+const char *storage_name = NULL;
+const char *storage_type = NULL;
 
 librdf_world *world = NULL;
 librdf_model *model = NULL;
@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
   redhttp_server_t *server = NULL;
   char *address = DEFAULT_ADDRESS;
   char *port = DEFAULT_PORT;
-  const char *storage_options = DEFAULT_STORAGE_OPTIONS;
+  const char *storage_options = NULL;
   int storage_new = 0;
   int opt = -1;
 
@@ -497,6 +497,15 @@ int main(int argc, char *argv[])
     redstore_error("Can't be quiet and verbose at the same time.");
     usage();
   }
+
+  // Set default storage settings, if none given
+  if (storage_name == NULL)
+    storage_name = DEFAULT_STORAGE_NAME;
+  if (storage_type == NULL) {
+    storage_type = DEFAULT_STORAGE_TYPE;
+    storage_options = DEFAULT_STORAGE_OPTIONS;
+  }
+
   // Setup signal handlers
   signal(SIGTERM, termination_handler);
   signal(SIGINT, termination_handler);
@@ -508,7 +517,8 @@ int main(int argc, char *argv[])
     redstore_fatal("Failed to initialise HTTP server.\n");
     goto cleanup;
   }
-  // Create storgae
+
+  // Create storage
   storage = redstore_setup_storage(storage_name, storage_type, storage_options, storage_new);
   if (!storage) {
     redstore_fatal("Failed to open librdf storage.");

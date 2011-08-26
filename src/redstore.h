@@ -35,8 +35,8 @@
 #define DEFAULT_PORT            "8080"
 #define DEFAULT_ADDRESS         (NULL)
 #define DEFAULT_STORAGE_NAME    "redstore"
-#define DEFAULT_STORAGE_TYPE    "memory"
-#define DEFAULT_STORAGE_OPTIONS ""
+#define DEFAULT_STORAGE_TYPE    "hashes"
+#define DEFAULT_STORAGE_OPTIONS "hash-type='memory'"
 #define DEFAULT_QUERY_LANGUAGE  "laqrs"
 #define DEFAULT_GRAPH_FORMAT    "rdfxml"
 #define DEFAULT_PARSE_FORMAT    "ntriples"
