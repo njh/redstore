@@ -24,6 +24,13 @@ Makefile.in
 stamp-h1
 TODO
 
+macosx/RedStore-Info.plist
+macosx/bin
+macosx/build
+macosx/Credits.html
+macosx/RedStore.xcodeproj/*.mode1v3
+macosx/RedStore.xcodeproj/*.pbxuser
+
 src/redhttp/test_redhttpd
 src/redstore
 src/redstore_config.h

@@ -91,6 +91,7 @@ AC_CONFIG_FILES([
   tests/Makefile
   tests/integration/Makefile
   tests/redhttp/Makefile
+  macosx/RedStore-Info.plist
 ])
 
 AC_OUTPUT
