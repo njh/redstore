@@ -9,7 +9,8 @@ my $TOP_DIR = Cwd::realpath(dirname(__FILE__).'/..');
 my $BUILD_DIR = "$TOP_DIR/build";
 my $ROOT_DIR = "$TOP_DIR/root";
 my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DIR ".
-                             "--disable-gtk-doc --disable-dependency-tracking";
+                             "--disable-gtk-doc --disable-dependency-tracking ".
+                             "--disable-rebuilds";
 
 my $packages = [
     {
@@ -212,10 +213,34 @@ foreach my $pkg (@$packages) {
 }
 
 print "Finished compiling:\n";
-foreach my $pkg (sort {$a->{'name'} cmp $b->{'name'}} @$packages) {
-    print " * ".$pkg->{'name'}."\n";
+my @package_names = sort(map {$_->{'name'}} @$packages);
+foreach my $name (@package_names) {
+    print " * $name\n";
 }
 
+if (`uname` =~ /^Darwin/) {
+    print "Copying static binary into Xcode project:\n  ";
+    safe_system('mkdir', 'macosx/bin') unless (-e 'macosx/bin');
+    safe_system('cp', 'src/redstore', 'macosx/bin/redstore-cli');
+
+    # Write out Credits document
+    print "Writing Credits.html into Xcode project.\n";
+    open(CREDITS, ">macosx/Credits.html") or die "Failed to write to credits file: $!";
+    print CREDITS "<!DOCTYPE html>\n";
+    print CREDITS "<html>\n";
+    print CREDITS "<head><title>RedStore Credits</title></head>\n";
+    print CREDITS "<body style='font-family: Tahoma, sans-serif; font-size: 8pt'>\n";
+    print CREDITS "  <p>This version of RedStore uses following libraries:</p>\n";
+    print CREDITS "  <ul>\n";
+    foreach my $name (@package_names) {
+        next if ($name eq 'redstore');
+        print CREDITS "    <li>$name</li>\n";
+    }
+    print CREDITS "  </ul>\n";
+    print CREDITS "</body>\n";
+    print CREDITS "</html>\n";
+    close(CREDITS);
+}
 
 sub extract_package {
     my ($pkg) = @_;
@@ -227,9 +252,9 @@ sub extract_package {
     safe_chdir();
     print "Extracting: $pkg->{'tarname'} into $pkg->{'dirpath'}\n";
     if ($pkg->{'tarname'} =~ /bz2$/) {
-        safe_system('tar', '-jxvf', $pkg->{'tarpath'});
+        safe_system('tar', '-jxf', $pkg->{'tarpath'});
     } elsif ($pkg->{'tarname'} =~ /gz$/) {
-        safe_system('tar', '-zxvf', $pkg->{'tarpath'});
+        safe_system('tar', '-zxf', $pkg->{'tarpath'});
     } else {
         die "Don't know how to decomress archive.";
     }
