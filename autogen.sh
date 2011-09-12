@@ -58,7 +58,7 @@ libtoolize_min_vers=020200
 
 # Default program arguments
 automake_args="--gnu --add-missing --force --copy -Wall"
-aclocal_args=
+aclocal_args=$ACLOCAL_FLAGS
 autoconf_args=
 libtoolize_args="--force --copy --automake"
 configure_args="--enable-maintainer-mode"
