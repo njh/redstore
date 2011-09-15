@@ -24,12 +24,16 @@ Usage
     redstore [options] [<name>]
        -p <port>       Port number to run HTTP server on (default 8080)
        -b <address>    Bind to specific address (default all)
-       -s <type>       Set the graph storage type
+       -s <type>       Set the graph storage type (default hashes)
        -t <options>    Storage options
        -n              Create a new store / replace old (default no)
+       -f <filename>   Input file to load at startup
+       -F <format>     Format of the input file (default guess)
        -v              Enable verbose mode
        -q              Enable quiet mode
   
+Start RedStore on port 8080, bound to localhost, using a new sqlite store:
+    redstore -p 8080 -b localhost -n -s sqlite
 
 Load a URI into the triplestore:
     curl --data uri=http://example.com/file.rdf http://localhost:8080/load

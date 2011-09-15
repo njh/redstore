@@ -228,7 +228,28 @@ static redhttp_response_t *handle_not_found(redhttp_request_t * request, void *u
   );
 }
 
+static int redstore_load_input_file(librdf_model* model, const char* filename, const char* format)
+{
+  librdf_uri *uri = NULL;
+  int result = 0;
 
+  if (filename) {
+    uri = librdf_new_uri_from_filename(world, filename);
+    if (!uri) {
+      redstore_error("Failed to convert filename into a URI");
+      return -1;
+    }
+
+    redstore_info("Loading: %s", (char*)librdf_uri_as_string(uri));
+    redstore_debug("Input format: %s", format);
+    result = librdf_model_load(model, uri, format, NULL, NULL);
+  }
+
+  if (uri)
+    librdf_free_uri(uri);
+
+  return result;
+}
 
 static void redstore_build_accepted_type_list(redhttp_negotiate_t **accepted_types,
                                               description_proc_t desc_proc)
@@ -404,19 +425,23 @@ static void usage()
   printf("Usage: %s [options] [<name>]\n", PACKAGE_TARNAME);
   printf("   -p <port>       Port number to run HTTP server on (default %s)\n", DEFAULT_PORT);
   printf("   -b <address>    Bind to specific address (default all)\n");
-  printf("   -s <type>       Set the graph storage type\n");
+  printf("   -s <type>       Set the graph storage type (default %s)\n", DEFAULT_STORAGE_TYPE);
   for (i = 0; 1; i++) {
     const char *help_name, *help_label;
     if (librdf_storage_enumerate(world, i, &help_name, &help_label))
       break;
-    printf("      %-10s     %s", help_name, help_label);
-    if (strcmp(help_name, DEFAULT_STORAGE_TYPE) == 0)
-      printf(" (default)\n");
-    else
-      printf("\n");
+    printf("      %-12s   %s\n", help_name, help_label);
   }
   printf("   -t <options>    Storage options\n");
   printf("   -n              Create a new store / replace old (default no)\n");
+  printf("   -f <filename>   Input file to load at startup\n");
+  printf("   -F <format>     Format of the input file (default guess)\n");
+  for (i = 0; 1; i++) {
+    const raptor_syntax_description* desc = librdf_parser_get_description(world, i);
+    if (!desc)
+      break;
+    printf("      %-12s   %s\n", desc->names[0], desc->label);
+  }
   printf("   -v              Enable verbose mode\n");
   printf("   -q              Enable quiet mode\n");
   exit(1);
@@ -428,6 +453,8 @@ int main(int argc, char *argv[])
   char *address = DEFAULT_ADDRESS;
   char *port = DEFAULT_PORT;
   const char *storage_options = NULL;
+  const char *input_filename = NULL;
+  const char *input_format = NULL;
   int storage_new = 0;
   int opt = -1;
 
@@ -455,7 +482,7 @@ int main(int argc, char *argv[])
   );
 
   // Parse Switches
-  while ((opt = getopt(argc, argv, "p:b:s:t:nvqh")) != -1) {
+  while ((opt = getopt(argc, argv, "p:b:s:t:nf:F:vqh")) != -1) {
     switch (opt) {
     case 'p':
       port = optarg;
@@ -471,6 +498,12 @@ int main(int argc, char *argv[])
       break;
     case 'n':
       storage_new = 1;
+      break;
+    case 'f':
+      input_filename = optarg;
+      break;
+    case 'F':
+      input_format = optarg;
       break;
     case 'v':
       verbose = 1;
@@ -528,6 +561,11 @@ int main(int argc, char *argv[])
   model = librdf_new_model(world, storage, NULL);
   if (!model) {
     redstore_fatal("Failed to create librdf model for storage.");
+    goto cleanup;
+  }
+  // Load startup input file
+  if (redstore_load_input_file(model, input_filename, input_format)) {
+    redstore_fatal("Failed to load input file.");
     goto cleanup;
   }
   // Create service description
