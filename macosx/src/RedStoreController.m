@@ -21,7 +21,7 @@
 		if ([verboseCheckbox intValue]) {
 			[args addObject:@"-v"];
 		}
-		
+
 		switch ([storageType indexOfSelectedItem]) {
 		    case 0:
 				[args addObject:@"-s"]; [args addObject:@"hashes"];
@@ -31,11 +31,11 @@
 				NSLog(@"Unknown storage type: %@", [storageType titleOfSelectedItem]);
 				break;
 		}
-		
+
 #ifdef DEBUG
 		NSLog(@"Command line arguments: %@", args);
 #endif
-		
+
 		// Create the new task and start it running
         redstoreTask=[[TaskWrapper alloc] initWithController:self arguments:args];
         [redstoreTask startProcess];
@@ -47,7 +47,7 @@
 	NSSavePanel* panel = [NSSavePanel savePanel];
 	[panel setTitle: @"Save Log As"];
 	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"log"]];
-	
+
 	if ([panel runModal] == NSFileHandlingPanelOKButton) {
 		NSData *logData = [[[logTextView textStorage] string] dataUsingEncoding:NSUnicodeStringEncoding];
 		BOOL success = [[NSFileManager defaultManager] createFileAtPath:[[panel URL] path] contents:logData attributes:nil];
@@ -66,29 +66,29 @@
 		NSRange range = NSMakeRange(0, [attrString length]);
 
 		[attrString addAttribute:NSLinkAttributeName value:url range:range];
-		
+
 		[urlTextField setSelectable: YES];
 		[urlTextField setAllowsEditingTextAttributes: YES];
 		[urlTextField setAttributedStringValue: [attrString autorelease]];
-		
+
 		// FIXME: why is this needed to get the hyperlink to display?
 		[urlTextField selectText: self];
-		[[urlTextField currentEditor] setSelectedRange:NSMakeRange([attrString length], 0)]; 
+		[[urlTextField currentEditor] setSelectedRange:NSMakeRange([attrString length], 0)];
 	} else {
 		[urlTextField setStringValue:@""];
 	}
 }
 
-- (void)logAttributedString:(NSAttributedString *)attrString
+- (void)appendAttributedString:(NSAttributedString *)attrString
 {
     [[logTextView textStorage] appendAttributedString: [attrString autorelease]];
 
     [self performSelector:@selector(scrollToVisible:) withObject:nil afterDelay:0.0];
 }
 
-- (void)logString:(NSString *)string
+- (void)appendString:(NSString *)string
 {
-	[self logAttributedString: [[NSAttributedString alloc] initWithString:string]];
+	[self appendAttributedString: [[NSAttributedString alloc] initWithString:string]];
 }
 
 - (void)scrollToVisible:(id)sender {
