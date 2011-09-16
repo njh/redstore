@@ -42,6 +42,20 @@
     }
 }
 
+- (IBAction)saveLogAs:(id)sender
+{
+	NSSavePanel* panel = [NSSavePanel savePanel];
+	[panel setTitle: @"Save Log As"];
+	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"log"]];
+	
+	if ([panel runModal] == NSFileHandlingPanelOKButton) {
+		NSData *logData = [[[logTextView textStorage] string] dataUsingEncoding:NSUnicodeStringEncoding];
+		BOOL success = [[NSFileManager defaultManager] createFileAtPath:[[panel URL] path] contents:logData attributes:nil];
+		if (!success) {
+			NSLog(@"Failed to open file");
+		}
+	}
+}
 
 - (void)updateUrlField
 {

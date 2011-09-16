@@ -19,6 +19,7 @@
 }
 
 - (IBAction)startStop:(id)sender;
+- (IBAction)saveLogAs:(id)sender;
 - (void)updateUrlField;
 
 enum RedstoreStorageTypes {
