@@ -136,6 +136,8 @@ $ENV{'CLASSPATH'} = '';
 
 # Add extra CFLAGS if this is Mac OS X
 if (`uname` =~ /^Darwin/) {
+    die "Mac OS X Developer Tools are not available." unless (-e '/Developer/');
+
     # Build Universal Binrary for both PPC and i386
     my $SDK = '/Developer/SDKs/MacOSX10.4u.sdk';
     my $ARCHES = '-arch i386 -arch ppc';
@@ -201,6 +203,7 @@ foreach my $pkg (@$packages) {
         download_package($pkg) if (defined $pkg->{'url'});
         extract_package($pkg) if (defined $pkg->{'tarpath'});
         clean_package($pkg);
+        patch_package($pkg);
         config_package($pkg);
         make_package($pkg);
         test_package($pkg);
@@ -274,8 +277,22 @@ sub clean_package {
     my ($pkg) = @_;
 
     safe_chdir($pkg->{'dirpath'});
-    # this is allowed to fail
-    system('make', 'clean') if (-e 'Makefile');
+    print "Cleaning: ".$pkg->{'name'}."\n";
+    if ($pkg->{'clean'}) {
+        system($pkg->{'clean'});
+    } else {
+        # this is allowed to fail
+        system('make', 'clean') if (-e 'Makefile');
+    }
+}
+
+sub patch_package {
+    my ($pkg) = @_;
+    if ($pkg->{'patch'}) {
+        safe_chdir($pkg->{'dirpath'});
+        my $patchfile = $TOP_DIR.'/'.$pkg->{'patch'};
+        safe_system("patch -p0 < $patchfile");
+    }
 }
 
 sub config_package {
