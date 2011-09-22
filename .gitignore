@@ -7,6 +7,7 @@
 *.o
 aclocal.m4
 autom4te.cache
+build
 build-scripts/*.m4
 build-scripts/config.guess
 build-scripts/config.sub
@@ -21,6 +22,7 @@ configure
 libtool
 Makefile
 Makefile.in
+root
 stamp-h1
 TODO
 
