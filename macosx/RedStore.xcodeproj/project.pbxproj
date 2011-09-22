@@ -12,6 +12,8 @@
 		622FC9651414BF3D00F2AA53 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 622FC9631414BF3D00F2AA53 /* MainMenu.nib */; };
 		62393F2814189B4800897A4D /* RedStore.icns in Resources */ = {isa = PBXBuildFile; fileRef = 62393F2714189B4800897A4D /* RedStore.icns */; };
 		62393F391418B6F300897A4D /* TaskWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 62393F381418B6F300897A4D /* TaskWrapper.m */; };
+		62B3F6F4142B0FBA003002A3 /* PreferencesWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 62B3F6F2142B0FBA003002A3 /* PreferencesWindow.nib */; };
+		62B3F6F8142B0FCB003002A3 /* PreferencesController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62B3F6F7142B0FCB003002A3 /* PreferencesController.m */; };
 		62CF19BA14176FE00029F997 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 62CF19B914176FE00029F997 /* main.m */; };
 		62CF19BF14176FF00029F997 /* RedStoreController.m in Sources */ = {isa = PBXBuildFile; fileRef = 62CF19BC14176FF00029F997 /* RedStoreController.m */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
@@ -44,6 +46,9 @@
 		62393F371418B6F300897A4D /* TaskWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TaskWrapper.h; path = src/TaskWrapper.h; sourceTree = "<group>"; };
 		62393F381418B6F300897A4D /* TaskWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TaskWrapper.m; path = src/TaskWrapper.m; sourceTree = "<group>"; };
 		624356F1141AB9BE0082757C /* redstore-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "redstore-cli"; sourceTree = "<group>"; };
+		62B3F6F3142B0FBA003002A3 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/PreferencesWindow.nib; sourceTree = "<group>"; };
+		62B3F6F6142B0FCB003002A3 /* PreferencesController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesController.h; path = src/PreferencesController.h; sourceTree = "<group>"; };
+		62B3F6F7142B0FCB003002A3 /* PreferencesController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PreferencesController.m; path = src/PreferencesController.m; sourceTree = "<group>"; };
 		62CF19B914176FE00029F997 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = src/main.m; sourceTree = "<group>"; };
 		62CF19BB14176FF00029F997 /* RedStoreController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RedStoreController.h; path = src/RedStoreController.h; sourceTree = "<group>"; };
 		62CF19BC14176FF00029F997 /* RedStoreController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RedStoreController.m; path = src/RedStoreController.m; sourceTree = "<group>"; };
@@ -70,6 +75,8 @@
 				62CF19BC14176FF00029F997 /* RedStoreController.m */,
 				62393F371418B6F300897A4D /* TaskWrapper.h */,
 				62393F381418B6F300897A4D /* TaskWrapper.m */,
+				62B3F6F6142B0FCB003002A3 /* PreferencesController.h */,
+				62B3F6F7142B0FCB003002A3 /* PreferencesController.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -127,6 +134,7 @@
 				6214525E141C1689009F28C5 /* Credits.html */,
 				62393F2714189B4800897A4D /* RedStore.icns */,
 				622FC9631414BF3D00F2AA53 /* MainMenu.nib */,
+				62B3F6F2142B0FBA003002A3 /* PreferencesWindow.nib */,
 				8D1107310486CEB800E47090 /* RedStore-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 			);
@@ -206,6 +214,7 @@
 				622FC9651414BF3D00F2AA53 /* MainMenu.nib in Resources */,
 				62393F2814189B4800897A4D /* RedStore.icns in Resources */,
 				6214525F141C1689009F28C5 /* Credits.html in Resources */,
+				62B3F6F4142B0FBA003002A3 /* PreferencesWindow.nib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,6 +228,7 @@
 				62CF19BA14176FE00029F997 /* main.m in Sources */,
 				62CF19BF14176FF00029F997 /* RedStoreController.m in Sources */,
 				62393F391418B6F300897A4D /* TaskWrapper.m in Sources */,
+				62B3F6F8142B0FCB003002A3 /* PreferencesController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,6 +249,14 @@
 				622FC9641414BF3D00F2AA53 /* English */,
 			);
 			name = MainMenu.nib;
+			sourceTree = "<group>";
+		};
+		62B3F6F2142B0FBA003002A3 /* PreferencesWindow.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				62B3F6F3142B0FBA003002A3 /* English */,
+			);
+			name = PreferencesWindow.nib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

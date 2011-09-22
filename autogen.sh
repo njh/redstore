@@ -33,11 +33,6 @@
 # Directory for the sources
 SRCDIR=${SRCDIR-.}
 
-# Because GIT doesn't support empty directories
-if [ ! -d "$SRCDIR/build-scripts" ]; then
-    mkdir "$SRCDIR/build-scripts"
-fi
-
 # The programs required for configuring which will be searched for
 # in the current PATH.
 # Set an envariable of the same name in uppercase, to override scan

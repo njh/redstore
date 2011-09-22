@@ -1,4 +1,5 @@
 #import "RedStoreController.h"
+#import "PreferencesController.h"
 
 @implementation RedStoreController
 
@@ -9,35 +10,63 @@
         [redstoreTask stopProcess];
     } else {
 		NSString *redstorePath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"redstore-cli"];
+		NSMutableArray *args = nil;
 
         // If the task is still sitting around from the last run, release it
-        if (redstoreTask!=nil) [redstoreTask release];
+        if (redstoreTask!=nil) {
+			[redstoreTask release];
+			redstoreTask = nil;
+		}
 
-		NSMutableArray *args = [NSMutableArray arrayWithObjects:redstorePath,
-						 @"-p", [httpPortTextField stringValue],
-						 @"-b", [addressTextField stringValue],
-						 nil];
+		// Check that the working directory exists
+		BOOL isDir = NO;
+		NSString *cwd = [[NSUserDefaults standardUserDefaults] stringForKey:@"storage.path"];
+		if (![[NSFileManager defaultManager] fileExistsAtPath:cwd isDirectory:&isDir] || !isDir) {
+			NSBeginAlertSheet(@"Directory not found", @"Ok", nil, nil, mainWindow,
+							  nil, nil, nil, nil, @"Storage directory does not exist.");
+			return;
+		}
 
-		if ([verboseCheckbox intValue]) {
+		// Build up the connect-line arguments
+		args = [NSMutableArray arrayWithObjects:
+				@"-p", [[NSUserDefaults standardUserDefaults] stringForKey:@"http.port"],
+				@"-b", [[NSUserDefaults standardUserDefaults] stringForKey:@"http.address"],
+			    nil];
+
+		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"logging.verbose"]) {
 			[args addObject:@"-v"];
 		}
 
-		switch ([storageType indexOfSelectedItem]) {
-		    case 0:
+		int type = [[NSUserDefaults standardUserDefaults] integerForKey:@"storage.type"];
+		switch (type) {
+		    case inmemoryHashes:
 				[args addObject:@"-s"]; [args addObject:@"hashes"];
 				[args addObject:@"-t"]; [args addObject:@"hash-type='memory'"];
 				break;
+			case berkeleyDb:
+				[args addObject:@"-s"]; [args addObject:@"hashes"];
+				[args addObject:@"-t"]; [args addObject:@"hash-type='bdb',dir='.'"];
+				break;
+			case sqlite:
+				[args addObject:@"-s"]; [args addObject:@"sqlite"];
+				break;
 			default:
-				NSLog(@"Unknown storage type: %@", [storageType titleOfSelectedItem]);
+				NSLog(@"Unknown storage type: %d", type);
 				break;
 		}
 
+		// Append the storage name
+		[args addObject:[[NSUserDefaults standardUserDefaults] stringForKey:@"storage.name"]];
+
 #ifdef DEBUG
+		NSLog(@"Working directory: %@", cwd);
 		NSLog(@"Command line arguments: %@", args);
 #endif
 
 		// Create the new task and start it running
-        redstoreTask=[[TaskWrapper alloc] initWithController:self arguments:args];
+        redstoreTask=[[TaskWrapper alloc] initWithController:self command:redstorePath];
+		[redstoreTask setArguments: args];
+		[redstoreTask setCurrentDirectoryPath: cwd];
         [redstoreTask startProcess];
     }
 }
@@ -61,7 +90,10 @@
 {
     if (processRunning)
     {
-		NSString* url = [NSString stringWithFormat:@"http://%@:%@/", [addressTextField stringValue], [httpPortTextField stringValue]];
+		NSString *port = [[NSUserDefaults standardUserDefaults] stringForKey:@"http.port"];
+		NSString *address = [[NSUserDefaults standardUserDefaults] stringForKey:@"http.address"];
+		NSString* url = [NSString stringWithFormat:@"http://%@:%@/", address, port];
+
 		NSMutableAttributedString* attrString = [[NSMutableAttributedString alloc] initWithString: url];
 		NSRange range = NSMakeRange(0, [attrString length]);
 
@@ -72,7 +104,7 @@
 		[urlTextField setAttributedStringValue: [attrString autorelease]];
 
 		// FIXME: why is this needed to get the hyperlink to display?
-		[urlTextField selectText: self];
+		[urlTextField selectText:nil];
 		[[urlTextField currentEditor] setSelectedRange:NSMakeRange([attrString length], 0)];
 	} else {
 		[urlTextField setStringValue:@""];
@@ -128,13 +160,12 @@
     redstoreTask=nil;
 }
 
-- (void) applicationDidFinishLaunching: (NSNotification *)note
-{
-}
-
 - (void) applicationWillTerminate: (NSNotification *)note
 {
 	[redstoreTask stopProcess];
+
+	// Force sync of preferences to disk
+	[[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 @end

@@ -2,11 +2,14 @@
 
 @implementation TaskWrapper
 
-- (id)initWithController:(id <TaskWrapperController>)cont arguments:(NSArray *)args
+- (id)initWithController:(id <TaskWrapperController>)cont command:(NSString *)cmd
 {
     self = [super init];
     controller = cont;
-    arguments = [args retain];
+	commandPath = [cmd retain];
+    arguments = nil;
+	directoryPath = nil;
+	task = nil;
 
     return self;
 }
@@ -20,8 +23,14 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleReadCompletionNotification object: [[task standardOutput] fileHandleForReading]];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSTaskDidTerminateNotification object:nil];
 
-    [arguments release];
-    [task release];
+	if (arguments)
+		[arguments release];
+	if (commandPath)
+		[commandPath release];
+	if (directoryPath)
+		[directoryPath release];
+	if (task)
+		[task release];
     [super dealloc];
 }
 
@@ -34,9 +43,15 @@
     task = [[NSTask alloc] init];
     [task setStandardOutput: [NSPipe pipe]];
     [task setStandardError: [task standardOutput]];
-    [task setLaunchPath: [arguments objectAtIndex:0]];
-    [task setArguments: [arguments subarrayWithRange: NSMakeRange (1, ([arguments count] - 1))]];
+    [task setLaunchPath: commandPath];
 
+	if (arguments) {
+		[task setArguments: arguments];
+	}
+
+	if (directoryPath) {
+		[task setCurrentDirectoryPath: directoryPath];
+	}
 
 	// Register for read notifications from the sub-process
     [[NSNotificationCenter defaultCenter] addObserver: self
@@ -55,6 +70,26 @@
 
     // launch the task asynchronously
     [task launch];
+}
+
+- (NSArray *)arguments
+{
+	return arguments;
+}
+
+- (void) setArguments: (NSArray *)args
+{
+	arguments = [args retain];
+}
+
+- (NSString *)currentDirectoryPath
+{
+	return directoryPath;
+}
+
+- (void) setCurrentDirectoryPath: (NSString *)path
+{
+	directoryPath = [path retain];
 }
 
 - (void) stopProcess
