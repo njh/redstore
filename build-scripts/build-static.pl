@@ -28,7 +28,7 @@ my $packages = [
         'checkfor' => 'lib/libmhash.a',
     },
     {
-        'url' => 'http://curl.haxx.se/download/curl-7.21.3.tar.gz',
+        'url' => 'http://curl.haxx.se/download/curl-7.21.7.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp ".
                     "--without-librtmp --disable-dict --disable-telnet --disable-pop3 ".
@@ -36,8 +36,10 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/libcurl.pc',
     },
     {
-        'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.01/pcre-8.01.tar.gz',
-        'checkfor' => 'lib/pkgconfig/libpcre.pc',
+        'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.12/pcre-8.12.tar.bz2',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
+                    "--enable-utf8 --enable-unicode-properties",
+        'checkfor' => 'lib/pkgconfig/libpcre.pc'
     },
 # FIXME: can't build a universal binary of GMP
 #     {
@@ -71,33 +73,33 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/sqlite3.pc',
     },
     {
-        'url' => 'http://www.iodbc.org/downloads/iODBC/libiodbc-3.52.7.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --disable-gui --disable-gtktest",
-        'checkfor' => 'lib/pkgconfig/libiodbc.pc',
-    },
-    {
         'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
         'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
         'checkfor' => 'lib/libdb.a',
     },
-    {
-        'url' => 'http://ftp.heanet.ie/mirrors/www.mysql.com/Downloads/MySQL-5.1/mysql-5.1.57.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
-        'checkfor' => 'lib/mysql/libmysqlclient.la',
-    },
-    {
-        'url' => 'http://ftp2.uk.postgresql.org/sites/ftp.postgresql.org/source/v9.0.3/postgresql-9.0.3.tar.gz',
-        'config' => "./configure --prefix=${ROOT_DIR}",
-        'make' => 'make -C src/bin/pg_config && '.
-                  'make -C src/interfaces/libpq all-static-lib',
-        'install' => 'make -C src/bin/pg_config install && '.
-                     "cp -fv src/include/postgres_ext.h ${ROOT_DIR}/include/ && ".
-                     "cp -fv src/interfaces/libpq/libpq-fe.h ${ROOT_DIR}/include/ && ".
-                     'make -C src/interfaces/libpq install-lib-static',
-        'checkfor' => 'lib/libpq.a',
-    },
+#     {
+#         'url' => 'http://www.iodbc.org/downloads/iODBC/libiodbc-3.52.7.tar.gz',
+#         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --disable-gui --disable-gtktest",
+#         'checkfor' => 'lib/pkgconfig/libiodbc.pc',
+#     },
+#     {
+#         'url' => 'http://ftp.heanet.ie/mirrors/www.mysql.com/Downloads/MySQL-5.1/mysql-5.1.57.tar.gz',
+#         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --without-server --without-docs --without-man",
+#         'checkfor' => 'lib/mysql/libmysqlclient.la',
+#     },
+#     {
+#         'url' => 'http://ftp2.uk.postgresql.org/sites/ftp.postgresql.org/source/v9.0.3/postgresql-9.0.3.tar.gz',
+#         'config' => "./configure --prefix=${ROOT_DIR}",
+#         'make' => 'make -C src/bin/pg_config && '.
+#                   'make -C src/interfaces/libpq all-static-lib',
+#         'install' => 'make -C src/bin/pg_config install && '.
+#                      "cp -fv src/include/postgres_ext.h ${ROOT_DIR}/include/ && ".
+#                      "cp -fv src/interfaces/libpq/libpq-fe.h ${ROOT_DIR}/include/ && ".
+#                      'make -C src/interfaces/libpq install-lib-static',
+#         'checkfor' => 'lib/libpq.a',
+#     },
     {
         'url' => 'http://download.librdf.org/source/raptor2-2.0.4.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
@@ -110,7 +112,9 @@ my $packages = [
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.14.tar.gz',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular --with-bdb=${ROOT_DIR}",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular ".
+                    "--with-bdb=${ROOT_DIR} --with-threestore=no --with-mysql=no --with-sqlite=3 ".
+                    "--with-postgresql=no --with-virtuoso=no",
         'checkfor' => 'lib/pkgconfig/redland.pc',
     },
     {
@@ -134,27 +138,34 @@ $ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin";
 $ENV{'PKG_CONFIG_PATH'} = "${ROOT_DIR}/lib/pkgconfig";
 $ENV{'CLASSPATH'} = '';
 
+# Check tools required are available
+my @TOOLS_REQUIRED = ('cmake', 'curl', 'ed', 'make', 'patch', 'tar');
+foreach my $cmd (@TOOLS_REQUIRED) {
+  system("which $cmd > /dev/null") && die "Error: $cmd is not available on this system.";
+}
+
 # Add extra CFLAGS if this is Mac OS X
 if (`uname` =~ /^Darwin/) {
     die "Mac OS X Developer Tools are not available." unless (-e '/Developer/');
 
     # Build Universal Binrary for both PPC and i386
+    my $SDK_VER = '10.4';
     my $SDK = '/Developer/SDKs/MacOSX10.4u.sdk';
     my $ARCHES = '-arch i386 -arch ppc';
-    my $MINVER = '-mmacosx-version-min=10.4';
+    my $MINVER = "-mmacosx-version-min=$SDK_VER";
     die "Mac OS X SDK is not available." unless (-e $SDK);
 
     $ENV{'CFLAGS'} .= " -isysroot $SDK $ARCHES $MINVER";
     $ENV{'LDFLAGS'} .= " -Wl,-syslibroot,$SDK $ARCHES $MINVER";
     $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
     $ENV{'LDFLAGS'} .= " -Wl,-headerpad_max_install_names";
-    $ENV{'MACOSX_DEPLOYMENT_TARGET'} = '10.4';
+    $ENV{'MACOSX_DEPLOYMENT_TARGET'} = $SDK_VER;
     $ENV{'CMAKE_OSX_ARCHITECTURES'} = 'ppc;i386';
 
     my $GCC_VER = '4.0';
-    $ENV{'CC'} = "/usr/bin/gcc-$GCC_VER";
-    $ENV{"CPP"} = "/usr/bin/cpp-$GCC_VER";
-    $ENV{"CXX"} = "/usr/bin/g++-$GCC_VER";
+    $ENV{'CC'} = "/Developer/usr/bin/gcc-$GCC_VER";
+    $ENV{"CPP"} = "/Developer/usr/bin/cpp-$GCC_VER";
+    $ENV{"CXX"} = "/Developer/usr/bin/g++-$GCC_VER";
     die "gcc version $GCC_VER is not available." unless (-e $ENV{'CC'});
 
     # Not sure why these are required
