@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+#
+# Script to build a static binary of redstore, including its dependancies
+#
 
 use File::Basename;
 use Cwd;
