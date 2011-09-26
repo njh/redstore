@@ -37,6 +37,10 @@
 			[args addObject:@"-v"];
 		}
 
+		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"storage.new"]) {
+			[args addObject:@"-n"];
+		}
+
 		int type = [[NSUserDefaults standardUserDefaults] integerForKey:@"storage.type"];
 		switch (type) {
 		    case inmemoryHashes:

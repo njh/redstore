@@ -10,6 +10,7 @@ static NSDictionary *defaultValues() {
                 @"8080", @"http.port",
                 @"localhost", @"http.address",
                 [NSNumber numberWithBool:YES], @"logging.verbose",
+                [NSNumber numberWithBool:YES], @"storage.new",
                 [NSNumber numberWithInt:0], @"storage.type",
 				@"redstore", @"storage.name",
 				NSHomeDirectory(), @"storage.path",
