@@ -288,9 +288,15 @@ redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *us
 
   redstore_page_append_string(response, "Result Format: ");
   redstore_page_append_string(response, "<select name=\"format\">\n");
-  // FIXME: Add sections to the select list
+
+  redstore_page_append_string(response, "<optgroup label=\"Query Results Formats\">\n");
   syntax_select_list(NULL, "html", librdf_query_results_formats_get_description, response);
+  redstore_page_append_string(response, "</optgroup>\n");
+
+  redstore_page_append_string(response, "<optgroup label=\"RDF Formats\">\n");
   syntax_select_list(NULL, NULL, librdf_serializer_get_description, response);
+  redstore_page_append_string(response, "</optgroup>\n");
+
   redstore_page_append_string(response, "</select>\n");
   redstore_page_append_string(response, "<br />");
 
