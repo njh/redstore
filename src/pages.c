@@ -237,42 +237,38 @@ redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *us
 }
 
 
-static void syntax_select_list(const char *name, const char *default_name, librdf_node * source,
-                               librdf_node * arc, redhttp_response_t * response)
+static void syntax_select_list(const char *field_name, const char *default_name,
+                               description_proc_t desc_proc, redhttp_response_t * response)
 {
-  librdf_iterator *iterator;
+  int i;
 
-  redstore_page_append_strings(response, "<select name=\"", name, "\">\n", NULL);
-  iterator = librdf_model_get_targets(sd_model, source, arc);
-  while (!librdf_iterator_end(iterator)) {
-    librdf_node *format_node = librdf_iterator_get_object(iterator);
-    if (format_node) {
-      librdf_node *name = librdf_model_get_target(sd_model, format_node, LIBRDF_S_label(world));
-      librdf_node *desc = librdf_model_get_target(sd_model, format_node, LIBRDF_S_comment(world));
-      if (name && desc) {
-        const char *name_str = (char *) librdf_node_get_literal_value(name);
-        redstore_page_append_strings(response, "<option value=\"", name_str, "\"", NULL);
-        if (strcmp(name_str, default_name) == 0)
-          redstore_page_append_string(response, " selected=\"selected\"");
-        redstore_page_append_string(response, ">");
-        redstore_page_append_escaped(response, (char *) librdf_node_get_literal_value(desc), 0);
-        redstore_page_append_string(response, "</option>\n");
-      }
+  if (field_name)
+    redstore_page_append_strings(response, "<select name=\"", field_name, "\">\n", NULL);
+
+  for(i=0; 1; i++) {
+    const raptor_syntax_description* desc = desc_proc(world, i);
+    if (!desc)
+      break;
+
+    if (desc->names && desc->names[0] && desc->label) {
+      const char *name_str = desc->names[0];
+      redstore_page_append_strings(response, "<option value=\"", name_str, "\"", NULL);
+      if (default_name && strcmp(name_str, default_name) == 0)
+        redstore_page_append_string(response, " selected=\"selected\"");
+      redstore_page_append_string(response, ">");
+      redstore_page_append_escaped(response, desc->label, 0);
+      redstore_page_append_string(response, "</option>\n");
     }
-    librdf_iterator_next(iterator);
   }
-  librdf_free_iterator(iterator);
-  redstore_page_append_string(response, "</select>\n");
+
+  if (field_name)
+    redstore_page_append_string(response, "</select>\n");
 }
 
 
 
 redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *user_data)
 {
-  librdf_node *ql_node = librdf_new_node_from_uri_local_name(world, sd_ns_uri,
-                                                             (unsigned char *) "queryLanguage");
-  librdf_node *rf_node =
-      librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "resultFormat");
   redhttp_response_t *response = NULL;
 
   response = redstore_page_new(REDHTTP_OK, "Query Form");
@@ -287,11 +283,15 @@ redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *us
 
   redstore_page_append_string(response, "<div class=\"buttons\">\n");
   redstore_page_append_string(response, "Query Language: ");
-  syntax_select_list("lang", DEFAULT_QUERY_LANGUAGE, service_node, ql_node, response);
+  syntax_select_list("lang", DEFAULT_QUERY_LANGUAGE, librdf_query_language_get_description, response);
   redstore_page_append_string(response, "<br />");
 
   redstore_page_append_string(response, "Result Format: ");
-  syntax_select_list("format", "html", service_node, rf_node, response);
+  redstore_page_append_string(response, "<select name=\"format\">\n");
+  // FIXME: Add sections to the select list
+  syntax_select_list(NULL, "html", librdf_query_results_formats_get_description, response);
+  syntax_select_list(NULL, NULL, librdf_serializer_get_description, response);
+  redstore_page_append_string(response, "</select>\n");
   redstore_page_append_string(response, "<br />");
 
   redstore_page_append_string(response, "<input type=\"reset\" /> ");
@@ -299,16 +299,11 @@ redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *us
   redstore_page_append_string(response, "</div></form>\n");
   redstore_page_end(response);
 
-  librdf_free_node(ql_node);
-  librdf_free_node(rf_node);
-
   return response;
 }
 
 redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *user_data)
 {
-  librdf_node *if_node =
-      librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "inputFormat");
   const char *title = (char *) user_data;
   const char *action = redhttp_request_get_path(request);
 
@@ -321,7 +316,7 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
   redstore_page_append_string(response, "</textarea></div>\n");
   redstore_page_append_string(response, "<div class=\"buttons\">\n");
   redstore_page_append_string(response, "Triples syntax: ");
-  syntax_select_list("content-type", DEFAULT_PARSE_FORMAT, service_node, if_node, response);
+  syntax_select_list("content-type", DEFAULT_PARSE_FORMAT, librdf_parser_get_description, response);
   redstore_page_append_string(response, "<br />");
   redstore_page_append_string(response,
                               "<label for=\"graph\">Graph:</label> <input id=\"graph\" name=\"graph\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
@@ -329,7 +324,6 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
                               "<input type=\"reset\" /> <input type=\"submit\" />\n"
                               "</div></form>\n");
   redstore_page_end(response);
-  librdf_free_node(if_node);
 
   return response;
 }
