@@ -31,7 +31,7 @@ librdf_uri *format_ns_uri = NULL;
 librdf_uri *sd_ns_uri = NULL;
 
 
-
+/*
 static librdf_node *new_node_from_integer(librdf_world * world, int i)
 {
   librdf_uri *xsd_integer_uri = NULL;
@@ -56,6 +56,7 @@ static librdf_node *new_node_from_integer(librdf_world * world, int i)
 
   return node;
 }
+*/
 
 static librdf_node* sd_get_endpoint_node(const char * request_url_str)
 {
