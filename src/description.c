@@ -191,7 +191,7 @@ static int sd_add_syntax_descriptions(librdf_model *sd_model, librdf_node *servi
   return 0;
 }
 
-librdf_model * create_service_description(librdf_storage *sd_storage, const char * request_url)
+static librdf_model * create_service_description(librdf_storage *sd_storage, const char * request_url)
 {
   librdf_model *sd_model = NULL;
   librdf_node *service_node = NULL;
