@@ -109,12 +109,15 @@ redhttp_response_t *handle_query(redhttp_request_t * request, void *user_data)
 
 redhttp_response_t *handle_sparql(redhttp_request_t * request, void *user_data)
 {
+  const char *method = redhttp_request_get_method(request);
   redhttp_response_t *response = NULL;
   const char *query_string = NULL;
 
   query_string = redhttp_request_get_argument(request, "query");
   if (query_string) {
     response = perform_query(request, query_string);
+  } else if (strcmp(method, "GET")==0) {
+    response = handle_description_get(request, user_data);
   } else {
     response = redstore_page_new_with_message(
       request, LIBRDF_LOG_INFO, REDHTTP_BAD_REQUEST, "Missing query string."

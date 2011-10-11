@@ -40,6 +40,7 @@ unsigned long import_count = 0;
 unsigned long request_count = 0;
 const char *storage_name = NULL;
 const char *storage_type = NULL;
+char *public_storage_options = NULL;
 
 librdf_world *world = NULL;
 librdf_model *model = NULL;
@@ -339,7 +340,6 @@ static librdf_storage *redstore_setup_storage(const char *name, const char *type
   librdf_storage *storage = NULL;
   librdf_hash *hash = NULL;
   const char *key_filter[] = { "password", NULL };
-  char *debug_str = NULL;
 
   // Create hash
   hash = librdf_new_hash_from_string(world, NULL, options);
@@ -356,9 +356,11 @@ static librdf_storage *redstore_setup_storage(const char *name, const char *type
   redstore_info("Storage name: %s", name);
   redstore_info("Storage type: %s", type);
 
-  debug_str = librdf_hash_to_string(hash, key_filter);
-  if (debug_str) {
-    redstore_info("Storage options: %s", debug_str);
+  public_storage_options = librdf_hash_to_string(hash, key_filter);
+  if (public_storage_options) {
+    redstore_info("Storage options: %s", public_storage_options);
+  } else {
+    redstore_warn("Failed to convert storage options hash into a string.");
   }
 
   storage = librdf_new_storage_with_options(world, type, name, hash);
@@ -368,8 +370,6 @@ static librdf_storage *redstore_setup_storage(const char *name, const char *type
 
   if (hash)
     librdf_free_hash(hash);
-  if (debug_str)
-    free(debug_str);
 
   return storage;
 }
@@ -602,6 +602,8 @@ cleanup:
     librdf_free_world(world);
 
   // Clean up redhttp
+  if (public_storage_options)
+    free(public_storage_options);
   if (accepted_serialiser_types)
     redhttp_negotiate_free(&accepted_serialiser_types);
   if (accepted_query_result_types)

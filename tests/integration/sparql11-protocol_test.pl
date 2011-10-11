@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 84;
+use Test::More tests => 86;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -161,7 +161,7 @@ like($response->content, qr[string\("v"\)], "SPARQL SELECT Query for plain text 
   $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => 'application/sparql-results+xml;q=0.1,application/sparql-results+json;q=1.0');
   is($response->code, 200, "SPARQL SELECT with content negotiation for JSON with q= values is successful");
   is($response->content_type, 'application/sparql-results+json', "SPARQL SELECT with content negotiation for JSON with q= values has correct content type");
-  
+
   # Test default mime type
   $response = $ua->get($base_url.'query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A', 'Accept' => '*/*');
   is($response->code, 200, "SPARQL SELECT with content negotiation for default is successful");
@@ -178,6 +178,11 @@ is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT que
 is(scalar(@_ = split(/<result>/,$response->content))-1, 2, "SPARQL SELECT Query Result count is correct");
 is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
+# GET without a query string should return a service description
+$response = $ua->get($base_url."sparql?format=turtle");
+is($response->code, 200, "GET to sparql endpoint without query is successful");
+is($response->content_type, "application/turtle", "GET to sparql endpoint without query returns RDF");
+like($response->content, qr/a sd:Service/, "GET to sparql endpoint returns RDF containing 'a sd:Service' triple");
 
 # Test alternative SPARQL endpoint URLs
 {
@@ -189,9 +194,6 @@ is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
     $response = $ua->get($base_url."sparql/?query=ASK+%7B%3Fs+%3Fp+%3Fo%7D&format=xml");
     is($response->code, 200, "GET response for query to /sparql/ is successful");
-
-    $response = $ua->get($base_url."sparql");
-    is($response->code, 400, "GET response to /sparql without query is bad request");
 
     $response = $ua->post($base_url."sparql");
     is($response->code, 400, "POST response to /sparql without query is bad request");

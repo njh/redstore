@@ -26,150 +26,16 @@
 #include "redstore.h"
 
 
-// Globals
-librdf_storage *sd_storage = NULL;
-librdf_model *sd_model = NULL;
-librdf_node *service_node = NULL;
+// ------- Globals -------
 librdf_uri *format_ns_uri = NULL;
 librdf_uri *sd_ns_uri = NULL;
 
 
 
-
-static int add_syntax_descriptions(description_proc_t desc_proc, const char *type)
-{
-  librdf_node *bnode = NULL;
-  unsigned int i,n;
-
-  for(i=0; 1; i++) {
-    const raptor_syntax_description* desc = NULL;
-    desc = desc_proc(world, i);
-    if (!desc)
-      break;
-
-    bnode = librdf_new_node(world);
-    if (!bnode) {
-      redstore_error("Failed to create new bnode for syntax description.");
-      return -1;
-    }
-
-    librdf_model_add(sd_model,
-                     librdf_new_node_from_node(service_node),
-                     librdf_new_node_from_uri_local_name(world, sd_ns_uri,
-                                                         (const unsigned char *) type),
-                     librdf_new_node_from_node(bnode)
-        );
-
-    for (n = 0; desc->names[n]; n++) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       LIBRDF_S_label(world),
-                       librdf_new_node_from_literal(world, (const unsigned char *) desc->names[n],
-                                                    NULL, 0)
-          );
-    }
-
-    if (desc->label) {
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       LIBRDF_S_comment(world),
-                       librdf_new_node_from_literal(world, (const unsigned char *) desc->label, NULL,
-                                                    0)
-          );
-    }
-
-    for (n = 0; n < desc->mime_types_count; n++) {
-      const raptor_type_q mime_type = desc->mime_types[n];
-      librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
-                       librdf_new_node_from_uri_local_name(world, format_ns_uri,
-                                                           (const unsigned char *) "media_type"),
-                       librdf_new_node_from_literal(world, (unsigned char *) mime_type.mime_type,
-                                                    NULL, 0)
-          );
-    }
-
-    // FIXME: this should use uri_strings_count, when it is working with rasqal again
-    if (desc->uri_strings) {
-      for (n = 0; desc->uri_strings[n]; n++) {
-        const char *uri_string = desc->uri_strings[n];
-        librdf_model_add(sd_model,
-                         librdf_new_node_from_node(bnode),
-                         LIBRDF_S_seeAlso(world),
-                         librdf_new_node_from_uri_string(world,
-                                                         (const unsigned char *) uri_string)
-            );
-      }
-    }
-
-    librdf_free_node(bnode);
-  }
-
-  return 0;
-}
-
-int description_init(void)
-{
-  char *description;
-
-  // Create namespace URIs
-  format_ns_uri = librdf_new_uri(world, (unsigned char *) "http://www.w3.org/ns/formats/");
-  sd_ns_uri =
-      librdf_new_uri(world, (unsigned char *) "http://www.w3.org/ns/sparql-service-description#");
-
-  sd_storage = librdf_new_storage(world, "memory", "service_description", "");
-  if (!sd_storage) {
-    perror("Failed to create storage for service description.");
-    return -1;
-  }
-
-  sd_model = librdf_new_model(world, sd_storage, NULL);
-  if (!sd_model) {
-    redstore_error("Failed to create model for service description.");
-    return -1;
-  }
-
-  service_node = librdf_new_node(world);
-  if (!service_node) {
-    redstore_error("Failed to create service description bnode - librdf_new_node returned NULL");
-    return -1;
-  }
-
-  librdf_model_add(sd_model,
-                   librdf_new_node_from_node(service_node),
-                   LIBRDF_MS_type(world),
-                   librdf_new_node_from_uri_local_name(world, sd_ns_uri,
-                                                       (unsigned char *) "Service")
-      );
-
-  add_syntax_descriptions(librdf_parser_get_description, "inputFormat");
-  add_syntax_descriptions(librdf_serializer_get_description, "resultFormat");
-  add_syntax_descriptions(librdf_query_results_formats_get_description, "resultFormat");
-  add_syntax_descriptions(librdf_query_language_get_description, "queryLanguage");
-
-  librdf_model_add(sd_model,
-                   librdf_new_node_from_node(service_node),
-                   LIBRDF_S_label(world),
-                   librdf_new_node_from_literal(world, (unsigned char *) storage_name, NULL, 0)
-      );
-
-  description = malloc(128);
-  snprintf(description, 128, "RedStore %s endpoint using the '%s' storage module.",
-           PACKAGE_VERSION, storage_type);
-  librdf_model_add(sd_model,
-                   librdf_new_node_from_node(service_node),
-                   LIBRDF_S_comment(world),
-                   librdf_new_node_from_literal(world, (unsigned char *) description, NULL, 0)
-      );
-  free(description);
-
-  return 0;
-}
-
-
 static librdf_node *new_node_from_integer(librdf_world * world, int i)
 {
   librdf_uri *xsd_integer_uri = NULL;
+  librdf_node *node = NULL;
   unsigned char *string = NULL;
 
 #define INTEGER_BUFFER_SIZE 20
@@ -182,44 +48,45 @@ static librdf_node *new_node_from_integer(librdf_world * world, int i)
 
   xsd_integer_uri =
       librdf_new_uri(world, (unsigned char *) "http://www.w3.org/2001/XMLSchema#integer");
-  return librdf_new_node_from_typed_literal(world, string, NULL, xsd_integer_uri);
+
+  node = librdf_new_node_from_typed_literal(world, string, NULL, xsd_integer_uri);
+
+  if (xsd_integer_uri)
+    librdf_free_uri(xsd_integer_uri);
+
+  return node;
 }
 
-static int model_remove_statements(librdf_model * model, librdf_statement * statement)
+static librdf_node* sd_get_endpoint_node(const char * request_url_str)
 {
-  librdf_stream *stream = librdf_model_find_statements(model, statement);
-  int count = 0;
+  librdf_uri *request_uri = NULL, *endpoint_uri = NULL;
+  librdf_node *endpoint_node = NULL;
 
-  while (stream && !librdf_stream_end(stream)) {
-    librdf_statement *match = librdf_stream_get_object(stream);
-    librdf_model_remove_statement(model, match);
-    librdf_stream_next(stream);
-    count++;
+  request_uri = librdf_new_uri(world, (unsigned char*)request_url_str);
+  if (!request_uri) {
+    redstore_error("Failed to create request_uri");
+    goto CLEANUP;
   }
 
-  librdf_free_stream(stream);
-  return count;
-}
+  endpoint_uri = librdf_new_uri_relative_to_base(request_uri, (unsigned char*)"sparql");
+  if (!endpoint_uri) {
+    redstore_error("Failed to create endpoint_uri");
+    goto CLEANUP;
+  }
 
-int description_update(void)
-{
-  librdf_statement *statement = librdf_new_statement_from_nodes(world,
-                                                                librdf_new_node_from_node
-                                                                (service_node),
-                                                                librdf_new_node_from_uri_local_name
-                                                                (world, sd_ns_uri,
-                                                                 (unsigned char *)
-                                                                 "totalTriples"),
-                                                                NULL);
+  endpoint_node = librdf_new_node_from_uri(world, endpoint_uri);
+  if (!endpoint_uri) {
+    redstore_error("Failed to create endpoint_node");
+    goto CLEANUP;
+  }
 
-  model_remove_statements(sd_model, statement);
+CLEANUP:
+  if (request_uri)
+    librdf_free_uri(request_uri);
+  if (endpoint_uri)
+    librdf_free_uri(endpoint_uri);
 
-  librdf_statement_set_object(statement,
-                              new_node_from_integer(world, librdf_storage_size(storage)));
-
-  librdf_model_add_statement(sd_model, statement);
-
-  return 0;
+  return endpoint_node;
 }
 
 
@@ -246,101 +113,218 @@ static int context_count(librdf_storage * storage)
   return count;
 }
 
-static int model_write_target_cell(librdf_node * source, librdf_node * arc,
-                                   redhttp_response_t * response)
+
+static int sd_add_syntax_descriptions(librdf_model *sd_model, librdf_node *service_node, description_proc_t desc_proc, const char *type)
 {
-  librdf_iterator *iterator;
-  char *str;
+  librdf_node *bnode = NULL;
+  unsigned int i,n;
 
-  redstore_page_append_string(response, "<td>");
+  for(i=0; 1; i++) {
+    const raptor_syntax_description* desc = NULL;
+    desc = desc_proc(world, i);
+    if (!desc)
+      break;
 
-  iterator = librdf_model_get_targets(sd_model, source, arc);
-  while (!librdf_iterator_end(iterator)) {
-    librdf_node *node = librdf_iterator_get_object(iterator);
-    redstore_page_append_string(response, "<div>");
-    if (node) {
-      if (librdf_node_is_literal(node)) {
-        str = (char *) librdf_node_get_literal_value(node);
-        redstore_page_append_escaped(response, str, 0);
-      } else if (librdf_node_is_resource(node)) {
-        str = (char *) librdf_uri_as_string(librdf_node_get_uri(node));
-        redstore_page_append_string(response, "<a href=\"");
-        redstore_page_append_escaped(response, str, '"');
-        redstore_page_append_string(response, "\">");
-        redstore_page_append_escaped(response, str, 0);
-        redstore_page_append_string(response, "</a>");
-      } else if (librdf_node_is_blank(node)) {
-        str = (char *) librdf_node_get_blank_identifier(node);
-        redstore_page_append_string(response, "_:");
-        redstore_page_append_escaped(response, str, 0);
-      }
-    } else {
-      redstore_page_append_string(response, "&nbsp;");
+    bnode = librdf_new_node(world);
+    if (!bnode) {
+      redstore_error("Failed to create new bnode for syntax description.");
+      return -1;
     }
-    redstore_page_append_string(response, "</div>");
-    librdf_iterator_next(iterator);
+
+    librdf_model_add(sd_model,
+                     librdf_new_node_from_node(bnode),
+                     librdf_new_node_from_node(LIBRDF_MS_type(world)),
+                     librdf_new_node_from_uri_local_name(world, format_ns_uri, (const unsigned char *) "Format")
+        );
+
+    librdf_model_add(sd_model,
+                     librdf_new_node_from_node(service_node),
+                     librdf_new_node_from_uri_local_name(world, sd_ns_uri,
+                                                         (const unsigned char *) type),
+                     librdf_new_node_from_node(bnode)
+        );
+
+    for (n = 0; desc->names[n]; n++) {
+      librdf_model_add(sd_model,
+                       librdf_new_node_from_node(bnode),
+                       librdf_new_node_from_node(LIBRDF_S_label(world)),
+                       librdf_new_node_from_literal(world, (const unsigned char *) desc->names[n],
+                                                    NULL, 0)
+          );
+    }
+
+    if (desc->label) {
+      librdf_model_add(sd_model,
+                       librdf_new_node_from_node(bnode),
+                       librdf_new_node_from_node(LIBRDF_S_comment(world)),
+                       librdf_new_node_from_literal(world, (const unsigned char *) desc->label, NULL,
+                                                    0)
+          );
+    }
+
+    for (n = 0; n < desc->mime_types_count; n++) {
+      const raptor_type_q mime_type = desc->mime_types[n];
+      librdf_model_add(sd_model,
+                       librdf_new_node_from_node(bnode),
+                       librdf_new_node_from_uri_local_name(world, format_ns_uri,
+                                                           (const unsigned char *) "media_type"),
+                       librdf_new_node_from_literal(world, (unsigned char *) mime_type.mime_type,
+                                                    NULL, 0)
+          );
+    }
+
+    if (desc->uri_strings) {
+      for (n = 0; desc->uri_strings[n]; n++) {
+        const char *uri_string = desc->uri_strings[n];
+        librdf_model_add(sd_model,
+                         librdf_new_node_from_node(bnode),
+                         librdf_new_node_from_node(LIBRDF_S_seeAlso(world)),
+                         librdf_new_node_from_uri_string(world,
+                                                         (const unsigned char *) uri_string)
+            );
+      }
+    }
+
+    librdf_free_node(bnode);
   }
-  redstore_page_append_string(response, "</td>");
 
   return 0;
 }
 
-static void syntax_html_table(const char *title, librdf_node * source, librdf_node * arc,
-                              redhttp_response_t * response)
+librdf_model * create_service_description(librdf_storage *sd_storage, const char * request_url)
 {
-  librdf_node *mt_node =
-      librdf_new_node_from_uri_local_name(world, format_ns_uri, (unsigned char *) "media_type");
-  librdf_iterator *iterator;
+  librdf_model *sd_model = NULL;
+  librdf_node *service_node = NULL;
+  char *comment = NULL;
+
+  sd_model = librdf_new_model(world, sd_storage, NULL);
+  if (!sd_model) {
+    redstore_error("Failed to create model for service description.");
+    return NULL;
+  }
+
+  service_node = librdf_new_node(world);
+  if (!service_node) {
+    redstore_error("Failed to create service description bnode - librdf_new_node returned NULL");
+    librdf_free_model(sd_model);
+    return NULL;
+  }
+
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(service_node),
+                   librdf_new_node_from_node(LIBRDF_MS_type(world)),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "Service")
+      );
+
+  sd_add_syntax_descriptions(sd_model, service_node, librdf_parser_get_description, "inputFormat");
+  sd_add_syntax_descriptions(sd_model, service_node, librdf_serializer_get_description, "resultFormat");
+  sd_add_syntax_descriptions(sd_model, service_node, librdf_query_results_formats_get_description, "resultFormat");
+
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(service_node),
+                   librdf_new_node_from_node(LIBRDF_S_label(world)),
+                   librdf_new_node_from_literal(world, (unsigned char *) storage_name, NULL, 0)
+      );
+
+  #define COMMENT_MAX_LEN   (128)
+  comment = malloc(COMMENT_MAX_LEN);
+  snprintf(comment, COMMENT_MAX_LEN, "RedStore %s endpoint using the '%s' storage module.",
+           PACKAGE_VERSION, storage_type);
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(service_node),
+                   librdf_new_node_from_node(LIBRDF_S_comment(world)),
+                   librdf_new_node_from_literal(world, (unsigned char *) comment, NULL, 0)
+      );
+  free(comment);
+
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(service_node),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "endpoint"),
+                   sd_get_endpoint_node(request_url)
+      );
+
+  return sd_model;
+}
+
+
+
+static void description_html_table(const char *title, description_proc_t desc_proc, redhttp_response_t * response)
+{
+  int i,n;
 
   redstore_page_append_strings(response, "<h2>", title, "</h2>\n", NULL);
   redstore_page_append_string(response, "<table border=\"1\">\n");
   redstore_page_append_string(response,
                               "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>Spec</th></tr>\n");
-  iterator = librdf_model_get_targets(sd_model, source, arc);
 
-  while (!librdf_iterator_end(iterator)) {
-    librdf_node *format_node = librdf_iterator_get_object(iterator);
-    if (format_node) {
-      redstore_page_append_string(response, "<tr>");
-      model_write_target_cell(format_node, LIBRDF_S_label(world), response);
-      model_write_target_cell(format_node, LIBRDF_S_comment(world), response);
-      model_write_target_cell(format_node, mt_node, response);
-      model_write_target_cell(format_node, LIBRDF_S_seeAlso(world), response);
-      redstore_page_append_string(response, "</tr>\n");
+  for(i=0; 1; i++) {
+    const raptor_syntax_description* desc = desc_proc(world, i);
+    if (!desc)
+      break;
+
+    redstore_page_append_string(response, "<tr>");
+
+    redstore_page_append_string(response, "<td>");
+    for (n = 0; desc->names[n]; n++) {
+      redstore_page_append_strings(response, desc->names[n], "<br />\n", NULL);
     }
-    librdf_iterator_next(iterator);
-  }
-  librdf_free_iterator(iterator);
-  redstore_page_append_string(response, "</table>\n");
+    redstore_page_append_string(response, "</td>\n");
 
-  librdf_free_node(mt_node);
+    redstore_page_append_string(response, "<td>");
+    if (desc->label)
+      redstore_page_append_string(response, desc->label);
+    redstore_page_append_string(response, "</td>\n");
+
+    redstore_page_append_string(response, "<td>");
+    for (n = 0; n < desc->mime_types_count; n++) {
+      const raptor_type_q mime_type = desc->mime_types[n];
+      redstore_page_append_string(response, mime_type.mime_type);
+
+      if (mime_type.q != 10) {
+        redstore_page_append_string(response, " <i>(");
+        redstore_page_append_decimal(response, mime_type.q / 10);
+        redstore_page_append_string(response, ".");
+        redstore_page_append_decimal(response, mime_type.q % 10);
+        redstore_page_append_string(response, ")</i>");
+      }
+      redstore_page_append_string(response, "<br />\n");
+    }
+    redstore_page_append_string(response, "</td>\n");
+
+    redstore_page_append_string(response, "<td>");
+    if (desc->uri_strings) {
+      for (n = 0; desc->uri_strings[n]; n++) {
+        const char *uri_string = desc->uri_strings[n];
+        redstore_page_append_string(response, "<a href=\"");
+        redstore_page_append_escaped(response, uri_string, '"');
+        redstore_page_append_string(response, "\">");
+        redstore_page_append_escaped(response, uri_string, 0);
+        redstore_page_append_string(response, "</a>");
+        redstore_page_append_string(response, "<br />\n");
+      }
+    }
+    redstore_page_append_string(response, "</td>\n");
+
+    redstore_page_append_string(response, "</tr>\n");
+  }
+  redstore_page_append_string(response, "</table>\n");
 }
 
 static redhttp_response_t *handle_html_description(redhttp_request_t * request, void *user_data)
 {
+
   redhttp_response_t *response = redstore_page_new(REDHTTP_OK, "Service Description");
-  librdf_node *total_node =
-      librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "totalTriples");
-  librdf_node *rf_node =
-      librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "resultFormat");
-  librdf_node *if_node =
-      librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "inputFormat");
-  librdf_node *ql_node = librdf_new_node_from_uri_local_name(world, sd_ns_uri,
-                                                             (unsigned char *) "queryLanguage");
 
   redstore_page_append_string(response, "<h2>Store Information</h2>\n");
   redstore_page_append_string(response, "<table border=\"1\">\n");
-  redstore_page_append_string(response, "<tr><th>Store Name</th>");
-  model_write_target_cell(service_node, LIBRDF_S_label(world), response);
-  redstore_page_append_string(response, "</tr>\n");
-  redstore_page_append_string(response, "<tr><th>Description</th>");
-  model_write_target_cell(service_node, LIBRDF_S_comment(world), response);
-  redstore_page_append_string(response, "</tr>\n");
-  redstore_page_append_string(response, "<tr><th>Triple Count</th>");
-  model_write_target_cell(service_node, total_node, response);
-  redstore_page_append_string(response, "</tr>\n");
+  redstore_page_append_strings(response, "<tr><th>Storage Name</th><td>", storage_name, "</td></tr>\n", NULL);
+  redstore_page_append_strings(response, "<tr><th>Storage Type</th><td>", storage_type, "</td></tr>\n", NULL);
+  redstore_page_append_strings(response, "<tr><th>Storage Options</th><td>", public_storage_options, "</td></tr>\n", NULL);
 
-  // FIXME: Put these into the RDF:
+  redstore_page_append_string(response, "<tr><th>Triple Count</th><td>");
+  redstore_page_append_decimal(response, librdf_storage_size(storage));
+  redstore_page_append_string(response, "</td></tr>\n");
+
   redstore_page_append_string(response, "<tr><th>Named Graph Count</th><td>");
   redstore_page_append_decimal(response, context_count(storage));
   redstore_page_append_string(response, "</td></tr>\n");
@@ -358,20 +342,17 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
   redstore_page_append_string(response, "</td></tr>\n");
   redstore_page_append_string(response, "</table>\n");
 
-  syntax_html_table("Query Languages", service_node, ql_node, response);
-  syntax_html_table("Input Formats", service_node, if_node, response);
-  syntax_html_table("Result Formats", service_node, rf_node, response);
+  description_html_table("Query Languages", librdf_query_language_get_description, response);
+  description_html_table("Query Result Formats", librdf_query_results_formats_get_description, response);
+  description_html_table("Input RDF Formats", librdf_parser_get_description, response);
+  description_html_table("Output RDF Formats", librdf_serializer_get_description, response);
 
   redstore_page_append_string(response,
                               "<p>This document is also available as "
                               "<a href=\"description?format=turtle\">RDF</a>.</p>\n");
 
-  redstore_page_end(response);
 
-  librdf_free_node(total_node);
-  librdf_free_node(ql_node);
-  librdf_free_node(if_node);
-  librdf_free_node(rf_node);
+  redstore_page_end(response);
 
   return response;
 }
@@ -380,31 +361,78 @@ redhttp_response_t *handle_description_get(redhttp_request_t * request, void *us
 {
   char *format_str = redstore_get_format(request, accepted_serialiser_types, "text/html");
   redhttp_response_t *response = NULL;
-
-  description_update();
+  librdf_storage *sd_storage = NULL;
+  librdf_model *sd_model = NULL;
+  librdf_stream *sd_stream = NULL;
 
   if (format_str == NULL || redstore_is_html_format(format_str)) {
     response = handle_html_description(request, user_data);
   } else {
-    librdf_stream *stream = librdf_model_as_stream(sd_model);
-    if (stream) {
-      response = format_graph_stream(request, stream);
-      librdf_free_stream(stream);
+    const char *request_url = redhttp_request_get_url(request);
+
+    sd_storage = librdf_new_storage(world, NULL, NULL, NULL);
+    if (!sd_storage) {
+      redstore_error("Failed to create temporary storage for service description.");
+      goto CLEANUP;
+    }
+
+    sd_model = create_service_description(sd_storage, request_url);
+    if (!sd_model) {
+      redstore_error("Failed to create model for service description.");
+      goto CLEANUP;
+    }
+
+    sd_stream = librdf_model_as_stream(sd_model);
+    if (!sd_stream) {
+      redstore_error("Failed to create stream for service description.");
+      goto CLEANUP;
+    }
+
+    response = format_graph_stream(request, sd_stream);
+    if (!response) {
+      redstore_error("Failed to create temporary storage for service description.");
+      goto CLEANUP;
     }
   }
 
+
+CLEANUP:
+  if (sd_stream)
+    librdf_free_stream(sd_stream);
+  if (sd_model)
+    librdf_free_model(sd_model);
+  if (sd_storage)
+    librdf_free_storage(sd_storage);
   if (format_str)
     free(format_str);
 
   return response;
 }
 
-void description_free(void)
+int description_init()
 {
-  if (sd_storage)
-    librdf_free_storage(sd_storage);
+  // Create namespace URIs
+  format_ns_uri = librdf_new_uri(world, (unsigned char *) "http://www.w3.org/ns/formats/");
+  if (!format_ns_uri) {
+    redstore_error("Failed to initialise format_ns_uri");
+    return 1;
+  }
+
+  sd_ns_uri = librdf_new_uri(world, (unsigned char *) "http://www.w3.org/ns/sparql-service-description#");
+  if (!sd_ns_uri) {
+    redstore_error("Failed to initialise sd_ns_uri");
+    return 1;
+  }
+
+  // Success
+  return 0;
+}
+
+void description_free()
+{
   if (format_ns_uri)
     librdf_free_uri(format_ns_uri);
+
   if (sd_ns_uri)
     librdf_free_uri(sd_ns_uri);
 }

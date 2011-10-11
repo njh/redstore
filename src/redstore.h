@@ -75,6 +75,7 @@ extern unsigned long import_count;
 extern unsigned long request_count;
 extern const char *storage_name;
 extern const char *storage_type;
+extern char *public_storage_options;
 extern librdf_world *world;
 extern librdf_storage *storage;
 extern librdf_model *model;
@@ -83,9 +84,6 @@ extern raptor_stringbuffer *error_buffer;
 extern redhttp_negotiate_t *accepted_serialiser_types;
 extern redhttp_negotiate_t *accepted_query_result_types;
 
-extern librdf_storage *sd_storage;
-extern librdf_model *sd_model;
-extern librdf_node *service_node;
 extern librdf_uri *format_ns_uri;
 extern librdf_uri *sd_ns_uri;
 
@@ -103,7 +101,6 @@ typedef const raptor_syntax_description* (*description_proc_t) (librdf_world *wo
 
 int description_init(void);
 redhttp_response_t *handle_description_get(redhttp_request_t * request, void *user_data);
-int description_update(void);
 void description_free(void);
 
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data);
