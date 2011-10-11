@@ -179,10 +179,10 @@ is(scalar(@_ = split(/<result>/,$response->content))-1, 2, "SPARQL SELECT Query 
 is_wellformed_xml($response->content, "SPARQL response is valid XML");
 
 # GET without a query string should return a service description
-$response = $ua->get($base_url."sparql?format=turtle");
+$response = $ua->get($base_url."sparql?format=rdfxml-abbrev");
 is($response->code, 200, "GET to sparql endpoint without query is successful");
-is($response->content_type, "application/turtle", "GET to sparql endpoint without query returns RDF");
-like($response->content, qr/a sd:Service/, "GET to sparql endpoint returns RDF containing 'a sd:Service' triple");
+is($response->content_type, "application/rdf+xml", "GET to sparql endpoint without query returns RDF");
+like($response->content, qr/<sd:Service>/, "GET to sparql endpoint returns RDF containing '<sd:Service>'");
 
 # Test alternative SPARQL endpoint URLs
 {
