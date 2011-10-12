@@ -213,7 +213,7 @@ static int sd_add_query_languages(librdf_model *sd_model, librdf_node *service_n
     }
 
     if (lang_node) {
-      librdf_model_add(librdf_new_node_from_node(sd_model),
+      librdf_model_add(sd_model,
                        librdf_new_node_from_node(service_node),
                        librdf_new_node_from_uri_local_name(world, sd_ns_uri,
                                                            (const unsigned char *) "supportedLanguage"),
@@ -239,6 +239,8 @@ static int sd_add_query_languages(librdf_model *sd_model, librdf_node *service_n
       librdf_free_node(lang_node);
     }
   }
+
+  return 0;
 }
 
 static librdf_model * create_service_description(librdf_storage *sd_storage, const char * request_url)
@@ -293,7 +295,7 @@ static librdf_model * create_service_description(librdf_storage *sd_storage, con
                    librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "endpoint"),
                    sd_get_endpoint_node(request_url)
       );
-      
+
   librdf_free_node(service_node);
 
   return sd_model;
