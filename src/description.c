@@ -115,7 +115,7 @@ static int context_count(librdf_storage * storage)
 }
 
 
-static int sd_add_syntax_descriptions(librdf_model *sd_model, librdf_node *service_node, description_proc_t desc_proc, const char *type)
+static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *service_node, description_proc_t desc_proc, const char *type)
 {
   librdf_node *bnode = NULL;
   unsigned int i,n;
@@ -192,6 +192,55 @@ static int sd_add_syntax_descriptions(librdf_model *sd_model, librdf_node *servi
   return 0;
 }
 
+static int sd_add_query_languages(librdf_model *sd_model, librdf_node *service_node)
+{
+  int i,n;
+
+  for(i=0; 1; i++) {
+    const raptor_syntax_description* desc = librdf_query_language_get_description(world, i);
+    librdf_node *lang_node = NULL;
+    if (!desc)
+      break;
+
+    for (n = 0; desc->names[n]; n++) {
+      if (strcmp(desc->names[n], "sparql10")==0) {
+        lang_node = librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "SPARQL10Query");
+        break;
+      } else if (strcmp(desc->names[n], "sparql11-query")==0) {
+        lang_node = librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "SPARQL11Query");
+        break;
+      }
+    }
+
+    if (lang_node) {
+      librdf_model_add(librdf_new_node_from_node(sd_model),
+                       librdf_new_node_from_node(service_node),
+                       librdf_new_node_from_uri_local_name(world, sd_ns_uri,
+                                                           (const unsigned char *) "supportedLanguage"),
+                       librdf_new_node_from_node(lang_node)
+          );
+
+      librdf_model_add(sd_model,
+                       librdf_new_node_from_node(lang_node),
+                       librdf_new_node_from_node(LIBRDF_S_comment(world)),
+                       librdf_new_node_from_literal(world, (const unsigned char *) desc->label, NULL, 0)
+          );
+
+      if (desc->uri_strings) {
+        for (n = 0; desc->uri_strings[n]; n++) {
+          librdf_model_add(sd_model,
+                           librdf_new_node_from_node(lang_node),
+                           librdf_new_node_from_node(LIBRDF_S_seeAlso(world)),
+                           librdf_new_node_from_uri_string(world, (const unsigned char *) desc->uri_strings[n])
+              );
+        }
+      }
+
+      librdf_free_node(lang_node);
+    }
+  }
+}
+
 static librdf_model * create_service_description(librdf_storage *sd_storage, const char * request_url)
 {
   librdf_model *sd_model = NULL;
@@ -217,9 +266,10 @@ static librdf_model * create_service_description(librdf_storage *sd_storage, con
                    librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "Service")
       );
 
-  sd_add_syntax_descriptions(sd_model, service_node, librdf_parser_get_description, "inputFormat");
-  sd_add_syntax_descriptions(sd_model, service_node, librdf_serializer_get_description, "resultFormat");
-  sd_add_syntax_descriptions(sd_model, service_node, librdf_query_results_formats_get_description, "resultFormat");
+  sd_add_format_descriptions(sd_model, service_node, librdf_parser_get_description, "inputFormat");
+  sd_add_format_descriptions(sd_model, service_node, librdf_serializer_get_description, "resultFormat");
+  sd_add_format_descriptions(sd_model, service_node, librdf_query_results_formats_get_description, "resultFormat");
+  sd_add_query_languages(sd_model, service_node);
 
   librdf_model_add(sd_model,
                    librdf_new_node_from_node(service_node),
@@ -243,6 +293,8 @@ static librdf_model * create_service_description(librdf_storage *sd_storage, con
                    librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "endpoint"),
                    sd_get_endpoint_node(request_url)
       );
+      
+  librdf_free_node(service_node);
 
   return sd_model;
 }
