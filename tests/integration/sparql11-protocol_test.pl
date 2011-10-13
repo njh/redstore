@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 86;
+use Test::More tests => 83;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -177,12 +177,6 @@ is($response->code, 200, "SPARQL SELECT query with LIMIT is successful");
 is($response->content_type, "application/sparql-results+xml", "SPARQL SELECT query with LIMIT Content Type data is correct");
 is(scalar(@_ = split(/<result>/,$response->content))-1, 2, "SPARQL SELECT Query Result count is correct");
 is_wellformed_xml($response->content, "SPARQL response is valid XML");
-
-# GET without a query string should return a service description
-$response = $ua->get($base_url."sparql?format=rdfxml-abbrev");
-is($response->code, 200, "GET to sparql endpoint without query is successful");
-is($response->content_type, "application/rdf+xml", "GET to sparql endpoint without query returns RDF");
-like($response->content, qr/<sd:Service>/, "GET to sparql endpoint returns RDF containing '<sd:Service>'");
 
 # Test alternative SPARQL endpoint URLs
 {
