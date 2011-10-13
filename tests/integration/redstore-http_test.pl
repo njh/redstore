@@ -7,7 +7,7 @@ use redstore_testlib;
 use warnings;
 use strict;
 
-use Test::More tests => 85;
+use Test::More tests => 87;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -46,6 +46,8 @@ is($response->content_type, 'text/html', "Service Description page is of type te
 ok($response->content_length > 100, "Service Description page is more than 100 bytes long");
 is_valid_xhtml($response->content, "Service Description page should be valid XHTML");
 like($response->content, qr(<h1>Service Description</h1>), "Service Description page has an h1 title");
+like($response->content, qr(<th>Storage Name</th><td>redstore-test</td>), "Service Description contains the storage name");
+like($response->content, qr(<th>Storage Type</th><td>memory</td>), "Service Description contains the storage type");
 like($response->content, qr(SPARQL 1.1), "Service Description references SPARQL 1.1");
 like($response->content, qr(application/sparql), "Service Description references application/sparql");
 like($response->content, qr(rdf-sparql-query), "Service Description references rdf-sparql-query");
