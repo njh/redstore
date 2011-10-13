@@ -117,7 +117,7 @@ static int context_count(librdf_storage * storage)
 
 static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *service_node, description_proc_t desc_proc, const char *type)
 {
-  librdf_node *bnode = NULL;
+  librdf_node *format_node = NULL;
   unsigned int i,n;
 
   for(i=0; 1; i++) {
@@ -126,14 +126,24 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
     if (!desc)
       break;
 
-    bnode = librdf_new_node(world);
-    if (!bnode) {
-      redstore_error("Failed to create new bnode for syntax description.");
+    // Hack to remove the 'guess' format from the service description
+    if (strcmp(desc->names[0], "guess") == 0)
+      continue;
+
+    // If the format has no URI, create a bnode
+    if (desc->uri_strings && desc->uri_strings[0]) {
+      format_node = librdf_new_node_from_uri_string(world, (const unsigned char *) desc->uri_strings[0]);
+    } else {
+      format_node = librdf_new_node(world);
+    }
+
+    if (!format_node) {
+      redstore_error("Failed to create new node for format.");
       return -1;
     }
 
     librdf_model_add(sd_model,
-                     librdf_new_node_from_node(bnode),
+                     librdf_new_node_from_node(format_node),
                      librdf_new_node_from_node(LIBRDF_MS_type(world)),
                      librdf_new_node_from_uri_local_name(world, format_ns_uri, (const unsigned char *) "Format")
         );
@@ -142,12 +152,12 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
                      librdf_new_node_from_node(service_node),
                      librdf_new_node_from_uri_local_name(world, sd_ns_uri,
                                                          (const unsigned char *) type),
-                     librdf_new_node_from_node(bnode)
+                     librdf_new_node_from_node(format_node)
         );
 
     for (n = 0; desc->names[n]; n++) {
       librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
+                       librdf_new_node_from_node(format_node),
                        librdf_new_node_from_node(LIBRDF_S_label(world)),
                        librdf_new_node_from_literal(world, (const unsigned char *) desc->names[n],
                                                     NULL, 0)
@@ -156,7 +166,7 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
 
     if (desc->label) {
       librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
+                       librdf_new_node_from_node(format_node),
                        librdf_new_node_from_node(LIBRDF_S_comment(world)),
                        librdf_new_node_from_literal(world, (const unsigned char *) desc->label, NULL,
                                                     0)
@@ -166,7 +176,7 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
     for (n = 0; n < desc->mime_types_count; n++) {
       const raptor_type_q mime_type = desc->mime_types[n];
       librdf_model_add(sd_model,
-                       librdf_new_node_from_node(bnode),
+                       librdf_new_node_from_node(format_node),
                        librdf_new_node_from_uri_local_name(world, format_ns_uri,
                                                            (const unsigned char *) "media_type"),
                        librdf_new_node_from_literal(world, (unsigned char *) mime_type.mime_type,
@@ -174,11 +184,11 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
           );
     }
 
-    if (desc->uri_strings) {
-      for (n = 0; desc->uri_strings[n]; n++) {
+    if (desc->uri_strings && desc->uri_strings[0]) {
+      for (n = 1; desc->uri_strings[n]; n++) {
         const char *uri_string = desc->uri_strings[n];
         librdf_model_add(sd_model,
-                         librdf_new_node_from_node(bnode),
+                         librdf_new_node_from_node(format_node),
                          librdf_new_node_from_node(LIBRDF_S_seeAlso(world)),
                          librdf_new_node_from_uri_string(world,
                                                          (const unsigned char *) uri_string)
@@ -186,7 +196,7 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
       }
     }
 
-    librdf_free_node(bnode);
+    librdf_free_node(format_node);
   }
 
   return 0;
