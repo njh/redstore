@@ -99,6 +99,7 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
   librdf_serializer_set_namespace(serialiser, librdf_get_concept_schema_namespace(world), "rdfs");
   librdf_serializer_set_namespace(serialiser, sd_ns_uri, "sd");
   librdf_serializer_set_namespace(serialiser, format_ns_uri, "format");
+  librdf_serializer_set_namespace(serialiser, void_ns_uri, "void");
 
   // Send back the response headers
   response = redhttp_response_new(REDHTTP_OK, NULL);

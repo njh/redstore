@@ -86,6 +86,7 @@ extern redhttp_negotiate_t *accepted_query_result_types;
 
 extern librdf_uri *format_ns_uri;
 extern librdf_uri *sd_ns_uri;
+extern librdf_uri *void_ns_uri;
 
 
 // ------- Callbacks ---------

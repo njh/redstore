@@ -29,9 +29,8 @@
 // ------- Globals -------
 librdf_uri *format_ns_uri = NULL;
 librdf_uri *sd_ns_uri = NULL;
+librdf_uri *void_ns_uri = NULL;
 
-
-/*
 static librdf_node *new_node_from_integer(librdf_world * world, int i)
 {
   librdf_uri *xsd_integer_uri = NULL;
@@ -56,7 +55,6 @@ static librdf_node *new_node_from_integer(librdf_world * world, int i)
 
   return node;
 }
-*/
 
 static librdf_node* sd_get_endpoint_node(const char * request_url_str)
 {
@@ -253,6 +251,66 @@ static int sd_add_query_languages(librdf_model *sd_model, librdf_node *service_n
   return 0;
 }
 
+static int sd_add_dataset_description(librdf_model *sd_model, librdf_node *service_node)
+{
+  librdf_node *dataset_node = NULL, *default_graph_node = NULL;
+  int triple_count = librdf_storage_size(storage);
+
+  dataset_node = librdf_new_node(world);
+  if (!dataset_node) {
+    redstore_error("Failed to create default dataset bnode - librdf_new_node returned NULL");
+    return 1;
+  }
+
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(service_node),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri,
+                                                       (const unsigned char *) "defaultDatasetDescription"),
+                   librdf_new_node_from_node(dataset_node)
+      );
+
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(dataset_node),
+                   librdf_new_node_from_node(LIBRDF_MS_type(world)),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri, (const unsigned char *) "Dataset")
+      );
+
+  default_graph_node = librdf_new_node(world);
+  if (!default_graph_node) {
+    redstore_error("Failed to create default graph bnode - librdf_new_node returned NULL");
+    return 1;
+  }
+
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(dataset_node),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri,
+                                                       (const unsigned char *) "defaultGraph"),
+                   librdf_new_node_from_node(default_graph_node)
+      );
+
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(default_graph_node),
+                   librdf_new_node_from_node(LIBRDF_MS_type(world)),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri, (const unsigned char *) "Graph")
+      );
+
+  if (triple_count>=0) {
+    librdf_model_add(sd_model,
+                     librdf_new_node_from_node(default_graph_node),
+                     librdf_new_node_from_uri_local_name(world, void_ns_uri, (const unsigned char *) "triples"),
+                     new_node_from_integer(world, triple_count)
+        );
+  }
+
+  if (dataset_node)
+    librdf_free_node(dataset_node);
+
+  if (default_graph_node)
+    librdf_free_node(default_graph_node);
+
+  return 0;
+}
+
 static librdf_model * create_service_description(librdf_storage *sd_storage, const char * request_url)
 {
   librdf_model *sd_model = NULL;
@@ -282,6 +340,7 @@ static librdf_model * create_service_description(librdf_storage *sd_storage, con
   sd_add_format_descriptions(sd_model, service_node, librdf_serializer_get_description, "resultFormat");
   sd_add_format_descriptions(sd_model, service_node, librdf_query_results_formats_get_description, "resultFormat");
   sd_add_query_languages(sd_model, service_node);
+  sd_add_dataset_description(sd_model, service_node);
 
   librdf_model_add(sd_model,
                    librdf_new_node_from_node(service_node),
@@ -304,6 +363,13 @@ static librdf_model * create_service_description(librdf_storage *sd_storage, con
                    librdf_new_node_from_node(service_node),
                    librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "endpoint"),
                    sd_get_endpoint_node(request_url)
+      );
+
+  // Redland's default graph is the union of all other graphs
+  librdf_model_add(sd_model,
+                   librdf_new_node_from_node(service_node),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "feature"),
+                   librdf_new_node_from_uri_local_name(world, sd_ns_uri, (unsigned char *) "UnionDefaultGraph")
       );
 
   librdf_free_node(service_node);
@@ -489,6 +555,12 @@ int description_init()
     return 1;
   }
 
+  void_ns_uri = librdf_new_uri(world, (unsigned char *) "http://rdfs.org/ns/void#");
+  if (!void_ns_uri) {
+    redstore_error("Failed to initialise void_ns_uri");
+    return 1;
+  }
+
   // Success
   return 0;
 }
@@ -500,4 +572,7 @@ void description_free()
 
   if (sd_ns_uri)
     librdf_free_uri(sd_ns_uri);
+
+  if (void_ns_uri)
+    librdf_free_uri(void_ns_uri);
 }
