@@ -120,6 +120,7 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
 
   for(i=0; 1; i++) {
     const raptor_syntax_description* desc = NULL;
+    int uri_index = 0;
     desc = desc_proc(world, i);
     if (!desc)
       break;
@@ -128,9 +129,10 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
     if (strcmp(desc->names[0], "guess") == 0)
       continue;
 
-    // If the format has no URI, create a bnode
-    if (desc->uri_strings && desc->uri_strings[0]) {
+    // If the format has a format URI, use that, otherwise create a bnode
+    if (desc->uri_strings && desc->uri_strings[0] && strncmp("http://www.w3.org/ns/formats/", desc->uri_strings[0], 29) == 0) {
       format_node = librdf_new_node_from_uri_string(world, (const unsigned char *) desc->uri_strings[0]);
+      uri_index++;
     } else {
       format_node = librdf_new_node(world);
     }
@@ -182,15 +184,23 @@ static int sd_add_format_descriptions(librdf_model *sd_model, librdf_node *servi
           );
     }
 
-    if (desc->uri_strings && desc->uri_strings[0]) {
-      for (n = 1; desc->uri_strings[n]; n++) {
-        const char *uri_string = desc->uri_strings[n];
-        librdf_model_add(sd_model,
-                         librdf_new_node_from_node(format_node),
-                         librdf_new_node_from_node(LIBRDF_S_seeAlso(world)),
-                         librdf_new_node_from_uri_string(world,
-                                                         (const unsigned char *) uri_string)
-            );
+    if (desc->uri_strings) {
+      int firstUri = uri_index;
+      for (; desc->uri_strings[uri_index]; uri_index++) {
+        const unsigned char *uri_string = (const unsigned char *) desc->uri_strings[uri_index];
+        if (firstUri == uri_index) {
+          librdf_model_add(sd_model,
+                           librdf_new_node_from_node(format_node),
+                           librdf_new_node_from_node(LIBRDF_S_isDefinedBy(world)),
+                           librdf_new_node_from_uri_string(world, uri_string)
+              );
+        } else {
+          librdf_model_add(sd_model,
+                           librdf_new_node_from_node(format_node),
+                           librdf_new_node_from_node(LIBRDF_S_seeAlso(world)),
+                           librdf_new_node_from_uri_string(world, uri_string)
+              );
+        }
       }
     }
 
@@ -386,7 +396,7 @@ static void description_html_table(const char *title, description_proc_t desc_pr
   redstore_page_append_strings(response, "<h2>", title, "</h2>\n", NULL);
   redstore_page_append_string(response, "<table border=\"1\">\n");
   redstore_page_append_string(response,
-                              "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>Spec</th></tr>\n");
+                              "<tr><th>Name</th><th>Description</th><th>MIME Type</th><th>URIs</th></tr>\n");
 
   for(i=0; 1; i++) {
     const raptor_syntax_description* desc = desc_proc(world, i);
