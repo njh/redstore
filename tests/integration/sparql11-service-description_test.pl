@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 29;
+use Test::More tests => 36;
 
 my $rdf_ns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns';
 my $sd_ns = 'http://www.w3.org/ns/sparql-service-description';
@@ -105,8 +105,12 @@ like(
 
 # Check for Turtle format
 # FIXME: this should lookup by Format URI, once Redland supports it
-my ($turtle_node) = ($response->content =~ qr[(\S+) <$rdfs_ns#label> "turtle"]);
-like($turtle_node, qr[^<http://], 'There is a Format with label "Turtle" in the description.');
+my ($turtle_node) = ($response->content =~ qr[(\S+) <$rdfs_ns#comment> "Turtle Terse RDF Triple Language"]);
+like($turtle_node, qr[^<http://], 'There is a Format with comment "Turtle" in the description.');
+like(
+  $response->content, qr[$turtle_node <$rdfs_ns#label> "turtle"],
+  'The turtle node has the label "turtle".'
+);
 like(
   $response->content, qr[$turtle_node <$rdf_ns#type> <${format_ns}Format>],
   'The turtle node is of type format:Format.'
@@ -122,6 +126,32 @@ like(
 like(
   $response->content, qr[$service_node <$sd_ns#resultFormat> $turtle_node],
   'The turtle is a supported result format.'
+);
+
+
+# Check for RDF/XML format
+# FIXME: this should lookup by Format URI, once Redland supports it
+my ($rdfxml_node) = ($response->content =~ qr[(\S+) <$rdfs_ns#comment> "RDF/XML"]);
+like($rdfxml_node, qr[^<http://], 'There is a Format with comment "RDF/XML" in the description.');
+like(
+  $response->content, qr[$rdfxml_node <$rdfs_ns#label> "rdfxml"],
+  'The rdfxml node has the label "rdfxml".'
+);
+like(
+  $response->content, qr[$rdfxml_node <$rdf_ns#type> <${format_ns}Format>],
+  'The rdfxml node is of type format:Format.'
+);
+like(
+  $response->content, qr[$rdfxml_node <${format_ns}media_type> "application/rdf\+xml"],
+  'The rdfxml node has the MIME type "application/rdf+xml" associated with it.'
+);
+like(
+  $response->content, qr[$service_node <$sd_ns#inputFormat> $rdfxml_node],
+  'The rdfxml is a supported input format.'
+);
+like(
+  $response->content, qr[$service_node <$sd_ns#resultFormat> $rdfxml_node],
+  'The rdfxml is a supported result format.'
 );
 
 
