@@ -14,7 +14,11 @@ use warnings;
 my $TOP_DIR = Cwd::realpath(dirname(__FILE__).'/..');
 
 # Check tools required are available
-my @TOOLS_REQUIRED = ('xcodebuild', 'du', 'hdiutil', '/usr/libexec/PlistBuddy', 'pandoc', 'osascript');
+my @TOOLS_REQUIRED = (
+  'xcodebuild', 'du', 'hdiutil',
+  '/usr/libexec/PlistBuddy',
+  'pandoc', 'osascript'
+);
 foreach my $cmd (@TOOLS_REQUIRED) {
   system("which $cmd > /dev/null") && die "Error: $cmd is not available on this system.";
 }
@@ -94,11 +98,11 @@ tell application "Finder"
 		set current view of container window to icon view
 		set toolbar visible of container window to false
 		set statusbar visible of container window to false
-		set the bounds of container window to {200, 200, 700, 550}
+		set the bounds of container window to {220, 220, 730, 580}
 		set theViewOptions to the icon view options of container window
 		set arrangement of theViewOptions to not arranged
 		set icon size of theViewOptions to 96
-		set position of item "RedStore.app" of container window to {250, 50}
+		set position of item "RedStore.app" of container window to {250, 80}
 		set position of item "README.rtf" of container window to {100, 250}
 		set position of item "Applications" of container window to {400, 250}
 		close
