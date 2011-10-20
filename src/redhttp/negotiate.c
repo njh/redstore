@@ -33,7 +33,7 @@
 #include "redhttp.h"
 
 
-static int compare_types(const char *server_type, const char *client_type)
+int redhttp_negotiate_compare_types(const char *server_type, const char *client_type)
 {
   // FIXME: support type/* as well as */*
   if (strcmp(client_type, "*/*") == 0) {
@@ -52,7 +52,7 @@ char *redhttp_negotiate_choose(redhttp_negotiate_t ** server, redhttp_negotiate_
 
   for (s = *server; s; s = s->next) {
     for (c = *client; c; c = c->next) {
-      if (compare_types(s->type, c->type)) {
+      if (redhttp_negotiate_compare_types(s->type, c->type)) {
         int score = s->q * c->q;
         if (score > best_score) {
           best_score = score;

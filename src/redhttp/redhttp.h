@@ -157,6 +157,7 @@ void redhttp_server_set_backlog_size(redhttp_server_t * server, int backlog_size
 int redhttp_server_get_backlog_size(redhttp_server_t * server);
 void redhttp_server_free(redhttp_server_t * server);
 
+int redhttp_negotiate_compare_types(const char *server_type, const char *client_type);
 char *redhttp_negotiate_choose(redhttp_negotiate_t ** server, redhttp_negotiate_t ** client);
 redhttp_negotiate_t *redhttp_negotiate_parse(const char *str);
 int redhttp_negotiate_get(redhttp_negotiate_t ** first, int i, const char **type, int *q);

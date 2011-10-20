@@ -24,6 +24,15 @@
 
 #suite redhttp_negotiate
 
+#test compare_types_same
+ck_assert(redhttp_negotiate_compare_types("text/plain", "text/plain") == 1);
+
+#test compare_types_different
+ck_assert(redhttp_negotiate_compare_types("text/html", "text/plain") == 0);
+
+#test compare_types_wildcard
+ck_assert(redhttp_negotiate_compare_types("text/html", "*/*") == 1);
+
 #test negotiate_add_and_get
 redhttp_negotiate_t *neg = NULL;
 const char* type;
