@@ -39,3 +39,5 @@ src/redstore_config.h
 src/redstore_config.h.in
 tests/redhttp/check_*
 !tests/redhttp/check_*.tc
+tests/unit/check_*
+!tests/redhttp/check_*.tc

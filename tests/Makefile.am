@@ -1,1 +1,1 @@
-SUBDIRS = redhttp integration
+SUBDIRS = redhttp unit integration
