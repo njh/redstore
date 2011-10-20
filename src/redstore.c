@@ -30,28 +30,6 @@
 #include "redstore.h"
 
 
-// ------- Globals -------
-int quiet = 0;                  // Only display error messages
-int verbose = 0;                // Increase number of logging messages
-int running = 1;                // True while still running
-int exit_code = EXIT_SUCCESS;   // Exit code for when RedStore exits
-unsigned long query_count = 0;
-unsigned long import_count = 0;
-unsigned long request_count = 0;
-const char *storage_name = NULL;
-const char *storage_type = NULL;
-char *public_storage_options = NULL;
-
-librdf_world *world = NULL;
-librdf_model *model = NULL;
-librdf_storage *storage = NULL;
-
-raptor_stringbuffer *error_buffer = NULL;
-
-redhttp_negotiate_t *accepted_serialiser_types = NULL;
-redhttp_negotiate_t *accepted_query_result_types = NULL;
-
-
 
 static void termination_handler(int signum)
 {
