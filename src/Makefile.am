@@ -13,7 +13,8 @@ redstore_SOURCES = \
   query.c \
   redstore.c \
   redstore.h \
-  update.c
+  update.c \
+  utils.c
 
 SUBDIRS = redhttp
 

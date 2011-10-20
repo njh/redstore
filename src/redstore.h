@@ -70,6 +70,7 @@
 extern int quiet;
 extern int verbose;
 extern int running;
+extern int exit_code;
 extern unsigned long query_count;
 extern unsigned long import_count;
 extern unsigned long request_count;
