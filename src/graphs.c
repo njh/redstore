@@ -146,9 +146,7 @@ static redhttp_response_t *handle_text_graph_index(redhttp_request_t * request,
 
 redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_data)
 {
-  redhttp_negotiate_t *accept =
-      redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-  char *format_str = redstore_get_format(request, accept, "text/plain");
+  char *format_str = redstore_negotiate_string(request, "text/plain,text/html,application/xhtml+xml", "text/plain");
   redhttp_response_t *response = NULL;
   librdf_iterator *iterator = NULL;
 
@@ -170,7 +168,6 @@ redhttp_response_t *handle_graph_index(redhttp_request_t * request, void *user_d
   }
 
   free(format_str);
-  redhttp_negotiate_free(&accept);
   librdf_free_iterator(iterator);
 
   return response;

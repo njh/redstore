@@ -38,6 +38,3 @@ librdf_model *model = NULL;
 librdf_storage *storage = NULL;
 
 raptor_stringbuffer *error_buffer = NULL;
-
-redhttp_negotiate_t *accepted_serialiser_types = NULL;
-redhttp_negotiate_t *accepted_query_result_types = NULL;

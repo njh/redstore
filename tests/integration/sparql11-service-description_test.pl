@@ -34,12 +34,6 @@ is_running($pid);
 # Load some test data into the store
 load_fixture('foaf.ttl', $base_url.'data/foaf.rdf');
 
-# GET the service description from the SPARQL endpoint using content negotiation
-$response = $ua->get($base_url.'sparql', 'Accept' => 'application/rdf+xml');
-is($response->code, 200, 'GET to sparql endpoint for application/rdf+xml is successful');
-is($response->content_type, "application/rdf+xml", "GET to sparql endpoint for application/rdf+xml has correct MIME type");
-like($response->content, qr/<sd:Service>/, "GET to sparql endpoint returns RDF/XML containing '<sd:Service>'");
-
 # GET the service description from the SPARQL endpoint as RDF/XML
 $response = $ua->get($base_url."sparql?format=rdfxml-abbrev");
 is($response->code, 200, "GET to sparql endpoint for rdfxml-abbrev is successful");
@@ -52,9 +46,15 @@ is($response->code, 200, "GET to sparql endpoint for turtle is successful");
 like($response->content_type, qr[/turtle], "GET to sparql endpoint for Turtle has /turtle in the MIME type");
 like($response->content, qr/ sd:Service /, "GET to sparql endpoint returns Turle containing 'sd:Service'");
 
+# GET the service description from the SPARQL endpoint using content negotiation
+$response = $ua->get($base_url.'sparql', 'Accept' => 'application/x-turtle');
+is($response->code, 200, 'GET to sparql endpoint for application/x-turtle is successful');
+is($response->content_type, "application/x-turtle", "GET to sparql endpoint for application/rdf+xml has correct MIME type");
+like($response->content, qr/ sd:Service /, "GET to sparql endpoint returns Turle containing 'sd:Service'");
+
 # GET the service description from its own URL
-$response = $ua->get($base_url.'description', 'Accept' => 'application/rdf+xml');
-is($response->code, 200, 'GET to description endpoint for application/rdf+xml is successful');
+$response = $ua->get($base_url.'description?format=rdfxml-abbrev');
+is($response->code, 200, 'GET to description endpoint for rdfxml-abbrev is successful');
 is($response->content_type, "application/rdf+xml", "GET to description endpoint for application/rdf+xml has correct MIME type");
 like($response->content, qr/<sd:Service>/, "GET to description endpoint returns RDF/XML containing '<sd:Service>'");
 

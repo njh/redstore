@@ -25,61 +25,16 @@
 #include "redstore.h"
 
 
-static int match_description(const char* format_str,
-                             description_proc_t desc_proc,
-                             const char** format_name,
-                             const char** mime_type)
-{
-  unsigned int i, n;
-
-  for (i = 0; 1; i++) {
-    const raptor_syntax_description *desc = desc_proc(world, i);
-    if (desc == NULL)
-      break;
-
-    // Does it match a MIME type?
-    for (n = 0; n < desc->mime_types_count; n++) {
-      raptor_type_q mt = desc->mime_types[n];
-      if (strcmp(format_str, mt.mime_type) == 0) {
-        *format_name = desc->names[0];
-        *mime_type = mt.mime_type;
-        return 1;
-      }
-    }
-
-    // Does it match a format name?
-    for (n = 0; desc->names[n]; n++) {
-      if (strcmp(format_str, desc->names[n]) == 0) {
-        *format_name = desc->names[n];
-        if (desc->mime_types_count)
-          *mime_type = desc->mime_types[0].mime_type;
-        return 1;
-      }
-    }
-  }
-
-  return 0;
-}
-
 redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stream * stream)
 {
   FILE *socket = redhttp_request_get_socket(request);
-  const char *format_name = NULL;
-  const char *mime_type = NULL;
+  const raptor_syntax_description* desc = NULL;
   redhttp_response_t *response = NULL;
   librdf_serializer *serialiser = NULL;
-  char *format_str = NULL;
+  const char* mime_type = NULL;
 
-  format_str = redstore_get_format(request, accepted_serialiser_types, DEFAULT_GRAPH_FORMAT);
-  if (!format_str) {
-    response = redstore_page_new_with_message(
-      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-      "Failed to get result format."
-    );
-    goto CLEANUP;
-  }
-
-  if (!match_description(format_str, librdf_serializer_get_description, &format_name, &mime_type)) {
+  desc = redstore_negotiate_format(request, librdf_serializer_get_description, DEFAULT_GRAPH_FORMAT, &mime_type);
+  if (!desc) {
     response = redstore_page_new_with_message(
       request, LIBRDF_LOG_INFO, REDHTTP_NOT_ACCEPTABLE,
       "Results format not supported for graph query type."
@@ -87,7 +42,7 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
     goto CLEANUP;
   }
 
-  serialiser = librdf_new_serializer(world, format_name, NULL, NULL);
+  serialiser = librdf_new_serializer(world, desc->names[0], NULL, NULL);
   if (!serialiser) {
     response = redstore_page_new_with_message(
       request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create serialiser."
@@ -115,8 +70,6 @@ redhttp_response_t *format_graph_stream(redhttp_request_t * request, librdf_stre
 CLEANUP:
   if (serialiser)
     librdf_free_serializer(serialiser);
-  if (format_str)
-    free(format_str);
 
   return response;
 }
@@ -130,20 +83,11 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
   raptor_iostream *iostream = NULL;
   redhttp_response_t *response = NULL;
   librdf_query_results_formatter *formatter = NULL;
-  const char *format_name = NULL;
-  const char *mime_type = NULL;
-  char *format_str = NULL;
+  const raptor_syntax_description* desc = NULL;
+  const char* mime_type = NULL;
 
-  format_str = redstore_get_format(request, accepted_query_result_types, DEFAULT_RESULTS_FORMAT);
-  if (!format_str) {
-    response = redstore_page_new_with_message(
-      request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR,
-      "Failed to get result format."
-    );
-    goto CLEANUP;
-  }
-
-  if (!match_description(format_str, librdf_query_results_formats_get_description, &format_name, &mime_type)) {
+  desc = redstore_negotiate_format(request, librdf_query_results_formats_get_description, DEFAULT_RESULTS_FORMAT, &mime_type);
+  if (!desc) {
     response = redstore_page_new_with_message(
       request, LIBRDF_LOG_INFO, REDHTTP_NOT_ACCEPTABLE,
       "Results format not supported for bindings query type."
@@ -151,7 +95,7 @@ redhttp_response_t *format_bindings_query_result(redhttp_request_t * request,
     goto CLEANUP;
   }
 
-  formatter = librdf_new_query_results_formatter2(results, format_name, NULL, NULL);
+  formatter = librdf_new_query_results_formatter2(results, desc->names[0], NULL, NULL);
   if (!formatter) {
     response = redstore_page_new_with_message(
       request, LIBRDF_LOG_ERROR, REDHTTP_INTERNAL_SERVER_ERROR, "Failed to create results formatter."
@@ -186,8 +130,6 @@ CLEANUP:
     raptor_free_iostream(iostream);
   if (formatter)
     librdf_free_query_results_formatter(formatter);
-  if (format_str)
-    free(format_str);
 
   return response;
 }

@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 83;
+use Test::More tests => 88;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -141,6 +141,14 @@ $response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE
 is($response->code, 200, "SPARQL CONSTRUCT query for ntriples is successful");
 is($response->content_type, "text/plain", "SPARQL CONSTRUCT query Content Type for ntriples is correct");
 like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+"v"\s+.\n], "SPARQL Construct response for ntriples should be correct");
+
+# Test a CONSTRUCT query with RDF/XML content negotiation
+$response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D", 'Accept' => 'application/rdf+xml');
+is($response->code, 200, "SPARQL CONSTRUCT query for application/rdf+xml is successful");
+is($response->content_type, "application/rdf+xml", "SPARQL CONSTRUCT query Mime Type for application/rdf+xml is correct");
+like($response->content, qr[^<\?xml version="1.0" encoding="utf-8"\?>], "SPARQL Construct response for RDF/XML start with XML declaration");
+like($response->content, qr[<rdf:Description rdf:about="http://example.org/dir/file#frag">], "SPARQL Construct response for RDF/XML contains triple subject");
+like($response->content, qr[<ns0:value xmlns:ns0="http://example.org/">v</ns0:value>], "SPARQL Construct response for RDF/XML should contains triple value");
 
 # Test a SELECT query with a plain text table response
 $response = $ua->get($base_url."query?query=SELECT+*+WHERE+%7B%3Fs+%3Fp+%3Fo%7D%0D%0A&format=table");

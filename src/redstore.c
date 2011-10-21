@@ -172,25 +172,6 @@ static int redstore_load_input_file(librdf_model* model, const char* filename, c
   return result;
 }
 
-static void redstore_build_accepted_type_list(redhttp_negotiate_t **accepted_types,
-                                              description_proc_t desc_proc)
-{
-  unsigned int i, m;
-
-  for (i = 0; 1; i++) {
-    const raptor_syntax_description *desc = desc_proc(world, i);
-    if (!desc)
-      return;
-
-    for (m = 0; m < desc->mime_types_count; m++) {
-      redhttp_negotiate_add(accepted_types,
-                            desc->mime_types[m].mime_type,
-                            desc->mime_types[m].mime_type_len,
-                            desc->mime_types[m].q);
-    }
-  }
-}
-
 static librdf_storage *redstore_setup_storage(const char *name, const char *type,
                                               const char *options, int new)
 {
@@ -328,16 +309,6 @@ int main(int argc, char *argv[])
   librdf_world_open(world);
   librdf_world_set_logger(world, NULL, redland_log_handler);
 
-  // Build list of accepted mime types
-  redstore_build_accepted_type_list(
-    &accepted_serialiser_types,
-    librdf_serializer_get_description
-  );
-  redstore_build_accepted_type_list(
-    &accepted_query_result_types,
-    librdf_query_results_formats_get_description
-  );
-
   // Parse Switches
   while ((opt = getopt(argc, argv, "p:b:s:t:nf:F:vqh")) != -1) {
     switch (opt) {
@@ -461,10 +432,6 @@ cleanup:
   // Clean up redhttp
   if (public_storage_options)
     free(public_storage_options);
-  if (accepted_serialiser_types)
-    redhttp_negotiate_free(&accepted_serialiser_types);
-  if (accepted_query_result_types)
-    redhttp_negotiate_free(&accepted_query_result_types);
   if (server)
     redhttp_server_free(server);
 

@@ -47,5 +47,168 @@ ck_assert(redstore_is_nquads_format("text/html") == 0);
 ck_assert(redstore_is_nquads_format("") == 0);
 ck_assert(redstore_is_nquads_format("foonquadsbar") == 0);
 
+#test get_format_by_name
+const raptor_syntax_description* desc = NULL;
+desc = redstore_get_format_by_name(librdf_serializer_get_description, "rdfxml");
+ck_assert_str_eq(desc->label, "RDF/XML");
+
+#test get_format_by_name_empty
+const raptor_syntax_description* desc = NULL;
+desc = redstore_get_format_by_name(librdf_serializer_get_description, "");
+ck_assert(desc == NULL);
+
+#test get_format_by_name_null
+const raptor_syntax_description* desc = NULL;
+desc = redstore_get_format_by_name(librdf_serializer_get_description, NULL);
+ck_assert(desc == NULL);
 
 
+#test negotiate_format_single_mime
+const raptor_syntax_description* desc = NULL;
+const char* chosen_mime = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "application/rdf+xml");
+desc = redstore_negotiate_format(request, librdf_serializer_get_description, "ntriples", &chosen_mime);
+ck_assert(desc != NULL);
+ck_assert_str_eq(desc->label, "RDF/XML");
+ck_assert_str_eq(chosen_mime, "application/rdf+xml");
+redhttp_request_free(request);
+
+#test negotiate_format_any_mime
+const raptor_syntax_description* desc = NULL;
+const char* chosen_mime = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "*/*");
+desc = redstore_negotiate_format(request, librdf_serializer_get_description, "ntriples", &chosen_mime);
+ck_assert(desc != NULL);
+ck_assert_str_eq(desc->label, "N-Triples");
+ck_assert_str_eq(chosen_mime, "text/plain");
+redhttp_request_free(request);
+
+#test negotiate_format_arg
+const raptor_syntax_description* desc = NULL;
+const char* chosen_mime = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar?format=ntriples", "1.1");
+desc = redstore_negotiate_format(request, librdf_serializer_get_description, NULL, &chosen_mime);
+ck_assert(desc != NULL);
+ck_assert_str_eq(desc->label, "N-Triples");
+ck_assert_str_eq(chosen_mime, "text/plain");
+redhttp_request_free(request);
+
+#test negotiate_format_arg_override
+const raptor_syntax_description* desc = NULL;
+const char* chosen_mime = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar?format=ntriples", "1.1");
+redhttp_request_add_header(request, "Accept", "application/rdf+xml");
+desc = redstore_negotiate_format(request, librdf_serializer_get_description, NULL, &chosen_mime);
+ck_assert(desc != NULL);
+ck_assert_str_eq(desc->label, "N-Triples");
+ck_assert_str_eq(chosen_mime, "text/plain");
+redhttp_request_free(request);
+
+#test negotiate_format_with_q
+const raptor_syntax_description* desc = NULL;
+const char* chosen_mime = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "application/rdf+xml;q=0.5,text/turtle;q=0.7,application/x-turtle;q=1.0");
+desc = redstore_negotiate_format(request, librdf_serializer_get_description, NULL, &chosen_mime);
+ck_assert(desc != NULL);
+ck_assert_str_eq(desc->label, "Turtle Terse RDF Triple Language");
+ck_assert_str_eq(chosen_mime, "application/x-turtle");
+redhttp_request_free(request);
+
+#test negotiate_format_default
+const raptor_syntax_description* desc = NULL;
+const char* chosen_mime = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+desc = redstore_negotiate_format(request, librdf_query_results_formats_get_description, "xml", &chosen_mime);
+ck_assert(desc != NULL);
+ck_assert_str_eq(desc->label, "SPARQL XML Query Results");
+ck_assert_str_eq(chosen_mime, "application/sparql-results+xml");
+redhttp_request_free(request);
+
+#test negotiate_format_alternate_mime
+const raptor_syntax_description* desc = NULL;
+const char* chosen_mime = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "application/turtle");
+desc = redstore_negotiate_format(request, librdf_serializer_get_description, "ntriples", &chosen_mime);
+ck_assert_str_eq(desc->label, "Turtle Terse RDF Triple Language");
+ck_assert_str_eq(chosen_mime, "application/turtle");
+redhttp_request_free(request);
+
+#test negotiate_format_no_default
+const raptor_syntax_description* desc = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+desc = redstore_negotiate_format(request, librdf_query_results_formats_get_description, NULL, NULL);
+ck_assert(desc == NULL);
+redhttp_request_free(request);
+
+#test negotiate_format_unsupported_arg
+const raptor_syntax_description* desc = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar?format=foobar", "1.1");
+desc = redstore_negotiate_format(request, librdf_query_results_formats_get_description, "xml", NULL);
+ck_assert(desc == NULL);
+redhttp_request_free(request);
+
+#test negotiate_format_unsupported_mime
+const raptor_syntax_description* desc = NULL;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "application/foo+bar");
+desc = redstore_negotiate_format(request, librdf_query_results_formats_get_description, "xml", NULL);
+ck_assert(desc == NULL);
+redhttp_request_free(request);
+
+#test negotiate_string_default
+char *format;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+format = redstore_negotiate_string(request, "text/plain,text/html", "text/plain");
+ck_assert(redstore_is_text_format(format) == 1);
+redhttp_request_free(request);
+
+#test negotiate_string_no_default
+char *format;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+format = redstore_negotiate_string(request, "text/plain,text/html", NULL);
+ck_assert(format == NULL);
+redhttp_request_free(request);
+
+#test negotiate_string_format_arg
+char *format;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar?format=html", "1.1");
+format = redstore_negotiate_string(request, "text/plain,text/html", "text/plain");
+ck_assert(redstore_is_html_format(format) == 1);
+redhttp_request_free(request);
+
+#test negotiate_string_accept
+char *format;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "image/png,text/html");
+format = redstore_negotiate_string(request, "text/plain,text/html", "text/plain");
+ck_assert(redstore_is_html_format(format) == 1);
+redhttp_request_free(request);
+
+#test negotiate_string_any_mime
+char *format;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "*/*");
+format = redstore_negotiate_string(request, "text/plain,text/html", "text/plain");
+ck_assert(redstore_is_text_format(format) == 1);
+redhttp_request_free(request);
+
+#test negotiate_string_unsupported_mime
+char *format;
+redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar", "1.1");
+redhttp_request_add_header(request, "Accept", "foo/bar");
+format = redstore_negotiate_string(request, "text/plain,text/html", "text/plain");
+ck_assert(format == NULL);
+redhttp_request_free(request);
+
+
+#main-pre
+world = librdf_new_world();
+quiet = 1;
+
+#main-post
+librdf_free_world(world);
+return nf == 0 ? 0 : 1;

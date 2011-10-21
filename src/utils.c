@@ -83,34 +83,105 @@ void redstore_log(librdf_log_level level, const char *fmt, ...)
   }
 }
 
-char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported, const char* default_format)
+const raptor_syntax_description* redstore_get_format_by_name(description_proc_t desc_proc, const char* format_name)
 {
-  const char *format_arg;
+  unsigned int d,n;
+
+  if (!format_name || !format_name[0])
+    return NULL;
+
+  for(d=0; 1; d++) {
+    const raptor_syntax_description* desc = desc_proc(world, d);
+    if (!desc)
+      break;
+
+    for (n=0; desc->names[n]; n++) {
+      if (strcmp(desc->names[n], format_name) == 0)
+        return desc;
+    }
+  }
+
+  return NULL;
+}
+
+const raptor_syntax_description* redstore_negotiate_format(redhttp_request_t * request, description_proc_t desc_proc, const char* default_format, const char** chosen_mime)
+{
+  const char *format_arg = redhttp_request_get_argument(request, "format");
+  const char *accept_str = redhttp_request_get_header(request, "Accept");
+  const raptor_syntax_description* chosen_desc = NULL;
+
+  if (format_arg) {
+    redstore_debug("format_arg: %s", format_arg);
+    chosen_desc = redstore_get_format_by_name(desc_proc, format_arg);
+  } else if (accept_str && accept_str[0] && strcmp("*/*", accept_str) != 0) {
+    redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
+
+    if (accept) {
+      int best_score = -1;
+      unsigned int d,m,a;
+
+      for(d=0; 1; d++) {
+        const raptor_syntax_description* desc = desc_proc(world, d);
+        if (!desc)
+          break;
+
+        for (m=0; m < desc->mime_types_count; m++) {
+          const raptor_type_q mime_type = desc->mime_types[m];
+          const char* accept_type = NULL;
+          int accept_q = 0;
+          for (a=0; redhttp_negotiate_get(&accept, a, &accept_type, &accept_q)==0; a++) {
+            if (redhttp_negotiate_compare_types(mime_type.mime_type, accept_type)) {
+              int score = mime_type.q * accept_q;
+              if (score > best_score) {
+                best_score = score;
+                chosen_desc = desc;
+                if (chosen_mime)
+                  *chosen_mime = mime_type.mime_type;
+              }
+            }
+          }
+        }
+      }
+
+      redhttp_negotiate_free(&accept);
+    }
+  } else if (default_format) {
+    redstore_debug("Using default format: %s", default_format);
+    chosen_desc = redstore_get_format_by_name(desc_proc, default_format);
+  }
+
+  if (chosen_desc) {
+    redstore_debug("Chosen format: %s", chosen_desc->label);
+    if (chosen_mime && *chosen_mime == NULL && chosen_desc->mime_types)
+      *chosen_mime = chosen_desc->mime_types[0].mime_type;
+  } else {
+    redstore_info("Failed to negotiate a serialisation format");
+  }
+
+  return chosen_desc;
+}
+
+char *redstore_negotiate_string(redhttp_request_t * request, const char* supported_str, const char* default_format)
+{
+  const char *format_arg = redhttp_request_get_argument(request, "format");
+  const char *accept_str = redhttp_request_get_header(request, "Accept");
   char *format_str = NULL;
 
-  format_arg = redhttp_request_get_argument(request, "format");
   if (format_arg) {
     format_str = calloc(1, strlen(format_arg) + 1);
     if (format_str)
       strcpy(format_str, format_arg);
     redstore_debug("format_arg: %s", format_str);
-  }
-
-  if (!format_str) {
-    const char *accept_str = redhttp_request_get_header(request, "Accept");
-    if (accept_str && accept_str[0] && strcmp("*/*", accept_str) != 0) {
-      redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
-      char *supported_str = redhttp_negotiate_to_string(&supported);
-      format_str = redhttp_negotiate_choose(&supported, &accept);
-      redstore_debug("supported: %s", supported_str);
-      redstore_debug("accept: %s", accept_str);
-      redstore_debug("chosen: %s", format_str);
-      redhttp_negotiate_free(&accept);
-      free(supported_str);
-    }
-  }
-
-  if (!format_str) {
+  } else if (accept_str && accept_str[0] && strcmp("*/*", accept_str) != 0) {
+    redhttp_negotiate_t *accept = redhttp_negotiate_parse(accept_str);
+    redhttp_negotiate_t *supported = redhttp_negotiate_parse(supported_str);
+    format_str = redhttp_negotiate_choose(&supported, &accept);
+    redstore_debug("supported: %s", supported_str);
+    redstore_debug("accept: %s", accept_str);
+    redstore_debug("chosen: %s", format_str);
+    redhttp_negotiate_free(&accept);
+    redhttp_negotiate_free(&supported);
+  } else if (default_format) {
     format_str = calloc(1, strlen(default_format) + 1);
     if (format_str)
       strcpy(format_str, default_format);

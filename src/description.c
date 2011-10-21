@@ -500,13 +500,14 @@ static redhttp_response_t *handle_html_description(redhttp_request_t * request, 
 
 redhttp_response_t *handle_description_get(redhttp_request_t * request, void *user_data)
 {
-  char *format_str = redstore_get_format(request, accepted_serialiser_types, "text/html");
+  const raptor_syntax_description* desc = NULL;
   redhttp_response_t *response = NULL;
   librdf_storage *sd_storage = NULL;
   librdf_model *sd_model = NULL;
   librdf_stream *sd_stream = NULL;
 
-  if (format_str == NULL || redstore_is_html_format(format_str)) {
+  desc = redstore_negotiate_format(request, librdf_serializer_get_description, "text/html", NULL);
+  if (desc == NULL || strcmp("html", desc->names[0])==0) {
     response = handle_html_description(request, user_data);
   } else {
     const char *request_url = redhttp_request_get_url(request);
@@ -544,8 +545,6 @@ CLEANUP:
     librdf_free_model(sd_model);
   if (sd_storage)
     librdf_free_storage(sd_storage);
-  if (format_str)
-    free(format_str);
 
   return response;
 }

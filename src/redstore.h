@@ -82,9 +82,6 @@ extern librdf_storage *storage;
 extern librdf_model *model;
 extern raptor_stringbuffer *error_buffer;
 
-extern redhttp_negotiate_t *accepted_serialiser_types;
-extern redhttp_negotiate_t *accepted_query_result_types;
-
 extern librdf_uri *format_ns_uri;
 extern librdf_uri *sd_ns_uri;
 extern librdf_uri *void_ns_uri;
@@ -163,7 +160,9 @@ redhttp_response_t *handle_image_favicon(redhttp_request_t * request, void *user
 
 void redstore_log(librdf_log_level level, const char *format, ...);
 
-char *redstore_get_format(redhttp_request_t * request, redhttp_negotiate_t * supported, const char* default_format);
+const raptor_syntax_description* redstore_get_format_by_name(description_proc_t desc_proc, const char* format_name);
+const raptor_syntax_description* redstore_negotiate_format(redhttp_request_t * request, description_proc_t desc_proc, const char* default_format, const char** chosen_mime);
+char *redstore_negotiate_string(redhttp_request_t * request, const char* supported, const char* default_format);
 int redstore_is_html_format(const char *str);
 int redstore_is_text_format(const char *str);
 int redstore_is_nquads_format(const char *str);

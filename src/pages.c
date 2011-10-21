@@ -72,8 +72,7 @@ redhttp_response_t *redstore_page_new(int code, const char *title)
 
 redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, int log_level, int code, const char *format, ...)
 {
-  redhttp_negotiate_t *accept = redhttp_negotiate_parse("text/plain,text/html,application/xhtml+xml");
-  char *format_str = redstore_get_format(request, accept, "text/plain");
+  char *format_str = redstore_negotiate_string(request, "text/plain,text/html,application/xhtml+xml", "text/plain");
   const char * title = redhttp_response_status_message_for_code(code);
   redhttp_response_t *response = NULL;
   size_t message_len = 0;
@@ -136,7 +135,6 @@ redhttp_response_t *redstore_page_new_with_message(redhttp_request_t *request, i
     free(format_str);
   if (message)
     free(message);
-  redhttp_negotiate_free(&accept);
 
   return response;
 }
