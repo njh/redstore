@@ -51,8 +51,8 @@ fi
 
 dnl ############## Check for packages we depend upon
 
-PKG_CHECK_MODULES(RAPTOR, raptor2 >= 2.0.1)
-PKG_CHECK_MODULES(RASQAL, rasqal >= 0.9.25)
+PKG_CHECK_MODULES(RAPTOR, raptor2 >= 2.0.4)
+PKG_CHECK_MODULES(RASQAL, rasqal >= 0.9.27)
 PKG_CHECK_MODULES(REDLAND, redland >= 1.0.14)
 
 PKG_CHECK_MODULES(CHECK, check >= 0.9.4, have_check="yes", have_check="no")
