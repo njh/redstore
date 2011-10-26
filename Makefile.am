@@ -2,7 +2,7 @@ AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I build-scripts
 SUBDIRS = src .
 
-man_MANS = redstore.1
+dist_man_MANS = redstore.1
 EXTRA_DIST = redstore.1.md
 
 if HAVE_PANDOC
