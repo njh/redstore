@@ -30,6 +30,10 @@ AC_C_BIGENDIAN
 AC_C_INLINE
 AC_C_CONST
 
+AC_CHECK_PROG(have_pandoc, [pandoc], [yes], [no])
+AM_CONDITIONAL(HAVE_PANDOC, test x"$have_pandoc" = "xyes")
+
+
 
 dnl ############# Store the build time (as RFC 1123)
 

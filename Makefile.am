@@ -2,6 +2,13 @@ AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I build-scripts
 SUBDIRS = src .
 
+man_MANS = redstore.1
+
+if HAVE_PANDOC
+redstore.1: redstore.1.md
+	pandoc -s -f markdown -t man -o $@ $<
+endif
+
 if HAVE_CHECK
 SUBDIRS += tests
 endif
