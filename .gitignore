@@ -22,6 +22,7 @@ configure
 libtool
 Makefile
 Makefile.in
+redstore.1
 root
 stamp-h1
 TODO
