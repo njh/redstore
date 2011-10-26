@@ -28,6 +28,21 @@ foreach my $cmd (@TOOLS_REQUIRED) {
 safe_chdir($TOP_DIR);
 safe_system('./build-scripts/build-static.pl');
 
+# Get the version number and bundle version
+my $plist = "$TOP_DIR/macosx/RedStore-Info.plist";
+my $config = read_config('./src/redstore_config.h');
+my $version = $config->{'PACKAGE_VERSION'};
+my $bundle_version = `/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' $plist`;
+$bundle_version += 1;
+print "Bundle version: $bundle_version\n";
+print "Version number: $version\n";
+die "Invalid version number" if (length($version) < 3);
+
+# Store the version number and the new bundle version
+safe_system("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion $bundle_version' $plist");
+safe_system("/usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString $version' $plist");
+
+
 # Build the GUI
 safe_chdir("$TOP_DIR/macosx");
 safe_system(
@@ -50,13 +65,6 @@ if  (`du -csk $app_path` =~ /\s*(\d+)\s+total\s*$/si) {
 } else {
     die "Failed to parse output from du";
 }
-
-# Get the version
-my $plist = "$TOP_DIR/macosx/RedStore-Info.plist";
-my $version = `/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' $plist`;
-chomp($version);
-print "Version number: $version\n";
-die "Invalid version number" if (length($version) < 3);
 
 # Create an empty DMG archive
 safe_chdir($TOP_DIR);
@@ -140,4 +148,19 @@ sub safe_system {
     if (system(@cmd)) {
         die "Command failed";
     }
+}
+
+sub read_config {
+    my ($config_file) = @_;
+    my $config = {};
+
+    open(CONFIG, $config_file) or die "Failed to open config.h file: $!";
+    while(<CONFIG>) {
+        if (/^#define (\w+) "?(.+?)"?$/) {
+            $config->{$1} = $2;
+        }
+    }
+    close(CONFIG);
+
+    return $config;
 }
