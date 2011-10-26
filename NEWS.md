@@ -1,6 +1,25 @@
 News about RedStore releases
 ============================
 
+Release 0.5.4 - 2011-10-26
+--------------------------
+
+- Created Mac OS X GUI.
+- Changed default storage from 'memory' to 'hashes', hash-type='memory'.
+- Updated minimum dependent versions to raptor2-2.0.4, rasqal-0.9.27, redland-1.0.14
+- Improved content negotiation.
+- Updated service description to match draft SPARQL 1.1 Service Description.
+- Improvements to shut down - fix for BDB data loss.
+- Changed the HTTP REST interface to follow SPARQL 1.1 RDF Dataset HTTP Protocol.
+- Added command-line option to load RDF document at startup.
+- Fix for incorrect Content-Length headers in the text/plain responses.
+- Implemented creating new graphs with generated identifier by POSTing to /data.
+- Added content negotiation to the RedStore error pages.
+- Redland error messages are now sent back to the user.
+- Using raptor's nquads formatter.
+- RedStore will now exit with a non-zero exit code if there was a fatal error.
+
+
 Release 0.5.2 - 2011-02-04
 --------------------------
 
