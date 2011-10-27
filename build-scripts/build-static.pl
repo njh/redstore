@@ -60,12 +60,12 @@ my $packages = [
         'checkfor' => 'lib/pkgconfig/libxslt.pc',
     },
     {
-        'url' => 'http://github.com/lloyd/yajl/tarball/1.0.12',
-        'dirname' => 'lloyd-yajl-17b1790',
-        'tarname' => 'yajl-1.0.12.tar.gz',
+        'url' => 'http://github.com/lloyd/yajl/tarball/2.0.1',
+        'dirname' => 'lloyd-yajl-f4b2b1a',
+        'tarname' => 'yajl-2.0.1.tar.gz',
         'config' => "mkdir build && cd build && cmake ..",
         'make' => "cd build && make yajl_s",
-        'install' => "cd build/yajl-1.0.12 && ".
+        'install' => "cd build/yajl-2.0.1 && ".
                      "cp -Rfv include/yajl ${ROOT_DIR}/include/ && ".
                      "cp -fv lib/libyajl_s.a ${ROOT_DIR}/lib/libyajl.a",
         'checkfor' => 'lib/libyajl.a',
