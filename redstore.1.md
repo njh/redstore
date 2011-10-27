@@ -39,6 +39,7 @@ OPTIONS
 `-s` *type*
 :   Set the graph storage type.
     By default, RedStore uses the 'hashes' storage type.
+    You can use any of the storage modules that support contexts.
 
 `-t` *options*
 :   Select storage options for the chosen storage type.
