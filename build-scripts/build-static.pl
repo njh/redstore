@@ -28,7 +28,7 @@ my $packages = [
     },
     {
         'url' => 'http://kent.dl.sourceforge.net/project/mhash/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz',
-        'checkfor' => 'lib/libmhash.a',
+        'checkfor' => ['include/mhash.h', 'lib/libmhash.a'],
     },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.21.7.tar.gz',
@@ -36,13 +36,13 @@ my $packages = [
                     "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp ".
                     "--without-librtmp --disable-dict --disable-telnet --disable-pop3 ".
                     "--disable-imap --disable-smtp --disable-manual --without-libssh2",
-        'checkfor' => 'lib/pkgconfig/libcurl.pc',
+        'checkfor' => ['include/curl/curl.h', 'lib/libcurl.a', 'lib/pkgconfig/libcurl.pc'],
     },
     {
         'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.12/pcre-8.12.tar.bz2',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--enable-utf8 --enable-unicode-properties",
-        'checkfor' => 'lib/pkgconfig/libpcre.pc'
+        'checkfor' => ['include/pcre.h', 'lib/libpcre.a', 'lib/pkgconfig/libpcre.pc']
     },
 # FIXME: can't build a universal binary of GMP
 #     {
@@ -53,11 +53,11 @@ my $packages = [
     {
         # NOTE: libxml2-2.7.8 doesn't seem to work with Mac OS 10.6 zlib
         'url' => 'http://xmlsoft.org/sources/libxml2-2.7.6.tar.gz',
-        'checkfor' => 'lib/pkgconfig/libxml-2.0.pc',
+        'checkfor' => ['include/libxml2', 'lib/libxml2.a', 'lib/pkgconfig/libxml-2.0.pc'],
     },
     {
         'url' => 'http://xmlsoft.org/sources/libxslt-1.1.26.tar.gz',
-        'checkfor' => 'lib/pkgconfig/libxslt.pc',
+        'checkfor' => ['include/libxslt/xslt.h', 'lib/libxslt.a', 'lib/pkgconfig/libxslt.pc'],
     },
     {
         'url' => 'http://github.com/lloyd/yajl/tarball/2.0.1',
@@ -68,19 +68,19 @@ my $packages = [
         'install' => "cd build/yajl-2.0.1 && ".
                      "cp -Rfv include/yajl ${ROOT_DIR}/include/ && ".
                      "cp -fv lib/libyajl_s.a ${ROOT_DIR}/lib/libyajl.a",
-        'checkfor' => 'lib/libyajl.a',
+        'checkfor' => ['include/yajl/yajl_common.h', 'lib/libyajl.a'],
     },
     {
         'dirname' => 'sqlite-3.7.3',
         'url' => 'http://www.sqlite.org/sqlite-amalgamation-3.7.3.tar.gz',
-        'checkfor' => 'lib/pkgconfig/sqlite3.pc',
+        'checkfor' => ['include/sqlite3.h', 'lib/libsqlite3.a', 'lib/pkgconfig/sqlite3.pc'],
     },
     {
         'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
         'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
-        'checkfor' => 'lib/libdb.a',
+        'checkfor' => ['include/db.h', 'lib/libdb.a'],
     },
 #     {
 #         'url' => 'http://www.iodbc.org/downloads/iODBC/libiodbc-3.52.7.tar.gz',
@@ -106,19 +106,19 @@ my $packages = [
     {
         'url' => 'http://download.librdf.org/source/raptor2-2.0.4.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
-        'checkfor' => 'lib/pkgconfig/raptor2.pc',
+        'checkfor' => ['lib/libraptor2.a', 'include/raptor2/raptor2.h', 'lib/pkgconfig/raptor2.pc'],
     },
     {
         'url' => 'http://download.librdf.org/source/rasqal-0.9.27.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
-        'checkfor' => 'lib/pkgconfig/rasqal.pc',
+        'checkfor' => ['include/rasqal/rasqal.h', 'lib/librasqal.a', 'lib/pkgconfig/rasqal.pc'],
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.14.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular ".
                     "--with-bdb=${ROOT_DIR} --with-threestore=no --with-mysql=no --with-sqlite=3 ".
                     "--with-postgresql=no --with-virtuoso=no",
-        'checkfor' => 'lib/pkgconfig/redland.pc',
+        'checkfor' => ['include/redland.h', 'lib/librdf.a', 'lib/pkgconfig/redland.pc'],
     },
     {
         'name' => 'redstore',
@@ -164,6 +164,7 @@ if (`uname` =~ /^Darwin/) {
     $ENV{'LDFLAGS'} .= " -Wl,-headerpad_max_install_names";
     $ENV{'MACOSX_DEPLOYMENT_TARGET'} = $SDK_VER;
     $ENV{'CMAKE_OSX_ARCHITECTURES'} = 'ppc;i386';
+    $ENV{'CMAKE_OSX_SYSROOT'} = $SDK;
 
     my $GCC_VER = '4.0';
     $ENV{'CC'} = "/Developer/usr/bin/gcc-$GCC_VER";
@@ -209,11 +210,8 @@ foreach my $pkg (@$packages) {
         $pkg->{'name'} = $pkg->{'dirname'};
     }
 
-    unless ($pkg->{'alwaysbuild'} or defined $pkg->{'checkfor'}) {
-        die "Don't know how to check if ".$pkg->{'name'}." is already built.";
-    }
-
-    if ($pkg->{'alwaysbuild'} or !-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
+    if ($pkg->{'alwaysbuild'} or check_installed($pkg) == 0) {
+        check_usr_local($pkg);
         download_package($pkg) if (defined $pkg->{'url'});
         extract_package($pkg) if (defined $pkg->{'tarpath'});
         clean_package($pkg);
@@ -223,8 +221,8 @@ foreach my $pkg (@$packages) {
         test_package($pkg);
         install_package($pkg);
 
-        if (defined $pkg->{'checkfor'} && !-e $ROOT_DIR.'/'.$pkg->{'checkfor'}) {
-            die "Installing $pkg->{'name'} failed.";
+        if (check_installed($pkg) == 0) {
+            die "Building $pkg->{'name'} failed.";
         }
     }
 }
@@ -258,6 +256,33 @@ if (`uname` =~ /^Darwin/) {
     print CREDITS "</html>\n";
     close(CREDITS);
 }
+
+print "Done.\n";
+
+
+sub check_installed {
+    my ($pkg) = @_;
+    my $checkfor = $pkg->{'checkfor'};
+
+    unless (defined $checkfor and $checkfor) {
+        die "Don't know how to check if ".$pkg->{'name'}." is built.";
+    }
+
+    print "Checking if ".$pkg->{'name'}." is built correctly.\n";
+    $checkfor = [$checkfor] unless (ref $checkfor eq 'ARRAY');
+    foreach (@$checkfor) {
+        my $path = $ROOT_DIR . '/' . $_;
+        unless (-e $path) {
+            print "  No - $path is missing.\n";
+            return 0;
+        }
+    }
+
+    # Everything exists
+    print "  Yes.\n";
+    return 1;
+}
+
 
 sub extract_package {
     my ($pkg) = @_;
@@ -358,6 +383,24 @@ sub install_package {
         safe_system($pkg->{'install'});
     } else {
         safe_system('make','install');
+    }
+}
+
+sub check_usr_local {
+    my ($pkg) = @_;
+    my $checkfor = $pkg->{'checkfor'};
+
+    $checkfor = [$checkfor] unless (ref $checkfor eq 'ARRAY');
+    foreach (@$checkfor) {
+        my $path = "/usr/local/$_";
+        if ($path =~ m(/lib/)) {
+          print "Checking for: $path\n";
+          if (-e $path) {
+              die "Error: found ".$pkg->{'name'}." installed as $path, this causes linking problems.";
+          } else {
+              print "  Doesn't exist (good!)\n";
+          }
+        }
     }
 }
 
