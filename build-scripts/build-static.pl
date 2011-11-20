@@ -109,7 +109,7 @@ my $packages = [
         'checkfor' => ['lib/libraptor2.a', 'include/raptor2/raptor2.h', 'lib/pkgconfig/raptor2.pc'],
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.27.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.28.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => ['include/rasqal/rasqal.h', 'lib/librasqal.a', 'lib/pkgconfig/rasqal.pc'],
     },
