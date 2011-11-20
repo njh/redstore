@@ -11,7 +11,7 @@ use warnings;
 use strict;
 
 
-use Test::More tests => 30;
+use Test::More tests => 52;
 
 my $rdf_ns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns';
 my $sd_ns = 'http://www.w3.org/ns/sparql-service-description';
@@ -103,91 +103,105 @@ like(
   'The correct number of triples is in the default graph.'
 );
 
-# Check for Turtle format
-# FIXME: this should lookup by Format URI, once Redland supports it
-# my ($turtle_node) = ($response->content =~ qr[(\S+) <$rdfs_ns#comment> "Turtle Terse RDF Triple Language"]);
-# like($turtle_node, qr[^<http://], 'There is a Format with comment "Turtle" in the description.');
-# like(
-#   $response->content, qr[$turtle_node <$rdfs_ns#label> "turtle"],
-#   'The turtle node has the label "turtle".'
-# );
-# like(
-#   $response->content, qr[$turtle_node <$rdf_ns#type> <${format_ns}Format>],
-#   'The turtle node is of type format:Format.'
-# );
-# # FIXME: enable this
-# # like(
-# #   $response->content, qr[$rdfxml_node <$rdfs_ns#isDefinedBy> <http://www.w3.org/TR/rdf-turtle>],
-# #   'The turtle node is has a rdfs:isDefinedBy triple.'
-# # );
-# like(
-#   $response->content, qr[$turtle_node <${format_ns}media_type> "application/turtle"],
-#   'The turtle node has the MIME type "application/turtle" associated with it.'
-# );
-# like(
-#   $response->content, qr[$service_node <$sd_ns#inputFormat> $turtle_node],
-#   'The turtle is a supported input format.'
-# );
-# like(
-#   $response->content, qr[$service_node <$sd_ns#resultFormat> $turtle_node],
-#   'The turtle is a supported result format.'
-# );
+
+## Check for Turtle format
+my $turtle_node = '<http://www.w3.org/ns/formats/Turtle>';
+like(
+  $response->content, qr[$turtle_node],
+  'The Format URI for turtle appears in the service description.'
+);
+like(
+  $response->content, qr[$turtle_node <$rdfs_ns#comment> "Turtle Terse RDF Triple Language"],
+  'The SPARQL XML node has the comment "Turtle Terse RDF Triple Language".'
+);
+like(
+  $response->content, qr[$turtle_node <$rdfs_ns#label> "turtle"],
+  'The turtle node has the label "turtle".'
+);
+like(
+  $response->content, qr[$turtle_node <$rdf_ns#type> <${format_ns}Format>],
+  'The turtle node is of type format:Format.'
+);
+like(
+  $response->content, qr[$turtle_node <${format_ns}media_type> "application/turtle"],
+  'The turtle node has the MIME type "application/turtle" associated with it.'
+);
+like(
+  $response->content, qr[$service_node <$sd_ns#inputFormat> $turtle_node],
+  'The turtle is a supported input format.'
+);
+like(
+  $response->content, qr[$service_node <$sd_ns#resultFormat> $turtle_node],
+  'The turtle is a supported result format.'
+);
 
 
-# Check for RDF/XML format
-# FIXME: this should lookup by Format URI, once Redland supports it
-# my ($rdfxml_node) = ($response->content =~ qr[(\S+) <$rdfs_ns#comment> "RDF/XML"]);
-# like($rdfxml_node, qr[^<http://], 'There is a Format with comment "RDF/XML" in the description.');
-# like(
-#   $response->content, qr[$rdfxml_node <$rdfs_ns#label> "rdfxml"],
-#   'The rdfxml node has the label "rdfxml".'
-# );
-# like(
-#   $response->content, qr[$rdfxml_node <$rdf_ns#type> <${format_ns}Format>],
-#   'The rdfxml node is of type format:Format.'
-# );
-# like(
-#   $response->content, qr[$rdfxml_node <$rdfs_ns#isDefinedBy> <http://www.w3.org/TR/rdf-syntax-grammar>],
-#   'The rdfxml node is has a rdfs:isDefinedBy triple.'
-# );
-# like(
-#   $response->content, qr[$rdfxml_node <${format_ns}media_type> "application/rdf\+xml"],
-#   'The rdfxml node has the MIME type "application/rdf+xml" associated with it.'
-# );
-# like(
-#   $response->content, qr[$service_node <$sd_ns#inputFormat> $rdfxml_node],
-#   'The rdfxml is a supported input format.'
-# );
-# like(
-#   $response->content, qr[$service_node <$sd_ns#resultFormat> $rdfxml_node],
-#   'The rdfxml is a supported result format.'
-# );
+## Check for RDF/XML format
+my $rdfxml_node = '<http://www.w3.org/ns/formats/RDF_XML>';
+like(
+  $response->content, qr[$rdfxml_node],
+  'The Format URI for RDF/XML appears in the service description.'
+);
+like(
+  $response->content, qr[$rdfxml_node <$rdfs_ns#comment> "RDF/XML"],
+  'The SPARQL XML node has the comment "RDF/XML".'
+);
+like(
+  $response->content, qr[$rdfxml_node <$rdfs_ns#label> "rdfxml"],
+  'The rdfxml node has the label "rdfxml".'
+);
+like(
+  $response->content, qr[$rdfxml_node <$rdf_ns#type> <${format_ns}Format>],
+  'The rdfxml node is of type format:Format.'
+);
+like(
+  $response->content, qr[$rdfxml_node <$rdfs_ns#isDefinedBy> <http://www.w3.org/TR/rdf-syntax-grammar>],
+  'The rdfxml node is has a rdfs:isDefinedBy triple.'
+);
+like(
+  $response->content, qr[$rdfxml_node <${format_ns}media_type> "application/rdf\+xml"],
+  'The rdfxml node has the MIME type "application/rdf+xml" associated with it.'
+);
+like(
+  $response->content, qr[$service_node <$sd_ns#inputFormat> $rdfxml_node],
+  'The rdfxml is a supported input format.'
+);
+like(
+  $response->content, qr[$service_node <$sd_ns#resultFormat> $rdfxml_node],
+  'The rdfxml is a supported result format.'
+);
 
 
 # Check for SPARQL XML results format
-# FIXME: this should lookup by Format URI, once Redland supports it
-# my ($xml_node) = ($response->content =~ qr[(\S+) <$rdfs_ns#comment> "SPARQL XML Query Results"]);
-# like($xml_node, qr[^<http://], 'There is a Format with comment "SPARQL XML Query Results" in the description.');
-# like(
-#   $response->content, qr[$xml_node <$rdfs_ns#label> "xml"],
-#   'The SPARQL XML node has the label "xml".'
-# );
-# like(
-#   $response->content, qr[$xml_node <$rdf_ns#type> <${format_ns}Format>],
-#   'The SPARQL XML node is of type format:Format.'
-# );
-# like(
-#   $response->content, qr[$xml_node <$rdfs_ns#isDefinedBy> <http://www.w3.org/TR/rdf-sparql-XMLres/>],
-#   'The SPARQL XML node is has a rdfs:isDefinedBy triple.'
-# );
-# like(
-#   $response->content, qr[$xml_node <${format_ns}media_type> "application/sparql-results\+xml"],
-#   'The SPARQL XML node has the MIME type "application/sparql-results+xml" associated with it.'
-# );
-# like(
-#   $response->content, qr[$service_node <$sd_ns#resultFormat> $xml_node],
-#   'The SPARQL XML is a supported result format.'
-# );
+my $xml_node = '<http://www.w3.org/ns/formats/SPARQL_Results_XML>';
+like(
+  $response->content, qr[$xml_node],
+  'The Format URI for SPARQL XML appears in the service description.'
+);
+like(
+  $response->content, qr[$xml_node <$rdfs_ns#comment> "SPARQL XML Query Results"],
+  'The SPARQL XML node has the comment "SPARQL XML Query Results".'
+);
+like(
+  $response->content, qr[$xml_node <$rdfs_ns#label> "xml"],
+  'The SPARQL XML node has the label "xml".'
+);
+like(
+  $response->content, qr[$xml_node <$rdf_ns#type> <${format_ns}Format>],
+  'The SPARQL XML node is of type format:Format.'
+);
+like(
+  $response->content, qr[$xml_node <$rdfs_ns#isDefinedBy> <http://www.w3.org/TR/rdf-sparql-XMLres/>],
+  'The SPARQL XML node is has a rdfs:isDefinedBy triple.'
+);
+like(
+  $response->content, qr[$xml_node <${format_ns}media_type> "application/sparql-results\+xml"],
+  'The SPARQL XML node has the MIME type "application/sparql-results+xml" associated with it.'
+);
+like(
+  $response->content, qr[$service_node <$sd_ns#resultFormat> $xml_node],
+  'The SPARQL XML is a supported result format.'
+);
 
 
 # Check for the GraphViz format (a bnode)
