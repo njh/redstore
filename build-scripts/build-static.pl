@@ -114,7 +114,7 @@ my $packages = [
         'checkfor' => ['include/rasqal/rasqal.h', 'lib/librasqal.a', 'lib/pkgconfig/rasqal.pc'],
     },
     {
-        'url' => 'http://download.librdf.org/source/redland-1.0.14.tar.gz',
+        'url' => 'http://download.librdf.org/source/redland-1.0.15.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular ".
                     "--with-bdb=${ROOT_DIR} --with-threestore=no --with-mysql=no --with-sqlite=3 ".
                     "--with-postgresql=no --with-virtuoso=no",
