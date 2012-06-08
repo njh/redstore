@@ -51,7 +51,7 @@ sub start_redstore {
             die "cannot fork: $!";
         } elsif ($pid == 0) {
             my @args = (
-              $cmd, '-q',
+              $cmd,
               '-b', 'localhost',
               '-p', $port,
               '-s', $storage
@@ -60,6 +60,10 @@ sub start_redstore {
             push(@args, '-t', $storage_options) if ($storage_options);
             push(@args, $storage_name);
             print "# ".join(' ', @args)."\n";
+            open(STDOUT, ">redstore-test.log") or
+              die "Can't redirect STDOUT to log file: $!";
+            open(STDERR, ">&", \*STDOUT) or
+              die "Can't dup STDOUT: $!";
             exec(@args);
             die "failed to exec redstore: $!";
         }
