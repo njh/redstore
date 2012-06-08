@@ -77,7 +77,7 @@ void redstore_log(librdf_log_level level, const char *fmt, ...)
       // Quit gracefully
       running = 0;
     } else {
-      fprintf(stderr, "Fatal error while quiting; exiting immediately.");
+      fprintf(stderr, "Fatal error while quiting; exiting immediately.\n");
       exit(-1);
     }
   }
