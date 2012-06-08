@@ -218,7 +218,16 @@ is($response->code, 400, "PUT response for both default and graph arguments shou
     is(scalar(@lines), 14, "Number of triples in new graph is correct");
 };
 
-
+# Test PUTing some invalid Turtle data into the triple store
+$request = HTTP::Request->new( 'PUT', $base_url.'data/baddata.rdf' );
+$request->content( "foo:subject foo:predicate foo:object .\n" );
+$request->content_length( length($request->content) );
+$request->content_type( 'text/turtle' );
+$request->header( 'Accept', 'text/plain' );
+$response = $ua->request($request);
+is($response->code, 500, "PUTing invalid turtle data into a graph should return status code 500");
+is($response->content_type, "text/plain", "Content Type of response is correct");
+like($response->content, qr/The namespace prefix in "foo:subject" was not declared/, "Response messages is correct");
 
 # Test DELETEing without any arguments
 $request = HTTP::Request->new( 'DELETE', $base_url.'data' );
