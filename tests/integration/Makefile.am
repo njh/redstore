@@ -16,3 +16,5 @@ TESTS = $(dist_check_SCRIPTS)
 TESTS_ENVIRONMENT = \
 	REDSTORE="$(top_builddir)/src/redstore" \
 	perl -w -Mstrict -MTest::Harness -I "$(srcdir)" -e "runtests(@ARGV)"
+
+CLEANFILES = redstore-test.log

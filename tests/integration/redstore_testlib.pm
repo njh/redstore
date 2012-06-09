@@ -60,7 +60,7 @@ sub start_redstore {
             push(@args, '-t', $storage_options) if ($storage_options);
             push(@args, $storage_name);
             print "# ".join(' ', @args)."\n";
-            open(STDOUT, ">redstore-test.log") or
+            open(STDOUT, ">>redstore-test.log") or
               die "Can't redirect STDOUT to log file: $!";
             open(STDERR, ">&", \*STDOUT) or
               die "Can't dup STDOUT: $!";
