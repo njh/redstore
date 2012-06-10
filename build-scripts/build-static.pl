@@ -23,13 +23,20 @@ my $packages = [
     },
     {
         'dirname' => 'check-0.9.8',
-        'url' => 'http://www.aelius.com/njh/redstore/check-20100409.tar.gz',
+        'url' => 'http://snapshots.aelius.com/check/check-0.9.8-20110416.tar.gz',
         'checkfor' => 'bin/checkmk',
     },
     {
         'url' => 'http://kent.dl.sourceforge.net/project/mhash/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz',
         'checkfor' => ['include/mhash.h', 'lib/libmhash.a'],
     },
+# RASQAL isn't detecting libuuid correctly
+#     {
+#         'url' => 'http://www.mirrorservice.org/sites/ftp.ossp.org/pkg/lib/uuid/uuid-1.6.2.tar.gz',
+#         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
+#                     "--disable-debug --without-perl --without-php --without-pgsql",
+#         'checkfor' => ['include/uuid.h', 'lib/libuuid.a', 'lib/pkgconfig/uuid.pc'],
+#     },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.21.7.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
@@ -44,19 +51,19 @@ my $packages = [
                     "--enable-utf8 --enable-unicode-properties",
         'checkfor' => ['include/pcre.h', 'lib/libpcre.a', 'lib/pkgconfig/libpcre.pc']
     },
-# FIXME: can't build a universal binary of GMP
-#     {
-#         'url' => 'ftp://ftp.gmplib.org/pub/gmp-4.3.2/gmp-4.3.2.tar.bz2',
-#         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ABI=32",
-#         'checkfor' => 'lib/libgmp.la',
-#     },
     {
-        # NOTE: libxml2-2.7.8 doesn't seem to work with Mac OS 10.6 zlib
-        'url' => 'http://xmlsoft.org/sources/libxml2-2.7.6.tar.gz',
+        'url' => 'ftp://ftp.gmplib.org/pub/gmp-5.0.5/gmp-5.0.5.tar.bz2',
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS ABI=32",
+        'checkfor' => ['include/gmp.h', 'lib/libgmp.a'],
+    },
+    {
+        'url' => 'http://xmlsoft.org/sources/libxml2-2.8.0.tar.gz',
         'checkfor' => ['include/libxml2', 'lib/libxml2.a', 'lib/pkgconfig/libxml-2.0.pc'],
     },
     {
         'url' => 'http://xmlsoft.org/sources/libxslt-1.1.26.tar.gz',
+        # Hack to fix broken compile on Mac OS 10.5 SDK
+        'make' => 'touch libxslt/ansidecl.h && make',
         'checkfor' => ['include/libxslt/xslt.h', 'lib/libxslt.a', 'lib/pkgconfig/libxslt.pc'],
     },
     {
@@ -104,12 +111,13 @@ my $packages = [
 #         'checkfor' => 'lib/libpq.a',
 #     },
     {
-        'url' => 'http://download.librdf.org/source/raptor2-2.0.6.tar.gz',
+        'dirname' => 'raptor2-2.0.8',
+        'url' => 'http://snapshots.aelius.com/raptor2/raptor2-2.0.8-20120610.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => ['lib/libraptor2.a', 'include/raptor2/raptor2.h', 'lib/pkgconfig/raptor2.pc'],
     },
     {
-        'url' => 'http://download.librdf.org/source/rasqal-0.9.28.tar.gz',
+        'url' => 'http://download.librdf.org/source/rasqal-0.9.29.tar.gz',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => ['include/rasqal/rasqal.h', 'lib/librasqal.a', 'lib/pkgconfig/rasqal.pc'],
     },
@@ -151,10 +159,10 @@ foreach my $cmd (@TOOLS_REQUIRED) {
 if (`uname` =~ /^Darwin/) {
     die "Mac OS X Developer Tools are not available." unless (-e '/Developer/');
 
-    # Build Universal Binrary for both PPC and i386
-    my $SDK_VER = '10.4';
-    my $SDK = '/Developer/SDKs/MacOSX10.4u.sdk';
-    my $ARCHES = '-arch i386 -arch ppc';
+    # Build for i386 only for now
+    my $SDK_VER = '10.5';
+    my $SDK = '/Developer/SDKs/MacOSX10.5.sdk';
+    my $ARCHES = '-arch i386';
     my $MINVER = "-mmacosx-version-min=$SDK_VER";
     die "Mac OS X SDK is not available." unless (-e $SDK);
 
@@ -163,10 +171,10 @@ if (`uname` =~ /^Darwin/) {
     $ENV{'CFLAGS'} .= " -force_cpusubtype_ALL";
     $ENV{'LDFLAGS'} .= " -Wl,-headerpad_max_install_names";
     $ENV{'MACOSX_DEPLOYMENT_TARGET'} = $SDK_VER;
-    $ENV{'CMAKE_OSX_ARCHITECTURES'} = 'ppc;i386';
+    $ENV{'CMAKE_OSX_ARCHITECTURES'} = 'i386';
     $ENV{'CMAKE_OSX_SYSROOT'} = $SDK;
 
-    my $GCC_VER = '4.0';
+    my $GCC_VER = '4.2';
     $ENV{'CC'} = "/Developer/usr/bin/gcc-$GCC_VER";
     $ENV{"CPP"} = "/Developer/usr/bin/cpp-$GCC_VER";
     $ENV{"CXX"} = "/Developer/usr/bin/g++-$GCC_VER";
