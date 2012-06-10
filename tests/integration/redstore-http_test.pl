@@ -7,7 +7,9 @@ use redstore_testlib;
 use warnings;
 use strict;
 
-use Test::More tests => 87;
+use Test::More tests => 94;
+
+my $RFC822_DATE = qr/^(\w{3},)? \d{1,2} \w{3} \d{2} \d{2}:\d{2}:\d{2}/;
 
 # Create a libwww-perl user agent
 my ($request, $response, @lines);
@@ -24,6 +26,7 @@ $response = $ua->get($base_url);
 is($response->code, 200, "Getting homepage is successful");
 is($response->content_type, 'text/html', "Homepage is of type text/html");
 ok($response->content_length > 100, "Homepage should be more than 100 bytes long");
+like($response->last_modified, qr/^\d{10}$/, "Should have a last modified date set");
 is_valid_xhtml($response->content, "Homepage should be valid XHTML");
 
 # Test getting the query page
@@ -31,6 +34,7 @@ $response = $ua->get($base_url.'query');
 is($response->code, 200, "Getting query page is successful");
 is($response->content_type, 'text/html', "Query page is of type text/html");
 ok($response->content_length > 100, "Query page is more than 100 bytes long");
+like($response->last_modified, qr/^\d{10}$/, "Should have a last modified date set");
 is_valid_xhtml($response->content, "Query page should be valid XHTML");
 
 # Test removing trailing slash
@@ -68,6 +72,7 @@ $response = $ua->get($base_url.'load');
 is($response->code, 200, "Getting load page is successful");
 is($response->content_type, 'text/html', "Load page is of type text/html");
 ok($response->content_length > 100, "Load page is more than 100 bytes long");
+like($response->last_modified, qr/^\d{10}$/, "Should have a last modified date set");
 is_valid_xhtml($response->content, "Load page should be valid XHTML");
 
 # Test getting the insert page
@@ -75,6 +80,7 @@ $response = $ua->get($base_url.'insert');
 is($response->code, 200, "Getting insert page is successful");
 is($response->content_type, 'text/html', "Insert page is of type text/html");
 ok($response->content_length > 100, "Insert page is more than 100 bytes long");
+like($response->last_modified, qr/^\d{10}$/, "Should have a last modified date set");
 is_valid_xhtml($response->content, "Insert page should be valid XHTML");
 
 # Test getting the delete page
@@ -82,6 +88,7 @@ $response = $ua->get($base_url.'delete');
 is($response->code, 200, "Getting delete page is successful");
 is($response->content_type, 'text/html', "Delete page is of type text/html");
 ok($response->content_length > 100, "Delete page is more than 100 bytes long");
+like($response->last_modified, qr/^\d{10}$/, "Should have a last modified date set");
 is_valid_xhtml($response->content, "Delete page should be valid XHTML");
 
 # Test getting the favicon
@@ -89,12 +96,14 @@ $response = $ua->get($base_url.'favicon.ico');
 is($response->code, 200, "Getting favicon.ico is successful");
 is($response->content_type, 'image/x-icon', "Getting favicon.ico set the content type");
 ok($response->content_length > 100, "favicon.ico is more than 100 bytes long");
+like($response->last_modified, qr/^\d{10}$/, "Should have a last modified date set");
 
 # Test getting robots.txt
 $response = $ua->get($base_url.'robots.txt');
 is($response->code, 200, "Getting robots.txt is successful");
 is($response->content_type, 'text/plain', "Getting robots.txt set the content type");
 ok($response->content_length > 20, "robots.txt is more than 20 bytes long");
+like($response->last_modified, qr/^\d{10}$/, "Should have a last modified date set");
 
 # Test getting empty list of graphs
 $response = $ua->get($base_url.'graphs');

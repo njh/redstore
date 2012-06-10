@@ -35,7 +35,7 @@ AM_CONDITIONAL(HAVE_PANDOC, test x"$have_pandoc" = "xyes")
 
 
 
-dnl ############# Store the build time (as RFC 1123)
+dnl ############# Store the build time (as RFC 822)
 
 BUILD_TIME=`date -u "+%a, %d %b %Y %H:%M:%S GMT"`
 AC_DEFINE_UNQUOTED(BUILD_TIME, "$BUILD_TIME", [Time that ./configure was run])

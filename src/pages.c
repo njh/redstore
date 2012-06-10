@@ -208,6 +208,7 @@ void redstore_page_end(redhttp_response_t * response)
 redhttp_response_t *handle_page_home(redhttp_request_t * request, void *user_data)
 {
   redhttp_response_t *response = redstore_page_new(REDHTTP_OK, "RedStore");
+  redhttp_response_add_header(response, "Last-Modified", BUILD_TIME);
   redstore_page_append_string(response, "<ul>\n");
   redstore_page_append_string(response, "  <li><a href=\"/query\">Query Form</a></li>\n");
   redstore_page_append_string(response, "  <li><a href=\"/graphs\">List Named Graphs</a></li>\n");
@@ -230,6 +231,7 @@ redhttp_response_t *handle_page_robots_txt(redhttp_request_t * request, void *us
 {
   redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
   static const char text[] = "User-agent: *\nDisallow: /\n";
+  redhttp_response_add_header(response, "Last-Modified", BUILD_TIME);
   redhttp_response_set_content(response, (char*)text, sizeof(text)-1, NULL);
   return response;
 }
@@ -270,6 +272,7 @@ redhttp_response_t *handle_page_query_form(redhttp_request_t * request, void *us
   redhttp_response_t *response = NULL;
 
   response = redstore_page_new(REDHTTP_OK, "Query Form");
+  redhttp_response_add_header(response, "Last-Modified", BUILD_TIME);
   redstore_page_append_string(response, "<form action=\"./query\" method=\"get\">\n");
   redstore_page_append_string(response, "<div><textarea name=\"query\" cols=\"80\" rows=\"18\">\n");
   redstore_page_append_string(response,
@@ -312,6 +315,7 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
   const char *action = redhttp_request_get_path(request);
 
   redhttp_response_t *response = redstore_page_new(REDHTTP_OK, title);
+  redhttp_response_add_header(response, "Last-Modified", BUILD_TIME);
   redstore_page_append_strings(response, "<form method=\"post\" action=\"", action, "\">\n", NULL);
   redstore_page_append_string(response,
                               "<div><textarea name=\"content\" cols=\"80\" rows=\"18\">\n");
@@ -336,6 +340,7 @@ redhttp_response_t *handle_page_update_form(redhttp_request_t * request, void *u
 redhttp_response_t *handle_page_load_form(redhttp_request_t * request, void *user_data)
 {
   redhttp_response_t *response = redstore_page_new(REDHTTP_OK, "Load URI");
+  redhttp_response_add_header(response, "Last-Modified", BUILD_TIME);
   redstore_page_append_string(response, "<form method=\"post\" action=\"/load\"><div>\n"
                               "<label for=\"uri\">URI:</label> <input id=\"uri\" name=\"uri\" type=\"text\" size=\"40\" /><br />\n"
                               "<label for=\"graph\">Graph:</label> <input id=\"graph\" name=\"graph\" type=\"text\" size=\"40\" /> <i>(optional)</i><br />\n"
