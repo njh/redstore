@@ -77,11 +77,9 @@ RedStore exits 0 on success, and >0 if an error occurred that caused RedStore to
 
 RESOURCES
 =========
-[RedStore Homepage]
-
-[RedStore on GitHub]
-
-[Redland Homepage]
+* [RedStore Homepage]
+* [RedStore on GitHub]
+* [Redland Homepage]
 
 
 AUTHORS
