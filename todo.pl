@@ -5,20 +5,15 @@
 # Nicholas J Humfrey <njh@aelius.com>
 # 
 
-use LWP::Simple;
 use JSON qw(decode_json);
-use Data::Dumper;
 use strict;
 
-my $json = decode_json(
-    get("http://github.com/api/v2/json/issues/list/njh/redstore/open")
-);
+my $json = `curl -s https://api.github.com/repos/njh/redstore/issues?state=open`;
+die "Couldn't get todo list from GitHub" unless defined $json;
+my $data = decode_json($json);
 
-my @sorted = sort {
-    $a->{'position'} <=> $b->{'position'}
-} @{$json->{'issues'}};
-
-# Display the titles
-foreach my $issue (@sorted) {
-    print '['.$issue->{'number'}.'] '.$issue->{'title'}."\n";
+print "Open issues on GitHub\n";
+print "---------------------\n";
+foreach my $issue (@$data) {
+    printf("[%2.2d] %s\n", $issue->{'number'}, $issue->{'title'});
 }
