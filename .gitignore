@@ -2,6 +2,7 @@
 .libs
 *.a
 *.gz
+*.dmg
 *.la
 *.lo
 *.o
