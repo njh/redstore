@@ -7,6 +7,7 @@ static NSDictionary *defaultValues() {
     static NSDictionary *dict = nil;
     if (!dict) {
         dict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                [NSNumber numberWithBool:YES], @"autostart",
                 @"8080", @"http.port",
                 @"localhost", @"http.address",
                 [NSNumber numberWithBool:YES], @"logging.verbose",

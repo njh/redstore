@@ -164,6 +164,13 @@
     redstoreTask=nil;
 }
 
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+	if ([[NSUserDefaults standardUserDefaults] integerForKey:@"autostart"]) {
+		[self startStop:self];
+	}
+}
+
 - (void) applicationWillTerminate: (NSNotification *)note
 {
 	[redstoreTask stopProcess];
