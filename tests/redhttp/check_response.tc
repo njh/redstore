@@ -94,6 +94,19 @@ redhttp_response_add_header(response, "key", "value");
 ck_assert_str_eq(redhttp_response_get_header(response, "key"), "value");
 redhttp_response_free(response);
 
+#test header_set_and_get
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+redhttp_response_set_header(response, "key", "value");
+ck_assert_str_eq(redhttp_response_get_header(response, "key"), "value");
+redhttp_response_free(response);
+
+#test header_double_set_and_get
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+redhttp_response_set_header(response, "key", "value1");
+redhttp_response_set_header(response, "key", "value2");
+ck_assert_str_eq(redhttp_response_get_header(response, "key"), "value2");
+redhttp_response_free(response);
+
 #test header_count
 redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
 redhttp_response_add_header(response, "key1", "value1");

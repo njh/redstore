@@ -180,6 +180,11 @@ void redhttp_response_add_header(redhttp_response_t * response, const char *key,
   redhttp_headers_add(&response->headers, key, value);
 }
 
+void redhttp_response_set_header(redhttp_response_t * response, const char *key, const char *value)
+{
+  redhttp_headers_set(&response->headers, key, value);
+}
+
 void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer)
 {
   static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";

@@ -66,6 +66,7 @@ typedef redhttp_response_t *(*redhttp_handler_func) (redhttp_request_t * request
 
 void redhttp_headers_print(redhttp_header_t ** first, FILE * socket);
 void redhttp_headers_add(redhttp_header_t ** first, const char *key, const char *value);
+void redhttp_headers_set(redhttp_header_t ** first, const char *key, const char *value);
 int redhttp_headers_count(redhttp_header_t ** first);
 const char *redhttp_headers_get(redhttp_header_t ** first, const char *key);
 int redhttp_headers_exists(redhttp_header_t ** first, const char *key);
@@ -126,6 +127,7 @@ int redhttp_response_count_headers(redhttp_response_t * response);
 void redhttp_response_print_headers(redhttp_response_t * response, FILE * socket);
 const char *redhttp_response_get_header(redhttp_response_t * response, const char *key);
 void redhttp_response_add_header(redhttp_response_t * response, const char *key, const char *value);
+void redhttp_response_set_header(redhttp_response_t * response, const char *key, const char *value);
 void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer);
 void redhttp_response_copy_content(redhttp_response_t * response,
                                    const char *content, size_t length);

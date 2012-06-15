@@ -71,6 +71,26 @@ void redhttp_headers_add(redhttp_header_t ** first, const char *key, const char 
   }
 }
 
+void redhttp_headers_set(redhttp_header_t ** first, const char *key, const char *value)
+{
+  redhttp_header_t *it;
+
+  assert(first != NULL);
+  assert(key != NULL);
+
+  // Change the value of the existing header, if it already exists
+  for (it = *first; it; it = it->next) {
+    if (redhttp_strcasecmp(key, it->key) == 0) {
+      if (it->value) free(it->value);
+      it->value = value && strlen(value) ? redhttp_strdup(value) : NULL;
+      return;
+    }
+  }
+
+  // Otherwise, add it
+  redhttp_headers_add(first, key, value);
+}
+
 int redhttp_headers_count(redhttp_header_t ** first)
 {
   redhttp_header_t *it;
