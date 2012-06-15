@@ -120,12 +120,54 @@ redhttp_response_free(response);
 redhttp_request_free(request);
 redhttp_server_free(server);
 
+#test dispatch_options_server
+redhttp_server_t *server = redhttp_server_new();
+redhttp_request_t *request = redhttp_request_new_with_args("OPTIONS", "*", "1.1");
+redhttp_response_t *response = NULL;
+redhttp_server_add_handler(server, "GET", "/hello", handle_ok, NULL);
+redhttp_server_add_handler(server, "GET", "/world", handle_ok, NULL);
+response = redhttp_server_dispatch_request(server, request);
+ck_assert(redhttp_response_get_status_code(response) == REDHTTP_OK);
+ck_assert(redhttp_response_get_content_length(response) == 0);
+ck_assert_str_eq(redhttp_response_get_header(response, "Allow"), "OPTIONS,GET,HEAD");
+redhttp_response_free(response);
+redhttp_request_free(request);
+redhttp_server_free(server);
+
+#test dispatch_options_path
+redhttp_server_t *server = redhttp_server_new();
+redhttp_request_t *request = redhttp_request_new_with_args("OPTIONS", "/hello", "1.1");
+redhttp_response_t *response = NULL;
+redhttp_server_add_handler(server, "POST", "/hello", handle_ok, NULL);
+redhttp_server_add_handler(server, "PUT", "/hello", handle_ok, NULL);
+redhttp_server_add_handler(server, "FOOBAR", "/world", handle_ok, NULL);
+response = redhttp_server_dispatch_request(server, request);
+ck_assert(redhttp_response_get_status_code(response) == REDHTTP_OK);
+ck_assert(redhttp_response_get_content_length(response) == 0);
+ck_assert_str_eq(redhttp_response_get_header(response, "Allow"), "OPTIONS,POST,PUT");
+redhttp_response_free(response);
+redhttp_request_free(request);
+redhttp_server_free(server);
+
 #test dispatch_head_404
 redhttp_server_t *server = redhttp_server_new();
 redhttp_request_t *request = redhttp_request_new_with_args("HEAD", "/hello", "1.0");
 redhttp_response_t *response = redhttp_server_dispatch_request(server, request);
 ck_assert(redhttp_response_get_status_code(response) == REDHTTP_NOT_FOUND);
 ck_assert(redhttp_response_get_content_length(response) == 0);
+redhttp_response_free(response);
+redhttp_request_free(request);
+redhttp_server_free(server);
+
+#test dispatch_not_allowed_server
+redhttp_server_t *server = redhttp_server_new();
+redhttp_request_t *request = redhttp_request_new_with_args("FOOBAR", "*", "1.0");
+redhttp_response_t *response = NULL;
+redhttp_server_add_handler(server, "GET", "/hello", handle_ok, NULL);
+redhttp_server_add_handler(server, "POST", "/hello", handle_ok, NULL);
+response = redhttp_server_dispatch_request(server, request);
+ck_assert(redhttp_response_get_status_code(response) == REDHTTP_METHOD_NOT_ALLOWED);
+ck_assert_str_eq(redhttp_response_get_header(response, "Allow"), "OPTIONS");
 redhttp_response_free(response);
 redhttp_request_free(request);
 redhttp_server_free(server);
@@ -139,7 +181,7 @@ redhttp_server_add_handler(server, "GET", "/hello", handle_ok, NULL);
 redhttp_server_add_handler(server, "POST", "/hello", handle_ok, NULL);
 response = redhttp_server_dispatch_request(server, request);
 ck_assert(redhttp_response_get_status_code(response) == REDHTTP_METHOD_NOT_ALLOWED);
-// FIXME: Check the list of allowed methods
+ck_assert_str_eq(redhttp_response_get_header(response, "Allow"), "OPTIONS,GET,HEAD,POST");
 redhttp_response_free(response);
 redhttp_request_free(request);
 redhttp_server_free(server);

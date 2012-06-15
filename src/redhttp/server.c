@@ -287,6 +287,77 @@ int redhttp_server_handle_request(redhttp_server_t * server, int socket,
   return 0;
 }
 
+
+static int add_allowed_method(const char* allowed[], int max, const char* method)
+{
+  int i;
+
+  for(i=0; i<max; i++) {
+    if (allowed[i] == NULL) {
+      // Add it to the list
+      allowed[i] = method;
+      return 1;
+    } else if (strcmp(allowed[i], method) == 0) {
+      // Already on the list
+      return 0;
+    }
+  }
+
+  return 0;
+}
+
+#define MAX_ALLOWED_METHODS   (50)
+static redhttp_response_t * check_allowed_responses(int status,
+                                                    redhttp_server_t * server,
+                                                    const char * path)
+{
+  redhttp_response_t *response = NULL;
+  const char *allowed[MAX_ALLOWED_METHODS] = {"OPTIONS"};
+  char allow_str[BUFSIZ+1] = {'\0'};
+  redhttp_handler_t *it;
+  int i;
+
+  for(i=1; i<MAX_ALLOWED_METHODS; i++) {
+    allowed[i] = NULL;
+  }
+
+  // Build up a list of the allowed methods
+  for (it = server->handlers; it; it = it->next) {
+    if (it->method == NULL) continue;
+    if (path == NULL || (it->path && strcmp(it->path, path) == 0)) {
+      int added = 0;
+      // Add it to the list, if it isn't already there
+      added = add_allowed_method(allowed, MAX_ALLOWED_METHODS, it->method);
+      if (added && strcmp("GET", it->method)==0) {
+        add_allowed_method(allowed, MAX_ALLOWED_METHODS, "HEAD");
+      }
+    }
+  }
+
+  // Now convert it to a string
+  strcpy(allow_str, allowed[0]);
+  for(i=1; i<MAX_ALLOWED_METHODS; i++) {
+    if (allowed[i]==NULL) break;
+    if (strlen(allow_str) + strlen(allowed[i]) + 2 < BUFSIZ) {
+      strcat(allow_str, ",");
+      strcat(allow_str, allowed[i]);
+    }
+  }
+
+  if (status == REDHTTP_OK) {
+    response = redhttp_response_new(REDHTTP_OK, NULL);
+  } else {
+    char message[BUFSIZ+1] = {'\0'};
+    snprintf(message, BUFSIZ, "Please use one of the allowed methods:<br /><code>%s</code>", allow_str);
+    response = redhttp_response_new_error_page(status, message);
+  }
+
+  // Add the allow header
+  redhttp_response_add_header(response, "Allow", allow_str);
+
+  return response;
+}
+
 redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t * server,
                                                     redhttp_request_t * request)
 {
@@ -296,6 +367,19 @@ redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t * server,
   assert(server != NULL);
   assert(request != NULL);
 
+  // Is the request not specific to a resource?
+  if (strncmp("*", request->path, 2) == 0) {
+    if (strncmp("OPTIONS", request->method, 8) == 0) {
+      return check_allowed_responses(REDHTTP_OK, server, NULL);
+    } else {
+      // The only method you are allowed to call on '*' is OPTIONS
+      response = redhttp_response_new_error_page(REDHTTP_METHOD_NOT_ALLOWED, NULL);
+      redhttp_response_add_header(response, "Allow", "OPTIONS");
+      return response;
+    }
+  }
+
+  // Try and match against a route
   for (it = server->handlers; it; it = it->next) {
     if (match_route(it, request)) {
       response = it->func(request, it->user_data);
@@ -305,34 +389,30 @@ redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t * server,
   }
 
   // Is it a HEAD request?
-  if (strncmp("HEAD", request->method, 4) == 0) {
+  if (strncmp("HEAD", request->method, 5) == 0) {
     for (it = server->handlers; it; it = it->next) {
       if ((it->method && strcmp(it->method, "GET") == 0) &&
           (it->path && strcmp(it->path, request->path) == 0)) {
-        response = redhttp_response_new(REDHTTP_OK, NULL);
-        break;
+        return redhttp_response_new(REDHTTP_OK, NULL);
       }
     }
+    // Not found (but no body)
+    return redhttp_response_new(REDHTTP_NOT_FOUND, NULL);
+  }
 
-    if (!response)
-      response = redhttp_response_new(REDHTTP_NOT_FOUND, NULL);
-
-  } else {
-    // Check if another method is allowed instead
-    for (it = server->handlers; it; it = it->next) {
-      if (it->path && strcmp(it->path, request->path) == 0) {
-        response = redhttp_response_new_error_page(REDHTTP_METHOD_NOT_ALLOWED, NULL);
-        // FIXME: add list of allowed methods
-        break;
+  // Check if some another method is allowed instead
+  for (it = server->handlers; it; it = it->next) {
+    if (it->path && strcmp(it->path, request->path) == 0) {
+      if (strncmp("OPTIONS", request->method, 8) == 0) {
+        return check_allowed_responses(REDHTTP_OK, server, request->path);
+      } else {
+        return check_allowed_responses(REDHTTP_METHOD_NOT_ALLOWED, server, request->path);
       }
     }
   }
 
   // Must be a 404
-  if (!response)
-    response = redhttp_response_new_error_page(REDHTTP_NOT_FOUND, NULL);
-
-  return response;
+  return redhttp_response_new_error_page(REDHTTP_NOT_FOUND, NULL);
 }
 
 void redhttp_server_set_signature(redhttp_server_t * server, const char *signature)
