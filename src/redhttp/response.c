@@ -1,6 +1,6 @@
 /*
     RedHTTP - a lightweight HTTP server library
-    Copyright (C) 2010-2011 Nicholas J Humfrey <njh@aelius.com>
+    Copyright (C) 2010-2012 Nicholas J Humfrey <njh@aelius.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -228,6 +228,10 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
   assert(response != NULL);
 
   if (!response->headers_sent) {
+    char length_str[32] = "";
+    snprintf(length_str, sizeof(length_str), "%d", (int) response->content_length);
+    redhttp_response_add_header(response, "Content-Length", length_str);
+
     redhttp_response_add_time_header(response, "Date", time(NULL));
     redhttp_response_add_header(response, "Connection", "Close");
 
@@ -235,12 +239,6 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
       const char *signature = redhttp_server_get_signature(request->server);
       if (signature)
         redhttp_response_add_header(response, "Server", signature);
-    }
-
-    if (response->content_length) {
-      char length_str[32] = "";
-      snprintf(length_str, sizeof(length_str), "%d", (int) response->content_length);
-      redhttp_response_add_header(response, "Content-Length", length_str);
     }
 
     if (request->version && strncmp(request->version, "0.9", 3) != 0) {

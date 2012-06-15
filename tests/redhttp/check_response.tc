@@ -1,6 +1,6 @@
 /*
     RedHTTP - a lightweight HTTP server library
-    Copyright (C) 2010-2011 Nicholas J Humfrey <njh@aelius.com>
+    Copyright (C) 2010-2012 Nicholas J Humfrey <njh@aelius.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -170,3 +170,23 @@ free(buffer);
 redhttp_request_free(request);
 redhttp_response_free(response);
 
+
+#test response_send_empty_body
+redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+redhttp_request_t *request = redhttp_request_new_with_args("HEAD", "/hello", "1.0");
+char *buffer = malloc(BUFSIZ);
+
+// Send response
+redhttp_request_set_socket(request,tmpfile());
+redhttp_response_send(response, request);
+rewind(redhttp_request_get_socket(request));
+
+// Now read it back in
+fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
+ck_assert_str_eq(buffer, "HTTP/1.0 200 OK\r\n");
+fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
+ck_assert_str_eq(buffer, "Content-Length: 0\r\n");
+
+free(buffer);
+redhttp_request_free(request);
+redhttp_response_free(response);
