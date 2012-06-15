@@ -197,6 +197,7 @@ int main(int argc, char **argv)
   redhttp_server_add_handler(server, "GET", "/", handle_homepage, NULL);
   redhttp_server_add_handler(server, "GET", "/query*", handle_query, NULL);
   redhttp_server_add_handler(server, "POST", "/query", handle_query, NULL);
+  redhttp_server_add_handler(server, "POST", "/postonly", handle_query, NULL);
   redhttp_server_add_handler(server, "GET", "/redirect", handle_redirect, NULL);
   redhttp_server_set_signature(server, "test_redhttpd/0.1");
 
