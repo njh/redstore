@@ -183,17 +183,15 @@ void redhttp_response_add_header(redhttp_response_t * response, const char *key,
 void redhttp_response_add_time_header(redhttp_response_t * response, const char *key, time_t timer)
 {
   static const char RFC1123FMT[] = "%a, %d %b %Y %H:%M:%S GMT";
-  char *date_str = malloc(BUFSIZ);
   struct tm *time_tm = gmtime(&timer);
+  char date_str[BUFSIZ];
 
-  if (!date_str)
+  if (!time_tm)
     return;
 
-  // FIXME: calculate the length of the date string instead of using BUFSIZ
-  strftime(date_str, BUFSIZ, RFC1123FMT, time_tm);
-  redhttp_headers_add(&response->headers, key, date_str);
-
-  free(date_str);
+  if (strftime(date_str, sizeof(date_str)-1, RFC1123FMT, time_tm)) {
+    redhttp_headers_add(&response->headers, key, date_str);
+  }
 }
 
 void redhttp_response_copy_content(redhttp_response_t * response,
