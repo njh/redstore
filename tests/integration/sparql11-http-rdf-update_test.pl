@@ -181,7 +181,11 @@ is($response->code, 400, "PUT response for both default and graph arguments shou
 };
 
 # Test PUTing JSON
-{
+SKIP: {
+    unless (redstore_supports_rdf_json()) {
+        skip("Parsing RDF/JSON support is not available", 2);
+    }
+
     $request = HTTP::Request->new( 'PUT', $base_url.'data/foaf.rdf' );
     $request->content( read_fixture('foaf.json') );
     $request->content_length( length($request->content) );

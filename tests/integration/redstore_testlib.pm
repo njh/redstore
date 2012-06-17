@@ -20,15 +20,8 @@ sub new_redstore_client {
   return $ua;
 }
 
-sub start_redstore {
-    my $storage = shift || 'memory';
-    my $storage_options = shift || undef;
-    my $storage_name = shift || 'redstore-test';
-    my $storage_new = shift;
-
-    my ($cmd, $pid, $port);
-    my $count = 0;
-
+sub redstore_cmd {
+    my $cmd;
     if ($ENV{REDSTORE}) {
       $cmd = $ENV{REDSTORE};
     } elsif ($ARGV[0]) {
@@ -41,6 +34,24 @@ sub start_redstore {
         die "Error: RedStore command does not exist: $cmd";
     }
 
+    return $cmd;
+}
+
+sub redstore_supports_rdf_json {
+    my $cmd = redstore_cmd();
+    my $help = `$cmd -h`;
+    return ($help =~ m|RDF/JSON|);
+}
+
+sub start_redstore {
+    my $storage = shift || 'memory';
+    my $storage_options = shift || undef;
+    my $storage_name = shift || 'redstore-test';
+    my $storage_new = shift;
+
+    my ($pid, $port);
+    my $count = 0;
+
     do {
         $port = 10000 + (int(rand(10000) + time()) % 10000);
         $count += 1;
@@ -51,7 +62,7 @@ sub start_redstore {
             die "cannot fork: $!";
         } elsif ($pid == 0) {
             my @args = (
-              $cmd,
+              redstore_cmd(),
               '-b', 'localhost',
               '-p', $port,
               '-s', $storage
