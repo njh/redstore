@@ -188,7 +188,6 @@ ck_assert_msg(redhttp_response_get_header(response, "Date") != NULL, "'Date' hea
 ck_assert_str_eq(redhttp_response_get_header(response, "Connection"), "Close");
 
 free(buffer);
-fclose(tmp);
 redhttp_request_free(request);
 redhttp_response_free(response);
 
@@ -208,6 +207,5 @@ ck_assert_str_eq(redhttp_response_get_header(response, "Content-Length"), "0");
 ck_assert_msg(redhttp_response_get_header(response, "Date") != NULL, "'Date' header has been set");
 ck_assert_str_eq(redhttp_response_get_header(response, "Connection"), "Close");
 
-fclose(tmp);
 redhttp_request_free(request);
 redhttp_response_free(response);
