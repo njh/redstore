@@ -81,6 +81,9 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
     return NULL;
   }
 
+  // Set default content length to -1 (unknown)
+  response->content_length = -1;
+
   redhttp_response_set_status_code(response, code);
   if (message)
     redhttp_response_set_status_message(response, message);
@@ -88,11 +91,20 @@ redhttp_response_t *redhttp_response_new(int code, const char *message)
   return response;
 }
 
+redhttp_response_t *redhttp_response_new_empty(int status)
+{
+  redhttp_response_t *response = redhttp_response_new(status, NULL);
+  if (response)
+    response->content_length = 0;
+  return response;
+}
+
 redhttp_response_t *redhttp_response_new_with_type(int status, const char *message,
                                                    const char *type)
 {
   redhttp_response_t *response = redhttp_response_new(status, message);
-  redhttp_response_add_header(response, "Content-Type", type);
+  if (response)
+    redhttp_response_add_header(response, "Content-Type", type);
   return response;
 }
 
@@ -233,9 +245,12 @@ void redhttp_response_send(redhttp_response_t * response, redhttp_request_t * re
   assert(response != NULL);
 
   if (!response->headers_sent) {
-    char length_str[32] = "";
-    snprintf(length_str, sizeof(length_str), "%d", (int) response->content_length);
-    redhttp_response_add_header(response, "Content-Length", length_str);
+    // Add a content-length header, if content length has been defined
+    if (response->content_length >= 0) {
+      char length_str[32] = "";
+      snprintf(length_str, sizeof(length_str), "%d", response->content_length);
+      redhttp_response_add_header(response, "Content-Length", length_str);
+    }
 
     redhttp_response_add_time_header(response, "Date", time(NULL));
     redhttp_response_add_header(response, "Connection", "Close");
@@ -303,7 +318,8 @@ char *redhttp_response_get_content_buffer(redhttp_response_t * response)
   return response->content_buffer;
 }
 
-size_t redhttp_response_get_content_length(redhttp_response_t * response)
+// Returns -1 when content_length is unknown
+int redhttp_response_get_content_length(redhttp_response_t * response)
 {
   return response->content_length;
 }

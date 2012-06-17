@@ -119,6 +119,7 @@ void redhttp_request_free(redhttp_request_t * request);
 
 const char* redhttp_response_status_message_for_code(int code);
 redhttp_response_t *redhttp_response_new(int status, const char *message);
+redhttp_response_t *redhttp_response_new_empty(int status);
 redhttp_response_t *redhttp_response_new_with_type(int status, const char *message,
                                                    const char *type);
 redhttp_response_t *redhttp_response_new_error_page(int code, const char *explanation);
@@ -138,7 +139,7 @@ int redhttp_response_get_status_code(redhttp_response_t * response);
 void redhttp_response_set_status_message(redhttp_response_t * response, const char* message);
 const char *redhttp_response_get_status_message(redhttp_response_t * response);
 char *redhttp_response_get_content_buffer(redhttp_response_t * response);
-size_t redhttp_response_get_content_length(redhttp_response_t * response);
+int redhttp_response_get_content_length(redhttp_response_t * response);
 void *redhttp_response_get_user_data(redhttp_response_t * response);
 void redhttp_response_set_user_data(redhttp_response_t * response, void *user_data);
 void redhttp_response_free(redhttp_response_t * response);

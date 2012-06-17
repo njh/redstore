@@ -79,7 +79,7 @@ struct redhttp_response_s {
   unsigned int status_code;
   char *status_message;
   char *content_buffer;
-  size_t content_length;
+  int content_length;
   void (*content_free_callback) (void *ptr);
 
   void *user_data;

@@ -159,16 +159,18 @@ ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<title>404 N
 ck_assert_msg(strstr(redhttp_response_get_content_buffer(response),"<h1>404 Not Found</h1>") != NULL, "Page has h1 title");
 redhttp_response_free(response);
 
+
 #test response_send
-redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
 redhttp_request_t *request = redhttp_request_new_with_args("GET", "/hello", "1.0");
+redhttp_response_t *response = redhttp_response_new_with_type(REDHTTP_OK, NULL, "text/plain");
 redhttp_response_copy_content(response, "Hello World", 11);
 char *buffer = malloc(BUFSIZ);
 
-// Send response
-redhttp_request_set_socket(request,tmpfile());
+// Send response to temporary file
+FILE* tmp = tmpfile();
+redhttp_request_set_socket(request, tmp);
 redhttp_response_send(response, request);
-rewind(redhttp_request_get_socket(request));
+rewind(tmp);
 
 // Now read it back in
 fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
@@ -179,27 +181,33 @@ do {
 fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
 ck_assert_str_eq(buffer, "Hello World");
 
+// Check that headers were set
+ck_assert_msg(redhttp_response_get_header(response, "Content-Length") != NULL, "'Content-Length' header has been set");
+ck_assert_str_eq(redhttp_response_get_header(response, "Content-Length"), "11");
+ck_assert_msg(redhttp_response_get_header(response, "Date") != NULL, "'Date' header has been set");
+ck_assert_str_eq(redhttp_response_get_header(response, "Connection"), "Close");
+
 free(buffer);
+fclose(tmp);
 redhttp_request_free(request);
 redhttp_response_free(response);
 
 
-#test response_send_empty_body
-redhttp_response_t *response = redhttp_response_new(REDHTTP_OK, NULL);
+#test response_send_head
 redhttp_request_t *request = redhttp_request_new_with_args("HEAD", "/hello", "1.0");
-char *buffer = malloc(BUFSIZ);
+redhttp_response_t *response = redhttp_response_new_empty(REDHTTP_OK);
 
-// Send response
-redhttp_request_set_socket(request,tmpfile());
+// Send response to temporary file
+FILE* tmp = tmpfile();
+redhttp_request_set_socket(request,tmp);
 redhttp_response_send(response, request);
-rewind(redhttp_request_get_socket(request));
 
-// Now read it back in
-fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
-ck_assert_str_eq(buffer, "HTTP/1.0 200 OK\r\n");
-fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
-ck_assert_str_eq(buffer, "Content-Length: 0\r\n");
+// Check that headers were set
+ck_assert_msg(redhttp_response_get_header(response, "Content-Length") != NULL, "'Content-Length' header has been set");
+ck_assert_str_eq(redhttp_response_get_header(response, "Content-Length"), "0");
+ck_assert_msg(redhttp_response_get_header(response, "Date") != NULL, "'Date' header has been set");
+ck_assert_str_eq(redhttp_response_get_header(response, "Connection"), "Close");
 
-free(buffer);
+fclose(tmp);
 redhttp_request_free(request);
 redhttp_response_free(response);

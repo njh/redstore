@@ -345,7 +345,7 @@ static redhttp_response_t * check_allowed_responses(int status,
   }
 
   if (status == REDHTTP_OK) {
-    response = redhttp_response_new(REDHTTP_OK, NULL);
+    response = redhttp_response_new_empty(REDHTTP_OK);
   } else {
     char message[BUFSIZ+1] = {'\0'};
     snprintf(message, BUFSIZ, "Please use one of the allowed methods:<br /><code>%s</code>", allow_str);
@@ -393,11 +393,11 @@ redhttp_response_t *redhttp_server_dispatch_request(redhttp_server_t * server,
     for (it = server->handlers; it; it = it->next) {
       if ((it->method && strcmp(it->method, "GET") == 0) &&
           (it->path && strcmp(it->path, request->path) == 0)) {
-        return redhttp_response_new(REDHTTP_OK, NULL);
+        return redhttp_response_new_empty(REDHTTP_OK);
       }
     }
     // Not found (but no body)
-    return redhttp_response_new(REDHTTP_NOT_FOUND, NULL);
+    return redhttp_response_new_empty(REDHTTP_NOT_FOUND);
   }
 
   // Check if some another method is allowed instead
