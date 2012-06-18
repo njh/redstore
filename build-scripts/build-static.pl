@@ -83,7 +83,7 @@ my $packages = [
         'checkfor' => ['include/sqlite3.h', 'lib/libsqlite3.a', 'lib/pkgconfig/sqlite3.pc'],
     },
     {
-        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.26.tar.gz',
+        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.30.tar.gz',
         'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
