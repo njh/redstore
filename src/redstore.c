@@ -426,8 +426,6 @@ cleanup:
   reset_error_buffer(NULL, NULL);
 
   // Clean up librdf
-  if (storage && librdf_storage_close(storage))
-    redstore_warn("Error while closing storage.");
   if (model)
     librdf_free_model(model);
   if (storage)
