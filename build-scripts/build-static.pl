@@ -18,16 +18,19 @@ my $DEFAULT_CONFIGURE_ARGS = "--enable-static --disable-shared --prefix=$ROOT_DI
 my $packages = [
     {
         'url' => 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.25.tar.gz',
+        'md5' => 'a3270bab3f4b69b7dc6dbdacbcae9745',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-pc-path=${ROOT_DIR}/lib/pkgconfig",
         'checkfor' => 'bin/pkg-config',
     },
     {
         'dirname' => 'check-0.9.8',
         'url' => 'http://snapshots.aelius.com/check/check-0.9.8-20110416.tar.gz',
+        'md5' => '045906b2a7eb0721a4c14f579e5d8dc2',
         'checkfor' => 'bin/checkmk',
     },
     {
         'url' => 'http://kent.dl.sourceforge.net/project/mhash/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz',
+        'md5' => 'ee66b7d5947deb760aeff3f028e27d25',
         'checkfor' => ['include/mhash.h', 'lib/libmhash.a'],
     },
 # RASQAL isn't detecting libuuid correctly
@@ -39,6 +42,7 @@ my $packages = [
 #     },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.21.7.tar.gz',
+        'md5' => '3bbdab8bf540d73d10d2a82d964bc20a',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp ".
                     "--without-librtmp --disable-dict --disable-telnet --disable-pop3 ".
@@ -47,27 +51,32 @@ my $packages = [
     },
     {
         'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.12/pcre-8.12.tar.bz2',
+        'md5' => 'f14a9fef3c92f3fc6c5ac92d7a2c7eb3',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--enable-utf8 --enable-unicode-properties",
         'checkfor' => ['include/pcre.h', 'lib/libpcre.a', 'lib/pkgconfig/libpcre.pc']
     },
     {
         'url' => 'ftp://ftp.gmplib.org/pub/gmp-5.0.5/gmp-5.0.5.tar.bz2',
+        'md5' => '041487d25e9c230b0c42b106361055fe',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ABI=32",
         'checkfor' => ['include/gmp.h', 'lib/libgmp.a'],
     },
     {
         'url' => 'http://xmlsoft.org/sources/libxml2-2.8.0.tar.gz',
+        'md5' => 'c62106f02ee00b6437f0fb9d370c1093',
         'checkfor' => ['include/libxml2', 'lib/libxml2.a', 'lib/pkgconfig/libxml-2.0.pc'],
     },
     {
         'url' => 'http://xmlsoft.org/sources/libxslt-1.1.26.tar.gz',
+        'md5' => 'e61d0364a30146aaa3001296f853b2b9',
         # Hack to fix broken compile on Mac OS 10.5 SDK
         'make' => 'touch libxslt/ansidecl.h && make',
         'checkfor' => ['include/libxslt/xslt.h', 'lib/libxslt.a', 'lib/pkgconfig/libxslt.pc'],
     },
     {
         'url' => 'http://github.com/lloyd/yajl/tarball/2.0.1',
+        'md5' => 'df6a751e7797b9c2182efd91b5d64017',
         'dirname' => 'lloyd-yajl-f4b2b1a',
         'tarname' => 'yajl-2.0.1.tar.gz',
         'config' => "mkdir build && cd build && cmake ..",
@@ -80,10 +89,12 @@ my $packages = [
     {
         'dirname' => 'sqlite-3.7.3',
         'url' => 'http://www.sqlite.org/sqlite-amalgamation-3.7.3.tar.gz',
+        'md5' => '74fe78b264f1c434c4b159d45b78e9b7',
         'checkfor' => ['include/sqlite3.h', 'lib/libsqlite3.a', 'lib/pkgconfig/sqlite3.pc'],
     },
     {
         'url' => 'http://download.oracle.com/berkeley-db/db-4.8.30.tar.gz',
+        'md5' => 'f80022099c5742cd179343556179aa8c',
         'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
@@ -113,16 +124,19 @@ my $packages = [
     {
         'dirname' => 'raptor2-2.0.8',
         'url' => 'http://snapshots.aelius.com/raptor2/raptor2-2.0.8-20120610.tar.gz',
+        'md5' => '6b41a2c3a607d16e3d8603966a227481',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => ['lib/libraptor2.a', 'include/raptor2/raptor2.h', 'lib/pkgconfig/raptor2.pc'],
     },
     {
         'url' => 'http://download.librdf.org/source/rasqal-0.9.29.tar.gz',
+        'md5' => '49e4b75a0c67465edf55dd20606715fa',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
         'checkfor' => ['include/rasqal/rasqal.h', 'lib/librasqal.a', 'lib/pkgconfig/rasqal.pc'],
     },
     {
         'url' => 'http://download.librdf.org/source/redland-1.0.15.tar.gz',
+        'md5' => 'b0deb87f3c7d3237a3d587c1e0f2f266',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular ".
                     "--with-bdb=${ROOT_DIR} --with-threestore=no --with-mysql=no --with-sqlite=3 ".
                     "--with-postgresql=no --with-virtuoso=no",
@@ -145,7 +159,7 @@ $ENV{'LDFLAGS'} = "-L${ROOT_DIR}/lib";
 $ENV{'INFOPATH'} = "${ROOT_DIR}/share/info";
 $ENV{'MANPATH'} = "${ROOT_DIR}/share/man";
 $ENV{'M4PATH'} = "${ROOT_DIR}/share/aclocal";
-$ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin";
+$ENV{'PATH'} = "${ROOT_DIR}/bin:/usr/bin:/bin:/sbin";
 $ENV{'PKG_CONFIG_PATH'} = "${ROOT_DIR}/lib/pkgconfig";
 $ENV{'CLASSPATH'} = '';
 
@@ -221,6 +235,7 @@ foreach my $pkg (@$packages) {
     if ($pkg->{'alwaysbuild'} or check_installed($pkg) == 0) {
         check_usr_local($pkg);
         download_package($pkg) if (defined $pkg->{'url'});
+        check_digest($pkg) if (defined $pkg->{'tarpath'});
         extract_package($pkg) if (defined $pkg->{'tarpath'});
         clean_package($pkg);
         patch_package($pkg);
@@ -291,6 +306,35 @@ sub check_installed {
     return 1;
 }
 
+sub download_package {
+    my ($pkg) = @_;
+
+    unless (-f $pkg->{'tarpath'}) {
+        safe_chdir();
+        print "Downloading: ".$pkg->{'tarname'}."\n";
+        safe_system('curl', '-L', '-k', '-o', $pkg->{'tarpath'}, $pkg->{'url'});
+    }
+}
+
+sub check_digest {
+    my ($pkg) = @_;
+
+    print "Checking digest for: ".$pkg->{'tarname'}."\n";
+    if ($pkg->{'md5'}) {
+        if (`md5 $pkg->{'tarpath'}` =~ / = ([0-9a-f]{32})$/) {
+            if ($pkg->{'md5'} ne $1) {
+                warn "MD5 digests don't match.\n";
+                warn "  Expected: $pkg->{'md5'}\n";
+                warn "  Actual: $1\n";
+                exit(-1);
+            }
+        } else {
+            die "  Unable to calculate MD5 digest for downloaded package.\n";
+        }
+    } else {
+        die "  Error: no digest defined.\n";
+    }
+}
 
 sub extract_package {
     my ($pkg) = @_;
@@ -307,16 +351,6 @@ sub extract_package {
         safe_system('tar', '-zxf', $pkg->{'tarpath'});
     } else {
         die "Don't know how to decomress archive.";
-    }
-}
-
-sub download_package {
-    my ($pkg) = @_;
-
-    unless (-e $pkg->{'tarpath'}) {
-        safe_chdir();
-        print "Downloading: ".$pkg->{'tarname'}."\n";
-        safe_system('curl', '-L', '-k', '-o', $pkg->{'tarpath'}, $pkg->{'url'});
     }
 }
 
