@@ -41,8 +41,8 @@ my $packages = [
 #         'checkfor' => ['include/uuid.h', 'lib/libuuid.a', 'lib/pkgconfig/uuid.pc'],
 #     },
     {
-        'url' => 'http://curl.haxx.se/download/curl-7.21.7.tar.gz',
-        'md5' => '3bbdab8bf540d73d10d2a82d964bc20a',
+        'url' => 'http://curl.haxx.se/download/curl-7.26.0.tar.bz2',
+        'md5' => 'bfa80f01b3d300359cfb4d409b6136a3',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--disable-ssh --disable-ldap --disable-ldaps --disable-rtsp ".
                     "--without-librtmp --disable-dict --disable-telnet --disable-pop3 ".
@@ -50,8 +50,8 @@ my $packages = [
         'checkfor' => ['include/curl/curl.h', 'lib/libcurl.a', 'lib/pkgconfig/libcurl.pc'],
     },
     {
-        'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.12/pcre-8.12.tar.bz2',
-        'md5' => 'f14a9fef3c92f3fc6c5ac92d7a2c7eb3',
+        'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.30/pcre-8.30.tar.bz2',
+        'md5' => '98e8928cccc945d04279581e778fbdff',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
                     "--enable-utf8 --enable-unicode-properties",
         'checkfor' => ['include/pcre.h', 'lib/libpcre.a', 'lib/pkgconfig/libpcre.pc']
@@ -75,21 +75,20 @@ my $packages = [
         'checkfor' => ['include/libxslt/xslt.h', 'lib/libxslt.a', 'lib/pkgconfig/libxslt.pc'],
     },
     {
-        'url' => 'http://github.com/lloyd/yajl/tarball/2.0.1',
-        'md5' => 'df6a751e7797b9c2182efd91b5d64017',
-        'dirname' => 'lloyd-yajl-f4b2b1a',
-        'tarname' => 'yajl-2.0.1.tar.gz',
+        'url' => 'http://github.com/lloyd/yajl/tarball/2.0.4',
+        'md5' => 'ee6208e697c43dcccf798ce80d370379',
+        'dirname' => 'lloyd-yajl-fee1ebe',
+        'tarname' => 'yajl-2.0.4.tar.gz',
         'config' => "mkdir build && cd build && cmake ..",
         'make' => "cd build && make yajl_s",
-        'install' => "cd build/yajl-2.0.1 && ".
+        'install' => "cd build/yajl-2.0.4 && ".
                      "cp -Rfv include/yajl ${ROOT_DIR}/include/ && ".
                      "cp -fv lib/libyajl_s.a ${ROOT_DIR}/lib/libyajl.a",
         'checkfor' => ['include/yajl/yajl_common.h', 'lib/libyajl.a'],
     },
     {
-        'dirname' => 'sqlite-3.7.3',
-        'url' => 'http://www.sqlite.org/sqlite-amalgamation-3.7.3.tar.gz',
-        'md5' => '74fe78b264f1c434c4b159d45b78e9b7',
+        'url' => 'http://www.sqlite.org/sqlite-autoconf-3071300.tar.gz',
+        'md5' => 'c97df403e8a3d5b67bb408fcd6aabd8e',
         'checkfor' => ['include/sqlite3.h', 'lib/libsqlite3.a', 'lib/pkgconfig/sqlite3.pc'],
     },
     {
