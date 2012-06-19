@@ -20,13 +20,13 @@ my $packages = [
         'url' => 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.25.tar.gz',
         'md5' => 'a3270bab3f4b69b7dc6dbdacbcae9745',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-pc-path=${ROOT_DIR}/lib/pkgconfig",
-        'checkfor' => 'bin/pkg-config',
+        'checkfor' => ['bin/pkg-config', 'share/aclocal/pkg.m4']
     },
     {
         'dirname' => 'check-0.9.8',
         'url' => 'http://snapshots.aelius.com/check/check-0.9.8-20110416.tar.gz',
         'md5' => '045906b2a7eb0721a4c14f579e5d8dc2',
-        'checkfor' => 'bin/checkmk',
+        'checkfor' => ['bin/checkmk', 'include/check.h', 'lib/libcheck.a']
     },
     {
         'url' => 'http://kent.dl.sourceforge.net/project/mhash/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz',
