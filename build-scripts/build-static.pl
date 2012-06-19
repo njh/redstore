@@ -33,13 +33,14 @@ my $packages = [
         'md5' => 'ee66b7d5947deb760aeff3f028e27d25',
         'checkfor' => ['include/mhash.h', 'lib/libmhash.a'],
     },
-# RASQAL isn't detecting libuuid correctly
-#     {
-#         'url' => 'http://www.mirrorservice.org/sites/ftp.ossp.org/pkg/lib/uuid/uuid-1.6.2.tar.gz',
-#         'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
-#                     "--disable-debug --without-perl --without-php --without-pgsql",
-#         'checkfor' => ['include/uuid.h', 'lib/libuuid.a', 'lib/pkgconfig/uuid.pc'],
-#     },
+    {
+        # libuuid
+        'url' => 'http://www.kernel.org/pub/linux/utils/util-linux/v2.21/util-linux-2.21.2.tar.gz',
+        'md5' => 'b228170ecdfce9ced77313d57b21b37c',
+        'make' => "cd libuuid && make",
+        'install' => "cd libuuid && make install",
+        'checkfor' => ['include/uuid/uuid.h', 'lib/libuuid.a', 'lib/pkgconfig/uuid.pc'],
+    },
     {
         'url' => 'http://curl.haxx.se/download/curl-7.26.0.tar.bz2',
         'md5' => 'bfa80f01b3d300359cfb4d409b6136a3',
@@ -130,7 +131,9 @@ my $packages = [
     {
         'url' => 'http://download.librdf.org/source/rasqal-0.9.29.tar.gz',
         'md5' => '49e4b75a0c67465edf55dd20606715fa',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --enable-query-languages=all",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
+                    "--with-regex-library=pcre --with-digest-library=mhash --with-decimal=gmp ".
+                    "--enable-raptor2 --enable-query-languages=all",
         'checkfor' => ['include/rasqal/rasqal.h', 'lib/librasqal.a', 'lib/pkgconfig/rasqal.pc'],
     },
     {
