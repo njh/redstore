@@ -123,8 +123,8 @@ my $packages = [
 #     },
     {
         'dirname' => 'raptor2-2.0.8',
-        'url' => 'http://snapshots.aelius.com/raptor2/raptor2-2.0.8-20120610.tar.gz',
-        'md5' => '6b41a2c3a607d16e3d8603966a227481',
+        'url' => 'http://download.librdf.org/source/raptor2-2.0.8.tar.gz',
+        'md5' => 'ac60858b875aab8fa7917f21a1237aa9',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
         'checkfor' => ['lib/libraptor2.a', 'include/raptor2/raptor2.h', 'lib/pkgconfig/raptor2.pc'],
     },
