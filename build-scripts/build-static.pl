@@ -122,7 +122,6 @@ my $packages = [
 #         'checkfor' => 'lib/libpq.a',
 #     },
     {
-        'dirname' => 'raptor2-2.0.8',
         'url' => 'http://download.librdf.org/source/raptor2-2.0.8.tar.gz',
         'md5' => 'ac60858b875aab8fa7917f21a1237aa9',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --with-yajl=${ROOT_DIR}",
@@ -137,8 +136,9 @@ my $packages = [
         'checkfor' => ['include/rasqal/rasqal.h', 'lib/librasqal.a', 'lib/pkgconfig/rasqal.pc'],
     },
     {
-        'url' => 'http://download.librdf.org/source/redland-1.0.15.tar.gz',
-        'md5' => 'b0deb87f3c7d3237a3d587c1e0f2f266',
+        'dirname' => 'redland-1.0.16',
+        'url' => 'http://snapshots.aelius.com/redland/redland-1.0.16-20120703.tar.gz',
+        'md5' => 'a21f7eb720ed820bfe120c0f27325b30',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-raptor2 --disable-modular ".
                     "--with-bdb=${ROOT_DIR} --with-threestore=no --with-mysql=no --with-sqlite=3 ".
                     "--with-postgresql=no --with-virtuoso=no",
