@@ -53,8 +53,9 @@ my $packages = [
     {
         'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.30/pcre-8.30.tar.bz2',
         'md5' => '98e8928cccc945d04279581e778fbdff',
-        'config' => "./configure $DEFAULT_CONFIGURE_ARGS ".
-                    "--enable-utf8 --enable-unicode-properties",
+        'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-utf8 ".
+                    "--enable-unicode-properties --enable-pcregrep-libz ".
+                    "--enable-pcregrep-libbz2",
         'checkfor' => ['include/pcre.h', 'lib/libpcre.a', 'lib/pkgconfig/libpcre.pc']
     },
     {
@@ -166,7 +167,7 @@ $ENV{'PKG_CONFIG_PATH'} = "${ROOT_DIR}/lib/pkgconfig";
 $ENV{'CLASSPATH'} = '';
 
 # Check tools required are available
-my @TOOLS_REQUIRED = ('cmake', 'curl', 'ed', 'make', 'patch', 'tar');
+my @TOOLS_REQUIRED = ('cmake', 'curl', 'ed', 'make', 'md5sum', 'patch', 'tar');
 foreach my $cmd (@TOOLS_REQUIRED) {
   system("which $cmd > /dev/null") && die "Error: $cmd is not available on this system.";
 }
@@ -323,7 +324,7 @@ sub check_digest {
 
     print "Checking digest for: ".$pkg->{'tarname'}."\n";
     if ($pkg->{'md5'}) {
-        if (`md5 $pkg->{'tarpath'}` =~ / = ([0-9a-f]{32})$/) {
+        if (`md5sum $pkg->{'tarpath'}` =~ /^([0-9a-f]{32})\s/) {
             if ($pkg->{'md5'} ne $1) {
                 warn "MD5 digests don't match.\n";
                 warn "  Expected: $pkg->{'md5'}\n";
