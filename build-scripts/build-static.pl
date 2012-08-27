@@ -94,9 +94,10 @@ my $packages = [
         'checkfor' => ['include/sqlite3.h', 'lib/libsqlite3.a', 'lib/pkgconfig/sqlite3.pc'],
     },
     {
-        'url' => 'http://download.oracle.com/berkeley-db/db-4.8.30.tar.gz',
-        'md5' => 'f80022099c5742cd179343556179aa8c',
-        'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS --disable-java",
+        'url' => 'http://download.oracle.com/berkeley-db/db-5.3.21.tar.gz',
+        'md5' => '3fda0b004acdaa6fa350bfc41a3b95ca',
+        'config' => "cd build_unix && ../dist/configure $DEFAULT_CONFIGURE_ARGS ".
+                    "--disable-debug --disable-cxx --disable-java",
         'make' => 'cd build_unix && make',
         'install' => 'cd build_unix && make install',
         'checkfor' => ['include/db.h', 'lib/libdb.a'],
