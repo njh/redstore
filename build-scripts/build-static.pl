@@ -29,7 +29,7 @@ my $packages = [
         'checkfor' => ['bin/checkmk', 'include/check.h', 'lib/libcheck.a']
     },
     {
-        'url' => 'http://kent.dl.sourceforge.net/project/mhash/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz',
+        'url' => 'http://downloads.sourceforge.net/project/mhash/mhash/0.9.9.9/mhash-0.9.9.9.tar.gz',
         'md5' => 'ee66b7d5947deb760aeff3f028e27d25',
         'checkfor' => ['include/mhash.h', 'lib/libmhash.a'],
     },
@@ -51,7 +51,7 @@ my $packages = [
         'checkfor' => ['include/curl/curl.h', 'lib/libcurl.a', 'lib/pkgconfig/libcurl.pc'],
     },
     {
-        'url' => 'http://kent.dl.sourceforge.net/project/pcre/pcre/8.30/pcre-8.30.tar.bz2',
+        'url' => 'http://downloads.sourceforge.net/project/pcre/pcre/8.30/pcre-8.30.tar.bz2',
         'md5' => '98e8928cccc945d04279581e778fbdff',
         'config' => "./configure $DEFAULT_CONFIGURE_ARGS --enable-utf8 ".
                     "--enable-unicode-properties --enable-pcregrep-libz ".
