@@ -82,7 +82,7 @@ redhttp_request_add_header(request, "Accept", "*/*");
 desc = redstore_negotiate_format(request, librdf_serializer_get_description, "ntriples", &chosen_mime);
 ck_assert(desc != NULL);
 ck_assert_str_eq(desc->label, "N-Triples");
-ck_assert_str_eq(chosen_mime, "text/plain");
+ck_assert_str_eq(chosen_mime, "application/n-triples");
 redhttp_request_free(request);
 
 #test negotiate_format_arg
@@ -92,7 +92,7 @@ redhttp_request_t *request = redhttp_request_new_with_args("GET", "/foo/bar?form
 desc = redstore_negotiate_format(request, librdf_serializer_get_description, NULL, &chosen_mime);
 ck_assert(desc != NULL);
 ck_assert_str_eq(desc->label, "N-Triples");
-ck_assert_str_eq(chosen_mime, "text/plain");
+ck_assert_str_eq(chosen_mime, "application/n-triples");
 redhttp_request_free(request);
 
 #test negotiate_format_arg_override
@@ -103,7 +103,7 @@ redhttp_request_add_header(request, "Accept", "application/rdf+xml");
 desc = redstore_negotiate_format(request, librdf_serializer_get_description, NULL, &chosen_mime);
 ck_assert(desc != NULL);
 ck_assert_str_eq(desc->label, "N-Triples");
-ck_assert_str_eq(chosen_mime, "text/plain");
+ck_assert_str_eq(chosen_mime, "application/n-triples");
 redhttp_request_free(request);
 
 #test negotiate_format_with_q
