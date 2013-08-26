@@ -60,8 +60,8 @@ like($response->content, qr/<sd:Service>/, "GET to description endpoint returns 
 
 # GET the service description from its own URL as n-triples
 $response = $ua->get($base_url.'description?format=ntriples');
-is($response->code, 200, 'GET to description endpoint for application/rdf+xml is successful');
-is($response->content_type, "text/plain", "GET to description endpoint for application/rdf+xml has correct MIME type");
+is($response->code, 200, 'GET to description endpoint for N-Triples is successful');
+is($response->content_type, "application/n-triples", "GET to description endpoint for N-Triples has correct MIME type");
 
 # Check for the service node
 my ($service_node) = ($response->content =~ qr[(\S+) <$rdf_ns#type> <$sd_ns#Service>]);

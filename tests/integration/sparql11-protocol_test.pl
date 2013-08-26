@@ -34,7 +34,7 @@ is_wellformed_xml($response->content, "SPARQL response is valid XML");
 # Test a CONSTRUCT query an empty store
 $response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=ntriples");
 is($response->code, 200, "SPARQL CONSTRUCT query on empty store does not give an error");
-is($response->content_type, 'text/plain', "SPARQL CONSTRUCT query gives the right response type");
+is($response->content_type, 'application/n-triples', "SPARQL CONSTRUCT query gives the right response type");
 is($response->content, '', "SPARQL CONSTRUCT query on empty store returns empty N-Triples data");
 
 # Test an ASK query an empty store
@@ -139,7 +139,7 @@ is_wellformed_json($response->content, "SPARQL CONSTRUCT query response is valid
 # Test a CONSTRUCT query with a ntriples response
 $response = $ua->get($base_url."query?query=CONSTRUCT+%7B%3Fs+%3Fp+%3Fo%7D+WHERE+%7B%3Fs+%3Fp+%3Fo%7D&format=ntriples");
 is($response->code, 200, "SPARQL CONSTRUCT query for ntriples is successful");
-is($response->content_type, "text/plain", "SPARQL CONSTRUCT query Content Type for ntriples is correct");
+is($response->content_type, "application/n-triples", "SPARQL CONSTRUCT query Content Type for ntriples is correct");
 like($response->content, qr[<http://example.org/dir/file#frag>\s+<http://example.org/value>\s+"v"\s+.\n], "SPARQL Construct response for ntriples should be correct");
 
 # Test a CONSTRUCT query with RDF/XML content negotiation
