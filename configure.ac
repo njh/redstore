@@ -1,18 +1,13 @@
-dnl Require autoconf version >= 2.60
-AC_PREREQ(2.60)
-
 
 dnl ############# Initialization
 
-AC_INIT([RedStore], [0.5.5], [njh@aelius.com], redstore)
-
+AC_PREREQ([2.62])
+AC_INIT([RedStore],[0.5.5],[njh@aelius.com],[redstore])
 AC_CONFIG_SRCDIR([src/redstore.c])
+AC_CONFIG_HEADERS([src/redstore_config.h])
 AC_CONFIG_AUX_DIR(build-scripts)
 AC_CONFIG_MACRO_DIR(build-scripts)
-AM_INIT_AUTOMAKE([1.10])
-
-LT_PREREQ([2.2])
-LT_INIT
+AM_INIT_AUTOMAKE([1.11])
 
 AM_MAINTAINER_MODE
 
@@ -20,15 +15,20 @@ AM_MAINTAINER_MODE
 
 dnl ############# Compiler and tools Checks
 
+AM_SANITY_CHECK
+AM_PROG_AR
 AC_PROG_CC
 AC_PROG_CC_C99
+
+dnl Initialize libtool
+LT_INIT
+
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PROG_LIBTOOL
 
+AC_C_CONST
 AC_C_BIGENDIAN
 AC_C_INLINE
-AC_C_CONST
 
 AC_CHECK_PROG(have_pandoc, [pandoc], [yes], [no])
 AM_CONDITIONAL(HAVE_PANDOC, test x"$have_pandoc" = "xyes")
@@ -85,8 +85,6 @@ fi
 
 
 dnl ############## Output files
-
-AC_CONFIG_HEADERS([src/redstore_config.h])
 
 AC_CONFIG_FILES([
   Makefile
