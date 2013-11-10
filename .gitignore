@@ -13,12 +13,15 @@ aclocal.m4
 autom4te.cache
 build
 build-scripts/*.m4
+build-scripts/ar-lib
+build-scripts/compile
 build-scripts/config.guess
 build-scripts/config.sub
 build-scripts/depcomp
 build-scripts/install-sh
 build-scripts/ltmain.sh
 build-scripts/missing
+build-scripts/test-driver
 config.cache
 config.log
 config.status
