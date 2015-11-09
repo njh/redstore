@@ -16,6 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef __FreeBSD__
+#include <sys/socket.h>
+#endif
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
