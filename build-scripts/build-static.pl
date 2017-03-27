@@ -270,7 +270,10 @@ if (`uname` =~ /^Darwin/) {
     open(CREDITS, ">macosx/Credits.html") or die "Failed to write to credits file: $!";
     print CREDITS "<!DOCTYPE html>\n";
     print CREDITS "<html>\n";
-    print CREDITS "<head><title>RedStore Credits</title></head>\n";
+    print CREDITS "<head>\n";
+    print CREDITS "  <meta charset=\"utf-8\" />\n";
+    print CREDITS "  <title>RedStore Credits</title>\n";
+    print CREDITS "</head>\n";
     print CREDITS "<body style='font-family: Tahoma, sans-serif; font-size: 8pt'>\n";
     print CREDITS "  <p>This version of RedStore uses following libraries:</p>\n";
     print CREDITS "  <ul>\n";

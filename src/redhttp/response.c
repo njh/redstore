@@ -116,7 +116,7 @@ redhttp_response_t *redhttp_response_new_error_page(int code, const char *explan
       "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
       " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
       "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
-      "<head><title>%d %s</title></head>\n"
+      "<head><meta charset=\"utf-8\" /><title>%d %s</title></head>\n"
       "<body>\n<h1>%d %s</h1>\n" "<p>%s</p>\n" "</body></html>\n";
 
   assert(code >= 100 && code < 1000);

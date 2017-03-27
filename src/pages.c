@@ -62,6 +62,7 @@ redhttp_response_t *redstore_page_new(int code, const char *title)
                               "          \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n");
   redstore_page_append_string(response, "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n");
   redstore_page_append_string(response, "<head>\n");
+  redstore_page_append_string(response, "  <meta charset=\"utf-8\" />\n");
   redstore_page_append_strings(response, "  <title>RedStore - ", title, "</title>\n", NULL);
   redstore_page_append_string(response, "</head>\n");
   redstore_page_append_string(response, "<body>\n");
