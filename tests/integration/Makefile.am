@@ -17,6 +17,7 @@ LOG_COMPILER = $(PERL)
 AM_LOG_FLAGS = -Mstrict -w
 
 TESTS_ENVIRONMENT = \
-	REDSTORE="$(top_builddir)/src/redstore"
+	REDSTORE="$(top_builddir)/src/redstore" \
+	PERL5LIB="$(top_srcdir)/tests/integration"
 
 CLEANFILES = *.log *.trs
