@@ -365,8 +365,8 @@ int main(int argc, char *argv[])
 
   if (!verbose) {
     rasqal_world* rasqal = librdf_world_get_rasqal(world);
-    // Lower warning level to get only more serious warnings
-    rasqal_world_set_warning_level(rasqal, 25);
+    // Lower warning level to only get more serious warnings
+    rasqal_world_set_warning_level(rasqal, 9);
   }
 
   // Set default storage settings, if none given
