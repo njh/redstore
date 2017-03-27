@@ -1,3 +1,6 @@
+dnl Require autoconf version >= 2.68
+AC_PREREQ([2.68])
+
 
 dnl ############# Initialization
 
@@ -33,7 +36,10 @@ AC_C_INLINE
 AC_CHECK_PROG(have_pandoc, [pandoc], [yes], [no])
 AM_CONDITIONAL(HAVE_PANDOC, test x"$have_pandoc" = "xyes")
 
-
+AC_PATH_PROG(PERL, perl)
+if test -z "$PERL"; then
+  AC_MSG_WARN([perl is needed to run the test suite])
+fi
 
 dnl ############# Store the build time (as RFC 822)
 

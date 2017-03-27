@@ -13,8 +13,10 @@ dist_check_DATA = \
   redstore_testlib.pm
 
 TESTS = $(dist_check_SCRIPTS)
-TESTS_ENVIRONMENT = \
-	REDSTORE="$(top_builddir)/src/redstore" \
-	perl -w -Mstrict -MTest::Harness -I "$(srcdir)" -e "runtests(@ARGV)"
+LOG_COMPILER = $(PERL)
+AM_LOG_FLAGS = -Mstrict -w
 
-CLEANFILES = redstore-test.log
+TESTS_ENVIRONMENT = \
+	REDSTORE="$(top_builddir)/src/redstore"
+
+CLEANFILES = *.log *.trs
