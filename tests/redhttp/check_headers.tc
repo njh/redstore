@@ -130,10 +130,10 @@ redhttp_headers_print(&first,file);
 rewind(file);
 
 // Now read it back in
-fgets(buffer, BUFSIZ, file);
-ck_assert_str_eq(buffer, "key1: value1\r\n");
-fgets(buffer, BUFSIZ, file);
-ck_assert_str_eq(buffer, "key2: value2\r\n");
+char* line1 = fgets(buffer, BUFSIZ, file);
+ck_assert_str_eq(line1, "key1: value1\r\n");
+char* line2 = fgets(buffer, BUFSIZ, file);
+ck_assert_str_eq(line2, "key2: value2\r\n");
 
 free(buffer);
 fclose(file);

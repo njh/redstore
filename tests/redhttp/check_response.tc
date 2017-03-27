@@ -173,13 +173,13 @@ redhttp_response_send(response, request);
 rewind(tmp);
 
 // Now read it back in
-fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
+char* line = fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
 ck_assert_str_eq(buffer, "HTTP/1.0 200 OK\r\n");
 do {
-    fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
-} while (strcmp(buffer, "\r\n"));
-fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
-ck_assert_str_eq(buffer, "Hello World");
+    line = fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
+} while (strcmp(line, "\r\n"));
+line = fgets(buffer, BUFSIZ, redhttp_request_get_socket(request));
+ck_assert_str_eq(line, "Hello World");
 
 // Check that headers were set
 ck_assert_msg(redhttp_response_get_header(response, "Content-Length") != NULL, "'Content-Length' header has been set");
