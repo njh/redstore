@@ -12,3 +12,6 @@ script:
   - ./autogen.sh
   - make
   - make test
+
+after_failure:
+  - find tests -name "*.log" -print -exec cat {} \;
