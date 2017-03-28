@@ -6,6 +6,7 @@ language: c
 install:
   - sudo apt-get update -qq
   - sudo apt-get install -y build-essential libtool pkg-config check pandoc
+  - sudo apt-get install -y libwww-perl libjson-perl
   - sudo apt-get install -y librdf-dev librdf-storage-sqlite
 
 script:
